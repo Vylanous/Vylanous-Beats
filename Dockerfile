@@ -22,15 +22,12 @@ FROM oven/bun:1.2-alpine AS runner
 
 WORKDIR /app
 
-# Only copy what's needed to run
+# Copy everything needed to run
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/web/package.json ./packages/web/package.json
 COPY --from=builder /app/packages/web/src ./packages/web/src
 COPY --from=builder /app/packages/web/dist ./packages/web/dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/web/node_modules ./packages/web/node_modules 2>/dev/null || true
-
-# Public assets (logos, etc.)
-COPY packages/web/public ./packages/web/public 2>/dev/null || true
+COPY --from=builder /app/packages/web/public ./packages/web/public
 
 WORKDIR /app/packages/web
 
