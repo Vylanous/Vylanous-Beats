@@ -1,5 +1,5 @@
 # ── Stage 1: Build ──────────────────────────────────────────────────
-FROM oven/bun:1.2-alpine AS builder
+FROM oven/bun:1.1-alpine AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ COPY package.json bun.lock* ./
 COPY packages/web/package.json ./packages/web/
 
 # Install all deps
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy source
 COPY packages/web ./packages/web
@@ -18,7 +18,7 @@ WORKDIR /app/packages/web
 RUN bun run build
 
 # ── Stage 2: Production runtime ─────────────────────────────────────
-FROM oven/bun:1.2-alpine AS runner
+FROM oven/bun:1.1-alpine AS runner
 
 WORKDIR /app
 
