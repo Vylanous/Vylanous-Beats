@@ -32,8 +32,7 @@ COPY --from=builder /app/packages/web/public ./packages/web/public
 WORKDIR /app/packages/web
 
 ENV NODE_ENV=production
-ENV PORT=8080
 
-EXPOSE 8080
+EXPOSE 3000
 
 CMD ["bun", "src/server.ts"]
