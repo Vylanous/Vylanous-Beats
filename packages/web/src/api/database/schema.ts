@@ -69,6 +69,15 @@ export const subscribers = sqliteTable("subscribers", {
   createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
 });
 
+// New settings table
+export const settings = sqliteTable("settings", {
+  id: text("id").primaryKey(),
+  json: text("json").notNull().default("{}"),
+  createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text("updated_at"),
+});
+
 export type Beat = typeof beats.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type SettingsRow = typeof settings.$inferSelect;
