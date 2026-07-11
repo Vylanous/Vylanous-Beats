@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { CartProvider } from "../lib/cart";
 import { PlayerProvider } from "../lib/player";
-import { getAdminSettings } from "../lib/api";
+import { getAdminSettings } from "../lib/admin";
 
 interface ProviderProps {
   children: React.ReactNode;

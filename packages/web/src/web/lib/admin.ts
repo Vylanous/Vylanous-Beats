@@ -71,6 +71,19 @@ export const adminApi = {
     }),
 };
 
+/** Fetch the site customization settings (admin-authenticated). */
+export async function getAdminSettings(): Promise<{ settings: any }> {
+  return req<{ settings: any }>("/admin/customization");
+}
+
+/** Persist the site customization settings. Accepts a JSON string payload. */
+export async function saveAdminSettings(json: string): Promise<{ ok: true }> {
+  return req<{ ok: true }>("/admin/customization", {
+    method: "POST",
+    body: JSON.stringify({ json }),
+  });
+}
+
 /** Upload a file to Tigris via presigned PUT. Returns the stored object key. */
 export async function uploadFile(file: File, folder: string): Promise<string> {
   const { url, key } = await adminApi.presign(file.name, file.type || "application/octet-stream", folder);
