@@ -1,37 +1,34 @@
-# Vylanous Beats Store — Build Tracker
+# Full Re-skin Customization — Build Tracker
 
-## Goal
-Premium hip-hop beat store. Custom cart + Stripe one-time checkout + secure download + email delivery.
-Dark purple/silver/black street aesthetic. Architected to expand into full artist landing page later.
+## Scope (confirmed with user)
+Full re-skin only: swap colors, fonts, logos/images across the live site via admin panel.
+NOT in scope: rearranging layout/sections.
 
-## Hosting plan (deliver to user)
-- Build on Runable managed stack -> Publish via platform -> add custom domain www.vylanous.com
-- Buy domain at Cloudflare Registrar (~$10/yr) or Porkbun. Hosting+SSL via platform = free.
+## Found on arrival
+Dead/unwired scaffolding: duplicate broken settings API files, admin UI component not
+imported anywhere, public settings fetch was admin-gated (401 for visitors) — nothing worked.
 
-## Stack decisions
-- Stripe Checkout one-time payments (user adds STRIPE_SECRET_KEY)
-- Free license = instant order, no stripe
-- Delivery: token-gated download page + send-email CLI
-- Fonts: Anton (display), League Gothic (sub), Barlow Semi Condensed (body)
-- Colors: black #0A0A0C, purple #7C2FCB/#A24DF5, silver chrome
-
-## Progress
-- [x] app_init scaffold
-- [x] brand logos copied to public/brand
-- [x] design.md
-- [x] styles.css (fonts, palette, grain, marquee, waveform, chrome text)
-- [x] db schema (beats, orders, orderItems, subscribers)
-- [x] shared/licenses.ts (5 tiers)
-- [x] seed.ts (6 beats) + cover art + preview audio
-- [x] api/index.ts (beats, checkout, confirm, orders, subscribe)  <- FIX zValidator -> use @hono/zod-validator
-- [ ] cart store (zustand or context + localStorage)
-- [ ] Layout: nav + global audio player + footer
-- [ ] Pages: home, beats, beat detail, licensing, cart, success, about
-- [ ] components: beat card, license card, waveform player, cart drawer
-- [ ] favicon + index.html meta/SEO
-- [ ] db:push, build, run dev, screenshot test
-- [ ] deliver + hosting instructions
+## Plan
+- [x] Delete dead files (api/customization.ts, api/admin-customization.ts,
+      database/settings.ts, database/settings-utils.ts)
+- [x] shared/site-settings.ts — theme colors, 6 curated font pairs, brand asset shape, defaults
+- [x] api/index.ts — GET /api/settings (public), GET/PUT /api/admin/settings, POST /api/admin/settings/reset
+      Uses existing schema.ts `settings` table (id/json/createdAt/updatedAt).
+- [x] lib/admin.ts — updated client helpers to new endpoints
+- [x] web/lib/site-settings.tsx — SiteSettingsProvider: fetches public settings, applies
+      CSS vars (--color-vb-*, --font-*) at :root so every existing Tailwind utility across
+      the site (bg-vb-black, font-display, text-purple-glow, etc.) re-themes automatically.
+      Injects Google Font <link> for chosen pair, sets favicon.
+- [x] components/provider.tsx — wrap app in SiteSettingsProvider
+- [x] nav.tsx — use brand.squareLogoUrl (in progress: img src swap)
+- [ ] footer.tsx — use brand.fullLogoUrl
+- [ ] rewrite web/components/admin/customization.tsx — full editor (8 color pickers,
+      font pair dropdown w/ preview, 3 file uploads, save/reset, live preview strip)
+- [ ] wire into admin.tsx as new tab
+- [ ] bun run db:push, bun run build, start dev server, smoke test (curl /api/settings,
+      load site, log into /admin, change a color, verify it applies)
+- [ ] deliver
 
 ## Notes
-- exclusive purchase -> mark beat soldExclusive + unpublish
-- never trust client prices; resolve tier price server-side
+- GitHub token was pasted in plain chat by user twice — told them to rotate it, not stored anywhere.
+- index.html favicon + meta theme-color are static defaults; dynamic override happens at runtime via site-settings.tsx.

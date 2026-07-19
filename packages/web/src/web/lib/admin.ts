@@ -3,6 +3,8 @@
  * The token lives in localStorage and is attached as a Bearer header.
  */
 
+import type { SiteSettings } from "../../shared/site-settings";
+
 const TOKEN_KEY = "vb_admin_token";
 
 export function getToken(): string | null {
@@ -71,17 +73,24 @@ export const adminApi = {
     }),
 };
 
-/** Fetch the site customization settings (admin-authenticated). */
-export async function getAdminSettings(): Promise<{ settings: any }> {
-  return req<{ settings: any }>("/admin/customization");
+/** Fetch the site customization settings (admin-authenticated).
+ * `settings.brand.*` are raw keys/paths (save these back as-is).
+ * `preview.*` are signed/displayable urls for admin thumbnails only — never save these back. */
+export async function getAdminSettings(): Promise<{ settings: SiteSettings; preview: SiteSettings["brand"] }> {
+  return req<{ settings: SiteSettings; preview: SiteSettings["brand"] }>("/admin/settings");
 }
 
-/** Persist the site customization settings. Accepts a JSON string payload. */
-export async function saveAdminSettings(json: string): Promise<{ ok: true }> {
-  return req<{ ok: true }>("/admin/customization", {
-    method: "POST",
-    body: JSON.stringify({ json }),
+/** Persist a partial patch of the site customization settings (merged server-side). */
+export async function saveAdminSettings(patch: Partial<SiteSettings>): Promise<{ settings: SiteSettings }> {
+  return req<{ settings: SiteSettings }>("/admin/settings", {
+    method: "PUT",
+    body: JSON.stringify(patch),
   });
+}
+
+/** Reset site customization back to brand defaults. */
+export async function resetAdminSettings(): Promise<{ settings: SiteSettings }> {
+  return req<{ settings: SiteSettings }>("/admin/settings/reset", { method: "POST" });
 }
 
 /** Upload a file to Tigris via presigned PUT. Returns the stored object key. */

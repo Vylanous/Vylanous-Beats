@@ -9,6 +9,7 @@ import {
   Loader2,
   Lock,
   Upload,
+  Palette,
 } from "lucide-react";
 import {
   adminApi,
@@ -21,9 +22,10 @@ import {
 import { formatCad } from "../../shared/licenses";
 import { BeatForm } from "../components/admin/beat-form";
 import { BeatTable } from "../components/admin/beat-table";
+import CustomizationPanel from "../components/admin/customization";
 import { BulkUpload } from "../components/admin/bulk-upload";
 
-type Tab = "overview" | "beats" | "bulk" | "orders" | "subscribers";
+type Tab = "overview" | "beats" | "bulk" | "orders" | "subscribers" | "customization";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -122,6 +124,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "bulk", label: "Bulk Upload", icon: Upload },
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "subscribers", label: "Fan List", icon: Users },
+    { id: "customization", label: "Customization", icon: Palette },
   ];
 
   const closeForm = () => {
@@ -193,6 +196,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {tab === "bulk" && <BulkUpload onDone={() => setTab("beats")} />}
             {tab === "orders" && <OrdersTab />}
             {tab === "subscribers" && <SubscribersTab />}
+            {tab === "customization" && <CustomizationPanel />}
           </>
         )}
       </main>
