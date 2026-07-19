@@ -7,11 +7,12 @@ import Stripe from "stripe";
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db } from "./database";
-import { beats, orders, orderItems, subscribers } from "./database/schema";
+import { beats, orders, orderItems, subscribers, settings } from "./database/schema";
 import { seedDatabase } from "./seed";
 import { TIER_BY_ID, type LicenseTierId } from "../shared/licenses";
 import { s3, S3_BUCKET } from "./lib/s3";
 import { requireAdmin, checkPassword, makeAdminToken } from "./lib/admin-auth";
+import { mergeSettings, type SiteSettings } from "../shared/site-settings";
 
 // Seed on cold start (idempotent)
 seedDatabase().catch((e) => console.error("[seed] failed", e));
@@ -87,6 +88,62 @@ async function signIfKey(value: string): Promise<string> {
   }
 }
 
+const SETTINGS_ID = "site";
+
+async function loadSettings(): Promise<SiteSettings> {
+  const rows = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
+  if (rows.length === 0) return mergeSettings(null);
+  try {
+    return mergeSettings(JSON.parse(rows[0].json || "{}"));
+  } catch {
+    return mergeSettings(null);
+  }
+}
+
+/** Sign any brand asset urls that are stored S3 keys (uploads); pass through absolute/default (/brand/*) paths untouched. */
+async function signBrandUrl(value: string): Promise<string> {
+  if (!value || value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://")) {
+    return value;
+  }
+  return signIfKey(value);
+}
+
+async function publicSettings(s: SiteSettings) {
+  return {
+    ...s,
+    brand: {
+      squareLogoUrl: await signBrandUrl(s.brand.squareLogoUrl),
+      fullLogoUrl: await signBrandUrl(s.brand.fullLogoUrl),
+      faviconUrl: await signBrandUrl(s.brand.faviconUrl),
+    },
+  };
+}
+
+const settingsSchema = z.object({
+  theme: z
+    .object({
+      primary: z.string(),
+      primaryBright: z.string(),
+      primaryDeep: z.string(),
+      background: z.string(),
+      surface: z.string(),
+      surfaceHover: z.string(),
+      text: z.string(),
+      muted: z.string(),
+    })
+    .partial()
+    .optional(),
+  fontId: z.string().optional(),
+  brand: z
+    .object({
+      squareLogoUrl: z.string(),
+      fullLogoUrl: z.string(),
+      faviconUrl: z.string(),
+    })
+    .partial()
+    .optional(),
+});
+
 const app = new Hono()
   .basePath("api")
   .use(
@@ -97,6 +154,12 @@ const app = new Hono()
     }),
   )
   .get("/health", (c) => c.json({ status: "ok" }, 200))
+
+  // ---- Site settings (public — theme/font/brand for re-skin) ----
+  .get("/settings", async (c) => {
+    const s = await loadSettings();
+    return c.json({ settings: await publicSettings(s) }, 200);
+  })
 
   // ---- Beats ----
   .get("/beats", async (c) => {
@@ -477,6 +540,43 @@ const app = new Hono()
   .get("/admin/subscribers", requireAdmin, async (c) => {
     const all = await db.select().from(subscribers).orderBy(desc(subscribers.createdAt));
     return c.json({ subscribers: all }, 200);
+  })
+
+  // ---- Site customization (re-skin: colors, font pairing, brand assets) ----
+  .get("/admin/settings", requireAdmin, async (c) => {
+    const s = await loadSettings();
+    // settings.brand.* stay raw (S3 key or default /brand path) — the source of truth for saving.
+    // preview.* are signed/display-ready urls for the admin panel's thumbnails only.
+    const preview = (await publicSettings(s)).brand;
+    return c.json({ settings: s, preview }, 200);
+  })
+  .put("/admin/settings", requireAdmin, zValidator("json", settingsSchema), async (c) => {
+    const input = c.req.valid("json");
+    const current = await loadSettings();
+    const merged = mergeSettings({
+      theme: { ...current.theme, ...input.theme },
+      fontId: input.fontId ?? current.fontId,
+      brand: { ...current.brand, ...input.brand },
+    });
+    const json = JSON.stringify(merged);
+    const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
+    if (existing.length === 0) {
+      await db.insert(settings).values({ id: SETTINGS_ID, json });
+    } else {
+      await db.update(settings).set({ json, updatedAt: new Date().toISOString() }).where(eq(settings.id, SETTINGS_ID));
+    }
+    return c.json({ settings: merged }, 200);
+  })
+  .post("/admin/settings/reset", requireAdmin, async (c) => {
+    const merged = mergeSettings(null);
+    const json = JSON.stringify(merged);
+    const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
+    if (existing.length === 0) {
+      await db.insert(settings).values({ id: SETTINGS_ID, json });
+    } else {
+      await db.update(settings).set({ json, updatedAt: new Date().toISOString() }).where(eq(settings.id, SETTINGS_ID));
+    }
+    return c.json({ settings: merged }, 200);
   })
 
   // ---- Stats ----

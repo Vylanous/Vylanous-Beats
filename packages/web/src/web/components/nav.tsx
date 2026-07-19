@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "../lib/cart";
+import { useSiteSettings } from "../lib/site-settings";
 
 const LINKS = [
   { href: "/beats", label: "Beats" },
@@ -14,6 +15,7 @@ export function Nav() {
   const [mobile, setMobile] = useState(false);
   const { count, setOpen } = useCart();
   const [loc] = useLocation();
+  const { brand } = useSiteSettings();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -32,7 +34,7 @@ export function Nav() {
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <img src="/brand/skull-mark.png" alt="Vylanous Beats" className="h-9 w-9 object-contain" />
+          <img src={brand.squareLogoUrl} alt="Vylanous Beats" className="h-9 w-9 object-contain" />
           <span className="font-display text-xl uppercase tracking-wide leading-none hidden sm:block">
             <span className="text-vb-silver-bright">Vylanous</span>{" "}
             <span className="text-purple-glow">Beats</span>

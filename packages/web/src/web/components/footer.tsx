@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Instagram, Youtube, Music2, Mail, Check } from "lucide-react";
+import { useSiteSettings } from "../lib/site-settings";
 
 export function Footer() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
+  const { brand } = useSiteSettings();
 
   const subscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export function Footer() {
     <footer className="relative border-t border-white/[0.06] bg-vb-black mt-24">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16 grid md:grid-cols-4 gap-10">
         <div className="md:col-span-2">
-          <img src="/brand/logo-full-transparent.png" alt="Vylanous Beats" className="h-24 w-auto -ml-2" />
+          <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="h-24 w-auto -ml-2" />
           <p className="font-body text-vb-muted max-w-sm mt-3">
             Premium hip-hop beats. Rhythmic expression, melodious compositions, affordable licensing for
             independent artists.
