@@ -2,22 +2,20 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Context, Next } from "hono";
 
 /**
- * Lightweight single-admin auth. The store owner sets ADMIN_PASSWORD in env.
- * On login we mint an HMAC-signed token (no DB needed) the client stores in
- * localStorage and sends as a Bearer header on every admin request.
+ * Lightweight single-admin auth. The store owner sets ADMIN_PASSWORD in Vercel
+ * Environment Variables. On login we mint an HMAC-signed token (no DB needed)
+ * the client stores in localStorage and sends as a Bearer header.
  */
 
 function secret(): string {
-  return process.env.BETTER_AUTH_SECRET || process.env.ADMIN_PASSWORD || adminPassword() || "vylanous-admin-secret";
+  return process.env.BETTER_AUTH_SECRET || process.env.ADMIN_PASSWORD || "vylanous-admin-secret";
 }
 
 export function adminPassword(): string {
-  // Check for ADMIN_PASSWORD in any form (Vercel env, Vite build-time, process.env)
-  return process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || "vylanous";
+  return process.env.ADMIN_PASSWORD || "vylanous";
 }
 
 export function makeAdminToken(): string {
-  // token = base64(expiryMs).hmac
   const exp = Date.now() + 1000 * 60 * 60 * 24 * 30; // 30 days
   const payload = Buffer.from(String(exp)).toString("base64url");
   const sig = createHmac("sha256", secret()).update(payload).digest("base64url");
