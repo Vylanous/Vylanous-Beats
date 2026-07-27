@@ -8,12 +8,12 @@ import type { Context, Next } from "hono";
  */
 
 function secret(): string {
-  return process.env.BETTER_AUTH_SECRET || process.env.ADMIN_PASSWORD || "vylanous-admin-secret";
+  return process.env.BETTER_AUTH_SECRET || process.env.ADMIN_PASSWORD || adminPassword() || "vylanous-admin-secret";
 }
 
 export function adminPassword(): string {
-  // Default password if none set — owner should override via env for security.
-  return process.env.ADMIN_PASSWORD || "vylanous";
+  // Check for ADMIN_PASSWORD in any form (Vercel env, Vite build-time, process.env)
+  return process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || "vylanous";
 }
 
 export function makeAdminToken(): string {
