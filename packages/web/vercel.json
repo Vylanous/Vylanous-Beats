@@ -1,5 +1,13 @@
 {
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@3",
+      "includeFiles": "../../src/api/**",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "buildCommand": "bun run build",
