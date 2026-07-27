@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Router } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import "./styles.css";
 import App from "./app.tsx";
 
@@ -16,5 +17,6 @@ createRoot(document.getElementById("root")!).render(
 			</Router>
 		</QueryClientProvider>
 		<Analytics />
+		<SpeedInsights />
 	</StrictMode>,
 );

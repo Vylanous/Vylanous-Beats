@@ -1,63 +1,44 @@
-import { ipcMain, dialog, Notification, app, BrowserWindow } from "electron";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import fs from "node:fs/promises";
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-const isDev = process.env.NODE_ENV !== "production";
-const WEB_DEV_URL = process.env.WEBSITE_URL ?? "http://localhost:3000";
-const WEB_DIST = path.join(__dirname$1, "../web-dist");
-let win;
-function createWindow() {
-  win = new BrowserWindow({
+import { ipcMain as a, dialog as s, Notification as h, app as t, BrowserWindow as r } from "electron";
+import { fileURLToPath as f } from "node:url";
+import l from "node:path";
+import d from "node:fs/promises";
+const c = l.dirname(f(import.meta.url)), w = process.env.NODE_ENV !== "production", p = process.env.WEBSITE_URL ?? "http://localhost:3000", u = l.join(c, "../web-dist");
+let e;
+function m() {
+  e = new r({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs"),
-      contextIsolation: true,
-      nodeIntegration: false
+      preload: l.join(c, "preload.mjs"),
+      contextIsolation: !0,
+      nodeIntegration: !1
     }
-  });
-  if (isDev) {
-    win.loadURL(WEB_DEV_URL);
-  } else {
-    win.loadFile(path.join(WEB_DIST, "index.html"));
-  }
+  }), w ? e.loadURL(p) : e.loadFile(l.join(u, "index.html"));
 }
-ipcMain.handle("dialog:open", async (_, opts) => {
-  const result = await dialog.showOpenDialog(opts);
-  return result.canceled ? [] : result.filePaths;
+a.handle("dialog:open", async (n, i) => {
+  const o = await s.showOpenDialog(i);
+  return o.canceled ? [] : o.filePaths;
 });
-ipcMain.handle("dialog:save", async (_, opts) => {
-  const result = await dialog.showSaveDialog(opts);
-  return result.canceled ? null : result.filePath;
+a.handle("dialog:save", async (n, i) => {
+  const o = await s.showSaveDialog(i);
+  return o.canceled ? null : o.filePath;
 });
-ipcMain.handle("fs:read", async (_, filePath) => {
-  return fs.readFile(filePath, "utf-8");
+a.handle("fs:read", async (n, i) => d.readFile(i, "utf-8"));
+a.handle("fs:write", async (n, i, o) => {
+  await d.writeFile(i, o, "utf-8");
 });
-ipcMain.handle("fs:write", async (_, filePath, data) => {
-  await fs.writeFile(filePath, data, "utf-8");
+a.handle("notification:show", (n, i, o) => {
+  new h({ title: i, body: o }).show();
 });
-ipcMain.handle("notification:show", (_, title, body) => {
-  new Notification({ title, body }).show();
+a.handle("window:minimize", () => e == null ? void 0 : e.minimize());
+a.handle("window:maximize", () => {
+  e != null && e.isMaximized() ? e.unmaximize() : e == null || e.maximize();
 });
-ipcMain.handle("window:minimize", () => win == null ? void 0 : win.minimize());
-ipcMain.handle("window:maximize", () => {
-  if (win == null ? void 0 : win.isMaximized()) {
-    win.unmaximize();
-  } else {
-    win == null ? void 0 : win.maximize();
-  }
+a.handle("window:close", () => e == null ? void 0 : e.close());
+t.on("window-all-closed", () => {
+  process.platform !== "darwin" && (t.quit(), e = null);
 });
-ipcMain.handle("window:close", () => win == null ? void 0 : win.close());
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+t.on("activate", () => {
+  r.getAllWindows().length === 0 && m();
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-app.whenReady().then(createWindow);
+t.whenReady().then(m);
