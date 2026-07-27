@@ -3,7 +3,7 @@
     { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
-  "buildCommand": "bun run build",
+  "buildCommand": "cd ../.. && bun install && cd packages/web && bun run build",
   "outputDirectory": "dist",
-  "installCommand": "bun install"
+  "installCommand": "cd ../.. && bun install"
 }
