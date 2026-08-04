@@ -105,6 +105,19 @@ const SEED: SeedBeat[] = [
 ];
 
 export async function seedDatabase() {
+  // Ensure settings table exists and has the default 'site' row before seeding
+  try {
+    await db.execute(sql`CREATE TABLE IF NOT EXISTS settings (
+      id TEXT PRIMARY KEY,
+      json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+      updated_at TEXT
+    )`);
+    await db.execute(sql`INSERT OR IGNORE INTO settings (id, json) VALUES ('site', '{}')`);
+  } catch (e) {
+    console.error('[seed] ensure settings table failed', e);
+  }
+
   const existing = await db.select({ c: sql<number>`count(*)` }).from(beats);
   if ((existing[0]?.c ?? 0) > 0) return;
 
