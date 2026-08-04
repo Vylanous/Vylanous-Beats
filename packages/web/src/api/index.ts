@@ -74,17 +74,16 @@ async function publicBeat<T extends { artworkUrl: string; audioUrl: string }>(b:
   return { ...b, artworkUrl: await signIfKey(b.artworkUrl), audioUrl: await signIfKey(b.audioUrl) };
 }
 
-async function signIfKey(value: string): Promise<string> {
-  if (!value) return "";
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+async function signIfKey(key: string): Promise<string> {
+  if (!key) return "";
   try {
     return await getSignedUrl(
       s3,
-      new GetObjectCommand({ Bucket: S3_BUCKET, Key: value }),
-      { expiresIn: 60 * 60 * 24 }, // 24h
+      new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
+      { expiresIn: 3600 }
     );
   } catch {
-    return value;
+    return "";
   }
 }
 
