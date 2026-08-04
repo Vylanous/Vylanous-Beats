@@ -82,7 +82,13 @@ async function signIfKey(key: string): Promise<string> {
       new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
       { expiresIn: 3600 }
     );
-  } catch {
+  } catch (e) {
+    // Log the S3 error so we can diagnose signing/fetch issues in production
+    try {
+      console.error("[s3] signIfKey failed", { key, error: e });
+    } catch {
+      // ignore logging failures
+    }
     return "";
   }
 }
