@@ -90,11 +90,18 @@ async function signIfKey(key: string): Promise<string> {
 const SETTINGS_ID = "site";
 
 async function loadSettings(): Promise<SiteSettings> {
-  const rows = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
-  if (rows.length === 0) return mergeSettings(null);
+  // The settings table might not exist yet in some environments (fresh DB/migrations not run).
+  // Wrap the DB access in try/catch so the app still boots even if migrations weren't applied.
   try {
-    return mergeSettings(JSON.parse(rows[0].json || "{}"));
-  } catch {
+    const rows = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
+    if (rows.length === 0) return mergeSettings(null);
+    try {
+      return mergeSettings(JSON.parse(rows[0].json || "{}"));
+    } catch {
+      return mergeSettings(null);
+    }
+  } catch (e) {
+    console.error("[db] loadSettings failed (table may be missing)", e);
     return mergeSettings(null);
   }
 }
