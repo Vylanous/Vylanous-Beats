@@ -1,5 +1,5 @@
 import { db } from "./database";
-import { beats } from "./database/schema";
+import { beats, settings } from "./database/schema";
 import { sql } from "drizzle-orm";
 
 interface SeedBeat {
@@ -105,17 +105,22 @@ const SEED: SeedBeat[] = [
 ];
 
 export async function seedDatabase() {
-  // Ensure settings table exists and has the default 'site' row before seeding
+  // Ensure settings table exists and has the default 'site' row before seeding.
+  // Some runtimes / DB clients do not expose a raw `execute` on the drizzle db wrapper,
+  // so avoid calling db.execute here and use high-level APIs where possible.
   try {
-    await db.execute(sql`CREATE TABLE IF NOT EXISTS settings (
-      id TEXT PRIMARY KEY,
-      json TEXT NOT NULL DEFAULT '{}',
-      created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
-      updated_at TEXT
-    )`);
-    await db.execute(sql`INSERT OR IGNORE INTO settings (id, json) VALUES ('site', '{}')`);
+    try {
+      const rows = await db.select().from(settings).limit(1);
+      if (rows.length === 0) {
+        await db.insert(settings).values({ id: "site", json: "{}" });
+      }
+    } catch (e) {
+      // If the table doesn't exist yet, or the operation isn't supported in this runtime,
+      // log and continue. Migrations should create the table in production.
+      console.warn('[seed] ensure settings skipped (table missing or unsupported op)', (e as Error)?.message || e);
+    }
   } catch (e) {
-    console.error('[seed] ensure settings table failed', e);
+    console.error('[seed] unexpected error while ensuring settings', e);
   }
 
   const existing = await db.select({ c: sql<number>`count(*)` }).from(beats);
