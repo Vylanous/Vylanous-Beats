@@ -431,12 +431,28 @@ const app = new Hono()
 
   // ---- Presign an upload URL (artwork / preview / delivery files) ----
   .post(
-    "/admin/upload/presign",
+    "/admin/upload", 
     requireAdmin,
-    zValidator(
-      "json",
-      z.object({ filename: z.string(), contentType: z.string(), folder: z.string().optional() }),
-    ),
+    async (c) => {
+      const formData = await c.req.formData();
+      const file = formData.get("file") as File;
+      const folder = (formData.get("folder") as string) || "uploads";
+      if (!file) return c.json({ error: "No file" }, 400);
+      
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+      const buffer = await file.arrayBuffer();
+      
+      await s3.send(new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: key,
+        Body: new Uint8Array(buffer),
+        ContentType: file.type,
+      }));
+      
+      return c.json({ key }, 200);
+    },
+  )
     async (c) => {
       const { filename, contentType, folder } = c.req.valid("json");
       const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
