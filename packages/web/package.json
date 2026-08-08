@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "vite",
-    "start": "bun src/server.ts",
+    "start": "npx drizzle-kit push && bun src/server.ts",
     "typecheck": "tsc --noEmit",
     "lint": "cd ../.. && oxlint packages/web --deny-warnings --no-error-on-unmatched-pattern",
     "preview": "bun run build && vite preview",
