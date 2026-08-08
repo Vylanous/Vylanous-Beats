@@ -9,7 +9,7 @@ export default function About() {
       <section className="bg-mesh grain relative pt-32 pb-16">
         <div className="max-w-5xl mx-auto px-5 sm:px-8">
           <div className="flex flex-col md:flex-row items-center gap-10">
-            <img src="/brand/skull-mark.png" alt="Vylanous Beats" className="w-44 h-44 object-contain animate-spin-slow shrink-0" />
+            <img src="/brand/Favicon_sharp.png" alt="Vylanous Beats" className="w-44 h-44 object-contain animate-spin-slow shrink-0" />
             <div>
               <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">The Story</p>
               <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-[0.85]">Vylanous Beats</h1>
