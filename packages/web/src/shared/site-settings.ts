@@ -48,9 +48,9 @@ export const DEFAULT_THEME: ThemeColors = {
 };
 
 export const DEFAULT_BRAND: BrandAssets = {
-  squareLogoUrl: "/brand/skull-mark.png",
-  fullLogoUrl: "/brand/logo-full-transparent.png",
-  faviconUrl: "/brand/favicon-skull.png",
+  squareLogoUrl: "/brand/Favicon_sharp.png",
+  fullLogoUrl: "/brand/Logo_full_transparent.png",
+  faviconUrl: "/brand/Favicon_sharp.png",
 };
 
 export const FONT_PAIRS: FontPair[] = [
