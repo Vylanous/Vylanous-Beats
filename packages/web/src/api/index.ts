@@ -157,6 +157,8 @@ const settingsSchema = z.object({
 });
 
 const app = new Hono()
+  // Serve license PDFs explicitly before SPA fallback
+app.use('/licenses/*', serveStatic({ root: './public' }))
   .basePath("api")
   .use(
     cors({
