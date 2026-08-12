@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, FileText } from "lucide-react";
 import { Layout } from "../components/layout";
 import { Marquee } from "../components/marquee";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
@@ -62,6 +62,14 @@ export default function Licensing() {
               >
                 Browse Beats
               </Link>
+              <a
+                href={t.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center justify-center gap-1.5 font-body text-xs text-vb-muted hover:text-vb-purple-bright transition-colors"
+              >
+                <FileText size={13} /> Read the agreement (PDF)
+              </a>
             </div>
           ))}
         </div>

@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../database";
-import { orders, orderItems, beats } from "../database/schema";
+import { orders, orderItems } from "../database/schema";
 import { signIfKey } from "../lib/url-sign";
 import { stripe } from "../lib/stripe";
-import { sendDeliveryEmail } from "../lib/email";
+import { fulfillOrder } from "../lib/fulfill";
 
 export function ordersRoutes(app: Hono) {
   app.post("/orders/:id/confirm", async (c) => {
@@ -19,20 +19,8 @@ export function ordersRoutes(app: Hono) {
       try {
         const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
         if (session.payment_status === "paid") {
-          await db
-            .update(orders)
-            .set({ status: "paid", paidAt: new Date().toISOString() })
-            .where(eq(orders.id, id));
+          await fulfillOrder(id);
           order.status = "paid";
-          const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
-          for (const it of items) {
-            if (it.licenseTier === "exclusive") {
-              await db.update(beats).set({ soldExclusive: true, published: false }).where(eq(beats.id, it.beatId));
-            }
-          }
-          await sendDeliveryEmail(order.email, id, token).catch((e) =>
-            console.error("[email] paid order", e),
-          );
         }
       } catch (e) {
         console.error("[confirm] stripe retrieve failed", e);

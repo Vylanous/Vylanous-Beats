@@ -93,15 +93,58 @@ export async function resetAdminSettings(): Promise<{ settings: SiteSettings }> 
   return req<{ settings: SiteSettings }>("/admin/settings/reset", { method: "POST" });
 }
 
-/** Upload a file to Tigris via presigned PUT. Returns the stored object key. */
-export async function uploadFile(file: File, folder: string): Promise<string> {
+/** Files at or above this size skip the same-origin proxy (proxies/CDNs cap request bodies). */
+const PROXY_UPLOAD_LIMIT = 90 * 1024 * 1024;
+
+/** Upload straight to the bucket with a presigned PUT. Requires bucket CORS to allow this origin. */
+async function uploadViaPresign(file: File, folder: string): Promise<string> {
   const { url, key } = await adminApi.presign(file.name, file.type || "application/octet-stream", folder);
   const put = await fetch(url, {
     method: "PUT",
     body: file,
     headers: { "Content-Type": file.type || "application/octet-stream" },
   });
-  if (!put.ok) throw new Error("Upload failed");
+  if (!put.ok) throw new Error(`Upload failed (${put.status})`);
+  return key;
+}
+
+/**
+ * Upload a file and return the stored object key.
+ *
+ * Default path is the same-origin server proxy (`POST /api/admin/upload`) so
+ * uploads never depend on bucket CORS. Big files go direct via presigned PUT
+ * because request bodies through Cloudflare/Render are capped (~100MB).
+ */
+export async function uploadFile(file: File, folder: string): Promise<string> {
+  if (file.size >= PROXY_UPLOAD_LIMIT) return uploadViaPresign(file, folder);
+
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file);
+  form.append("folder", folder);
+
+  const res = await fetch("/api/admin/upload", {
+    method: "POST",
+    // No Content-Type header — the browser sets the multipart boundary.
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+
+  if (res.status === 401) {
+    clearToken();
+    throw new Error("unauthorized");
+  }
+  if (!res.ok) {
+    let msg = `Upload failed (${res.status})`;
+    try {
+      const j = (await res.json()) as { message?: string; error?: string };
+      msg = j.message || j.error || msg;
+    } catch {
+      /* noop */
+    }
+    throw new Error(msg);
+  }
+  const { key } = (await res.json()) as { key: string };
   return key;
 }
 

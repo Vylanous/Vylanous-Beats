@@ -14,11 +14,14 @@ export interface LicenseTier {
   features: string[];
   highlight?: boolean;
   badge?: string;
+  /** Public path to the signed license agreement PDF in /public (case-sensitive). */
+  pdfUrl: string;
 }
 
 export const LICENSE_TIERS: LicenseTier[] = [
   {
     id: "free",
+    pdfUrl: "/Licenses/Free_License_Agreement_VylanousBeats.pdf",
     name: "Free License",
     priceCents: 0,
     blurb: "Non-profit / demo use with credit.",
@@ -33,6 +36,7 @@ export const LICENSE_TIERS: LicenseTier[] = [
   },
   {
     id: "mp3",
+    pdfUrl: "/Licenses/MP3_Lease_Agreement_VylanousBeats.pdf",
     name: "MP3 Lease",
     priceCents: 2400,
     blurb: "Entry-level lease for releases.",
@@ -48,6 +52,7 @@ export const LICENSE_TIERS: LicenseTier[] = [
   },
   {
     id: "wav",
+    pdfUrl: "/Licenses/WAV_Lease_Agreement_VylanousBeats.pdf",
     name: "WAV Lease",
     priceCents: 4900,
     blurb: "Higher quality + bigger caps.",
@@ -65,6 +70,7 @@ export const LICENSE_TIERS: LicenseTier[] = [
   },
   {
     id: "unlimited",
+    pdfUrl: "/Licenses/Unlimited_License_VylanousBeats.pdf",
     name: "Unlimited Lease",
     priceCents: 9900,
     blurb: "No caps. Still non-exclusive.",
@@ -80,6 +86,7 @@ export const LICENSE_TIERS: LicenseTier[] = [
   },
   {
     id: "exclusive",
+    pdfUrl: "/Licenses/Exclusive_License_VylanousBeats.pdf",
     name: "Exclusive License",
     priceCents: 29900,
     blurb: "You own it. Beat removed from store.",

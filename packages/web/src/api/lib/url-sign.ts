@@ -8,9 +8,15 @@ import { s3, S3_BUCKET } from "./s3";
  */
 export async function signIfKey(key: string): Promise<string> {
   if (!key) return "";
+  // Already a usable URL, or a local file served from /public — never presign these,
+  // otherwise seeded/local assets turn into 404ing bucket URLs.
+  if (key.startsWith("/") || key.startsWith("http://") || key.startsWith("https://")) return key;
   try {
     return await getSignedUrl(
-      s3,
+      // @aws-sdk/client-s3 and s3-request-presigner can resolve slightly different
+      // @smithy/types versions, which makes the structurally identical client type
+      // mismatch. Runtime is unaffected.
+      s3 as unknown as Parameters<typeof getSignedUrl>[0],
       new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
       { expiresIn: 3600 }
     );

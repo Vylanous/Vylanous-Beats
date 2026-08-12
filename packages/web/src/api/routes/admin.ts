@@ -77,13 +77,56 @@ export function adminRoutes(app: Hono) {
       const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
       const key = `${folder || "uploads"}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
       const url = await getSignedUrl(
-        s3,
+        s3 as unknown as Parameters<typeof getSignedUrl>[0],
         new PutObjectCommand({ Bucket: S3_BUCKET, Key: key, ContentType: contentType }),
         { expiresIn: 600 },
       );
       return c.json({ url, key }, 200);
     },
   );
+
+  /**
+   * Server-side upload proxy. The browser posts multipart form-data here and the
+   * server streams the bytes to S3/R2 itself.
+   *
+   * Why: a presigned PUT straight from the browser is a cross-origin request to
+   * the bucket, so it fails with "Failed to fetch" unless bucket CORS is
+   * configured. Same-origin proxying removes that dependency entirely.
+   * Presigned PUT stays available for very large files (see /admin/upload/presign).
+   */
+  app.post("/admin/upload", requireAdmin, async (c) => {
+    let form: FormData;
+    try {
+      form = await c.req.formData();
+    } catch {
+      return c.json({ error: "invalid_form_data" }, 400);
+    }
+    const file = form.get("file");
+    if (!file || typeof file === "string") return c.json({ error: "file_missing" }, 400);
+    const folderRaw = form.get("folder");
+    const folder = typeof folderRaw === "string" && folderRaw ? folderRaw : "uploads";
+    if (!S3_BUCKET) return c.json({ error: "storage_not_configured", message: "S3_BUCKET is not set" }, 503);
+
+    const safeFolder = folder.replace(/[^a-zA-Z0-9/_-]/g, "_").replace(/^\/+|\/+$/g, "");
+    const safeName = (file.name || "file").replace(/[^a-zA-Z0-9._-]/g, "_");
+    const key = `${safeFolder || "uploads"}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: S3_BUCKET,
+          Key: key,
+          Body: bytes,
+          ContentType: file.type || "application/octet-stream",
+        }),
+      );
+    } catch (e) {
+      console.error("[upload] proxy put failed", { key, error: e });
+      return c.json({ error: "upload_failed", message: e instanceof Error ? e.message : "unknown" }, 502);
+    }
+    return c.json({ key }, 200);
+  });
 
   app.get("/admin/beats", requireAdmin, async (c) => {
     const all = await db.select().from(beats).orderBy(desc(beats.createdAt));
@@ -98,7 +141,9 @@ export function adminRoutes(app: Hono) {
   });
 
   app.get("/admin/beats/:id", requireAdmin, async (c) => {
-    const rows = await db.select().from(beats).where(eq(beats.id, c.req.param("id"))).limit(1);
+    const beatId = c.req.param("id");
+    if (!beatId) return c.json({ error: "missing_id" }, 400);
+    const rows = await db.select().from(beats).where(eq(beats.id, beatId)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
     return c.json(
@@ -161,7 +206,9 @@ export function adminRoutes(app: Hono) {
   });
 
   app.delete("/admin/beats/:id", requireAdmin, async (c) => {
-    await db.delete(beats).where(eq(beats.id, c.req.param("id")));
+    const beatId = c.req.param("id");
+    if (!beatId) return c.json({ error: "missing_id" }, 400);
+    await db.delete(beats).where(eq(beats.id, beatId));
     return c.json({ ok: true }, 200);
   });
 

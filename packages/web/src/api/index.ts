@@ -1,19 +1,17 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { serveStatic } from "hono/bun";
 import { seedDatabase } from "./seed";
 import { beatsRoutes } from "./routes/beats";
 import { checkoutRoutes } from "./routes/checkout";
 import { ordersRoutes } from "./routes/orders";
 import { publicRoutes } from "./routes/public";
 import { adminRoutes } from "./routes/admin";
+import { webhookRoutes } from "./routes/webhooks";
 
 // Seed on cold start (idempotent)
 seedDatabase().catch((e) => console.error("[seed] failed", e));
 
 const app = new Hono()
-  // Serve license PDFs explicitly before SPA fallback
-  .use('/licenses/*', serveStatic({ root: './public' }))
   .basePath("api")
   .use(
     cors({
@@ -29,6 +27,7 @@ beatsRoutes(app);
 checkoutRoutes(app);
 ordersRoutes(app);
 adminRoutes(app);
+webhookRoutes(app);
 
 export type AppType = typeof app;
 export default app;
