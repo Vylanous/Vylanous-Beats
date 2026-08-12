@@ -1,33 +1,59 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Context, Next } from "hono";
 
 /**
- * Lightweight single-admin auth. The store owner sets ADMIN_PASSWORD in Vercel
- * Environment Variables. On login we mint an HMAC-signed token (no DB needed)
- * the client stores in localStorage and sends as a Bearer header.
+ * Lightweight single-admin auth. The store owner sets ADMIN_PASSWORD and
+ * BETTER_AUTH_SECRET in environment variables. On login we mint an HMAC-signed
+ * token (no DB needed) the client stores in localStorage and sends as a Bearer
+ * header.
+ *
+ * Fail-closed: if either secret is missing, auth operations throw instead of
+ * silently falling back to a hardcoded default. Set both vars in every
+ * environment (see .env.template).
  */
 
 function secret(): string {
-  return process.env.BETTER_AUTH_SECRET || process.env.ADMIN_PASSWORD || "vylanous-admin-secret";
+  const s = process.env.BETTER_AUTH_SECRET;
+  if (!s) throw new Error("BETTER_AUTH_SECRET is not set");
+  return s;
 }
 
 export function adminPassword(): string {
-  return process.env.ADMIN_PASSWORD || "vylanous";
+  const p = process.env.ADMIN_PASSWORD;
+  if (!p) throw new Error("ADMIN_PASSWORD is not set");
+  return p;
+}
+
+const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+
+interface AdminTokenPayload {
+  sub: string; // unique token id
+  iat: number;
+  exp: number;
 }
 
 export function makeAdminToken(): string {
-  const exp = Date.now() + 1000 * 60 * 60 * 24 * 30; // 30 days
-  const payload = Buffer.from(String(exp)).toString("base64url");
-  const sig = createHmac("sha256", secret()).update(payload).digest("base64url");
-  return `${payload}.${sig}`;
+  const payload: AdminTokenPayload = {
+    sub: randomBytes(18).toString("base64url"),
+    iat: Date.now(),
+    exp: Date.now() + TOKEN_TTL_MS,
+  };
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const sig = createHmac("sha256", secret()).update(body).digest("base64url");
+  return `${body}.${sig}`;
 }
 
 export function verifyAdminToken(token: string | undefined | null): boolean {
   if (!token) return false;
   const parts = token.split(".");
   if (parts.length !== 2) return false;
-  const [payload, sig] = parts;
-  const expected = createHmac("sha256", secret()).update(payload).digest("base64url");
+  const [body, sig] = parts;
+  let expected: string;
+  try {
+    expected = createHmac("sha256", secret()).update(body).digest("base64url");
+  } catch {
+    return false;
+  }
   try {
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
@@ -35,13 +61,24 @@ export function verifyAdminToken(token: string | undefined | null): boolean {
   } catch {
     return false;
   }
-  const exp = Number(Buffer.from(payload, "base64url").toString("utf8"));
-  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  let payload: AdminTokenPayload;
+  try {
+    payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
+  } catch {
+    return false;
+  }
+  if (!payload || typeof payload.exp !== "number" || !Number.isFinite(payload.exp)) return false;
+  if (Date.now() > payload.exp) return false;
   return true;
 }
 
 export function checkPassword(input: string): boolean {
-  const expected = adminPassword();
+  let expected: string;
+  try {
+    expected = adminPassword();
+  } catch {
+    return false;
+  }
   try {
     const a = Buffer.from(input);
     const b = Buffer.from(expected);
