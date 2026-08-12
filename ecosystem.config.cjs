@@ -7,6 +7,8 @@ module.exports = {
       cwd: __dirname,
       script: "packages/web/src/server.ts",
       interpreter: "bun",
+      // Migrations are applied out-of-band by `bun run db:migrate` before start;
+      // the server itself never mutates the schema.
       exec_mode: "fork",
       instances: 1,
       autorestart: true,

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 import { Play, Pause, ArrowRight, Music4, ShieldCheck, Zap } from "lucide-react";
 import { Layout } from "../components/layout";
 import { Marquee } from "../components/marquee";
@@ -11,9 +11,13 @@ import { api } from "../lib/api";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
-  show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] } }),
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  }),
 };
 
 export default function Index() {

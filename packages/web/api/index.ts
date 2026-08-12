@@ -2,8 +2,16 @@
 // This bypasses the full Hono monolith and handles only the admin login
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const PASSWORD = process.env.ADMIN_PASSWORD || "vylanous";
-const SECRET = process.env.BETTER_AUTH_SECRET || PASSWORD || "vylanous-admin-secret";
+const PASSWORD = process.env.ADMIN_PASSWORD;
+const SECRET = process.env.ADMIN_TOKEN_SECRET || process.env.BETTER_AUTH_SECRET;
+
+// Fail loudly at import time rather than shipping a guessable default credential.
+if (!PASSWORD || PASSWORD.length < 10) {
+  throw new Error("ADMIN_PASSWORD must be set and at least 10 characters long");
+}
+if (!SECRET || SECRET.length < 16) {
+  throw new Error("ADMIN_TOKEN_SECRET (or BETTER_AUTH_SECRET) must be set and at least 16 characters long");
+}
 
 function makeToken(): string {
   const exp = Date.now() + 1000 * 60 * 60 * 24 * 30;

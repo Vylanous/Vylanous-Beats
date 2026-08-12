@@ -2,30 +2,53 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import Stripe from "stripe";
-import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { randomBytes, timingSafeEqual } from "node:crypto";
+import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db } from "./database";
-import { beats, orders, orderItems, subscribers, settings } from "./database/schema";
-import { seedDatabase } from "./seed";
+import { beats, orders, orderItems, subscribers, settings, type Beat } from "./database/schema";
+import type { PublicBeat } from "../shared/beats";
+import { ensureDatabaseReady } from "./startup";
 import { TIER_BY_ID, type LicenseTierId } from "../shared/licenses";
 import { s3, S3_BUCKET } from "./lib/s3";
-import { requireAdmin, checkPassword, makeAdminToken } from "./lib/admin-auth";
+import {
+  requireAdmin,
+  checkPassword,
+  makeAdminToken,
+  loginRateLimit,
+  resetLoginAttempts,
+} from "./lib/admin-auth";
 import { mergeSettings, type SiteSettings } from "../shared/site-settings";
-
-// Seed on cold start (idempotent)
-seedDatabase().catch((e) => console.error("[seed] failed", e));
 
 const stripeKey = process.env.STRIPE_SECRET_KEY || "";
 const stripe = stripeKey ? new Stripe(stripeKey) : null;
+const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 function appUrl(): string {
   return process.env.APP_URL || process.env.PUBLIC_URL || "";
 }
 
 function rid(prefix: string): string {
-  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return `${prefix}_${Date.now().toString(36)}${randomBytes(6).toString("hex")}`;
+}
+
+/** Unguessable download token (CSPRNG, ~256 bits). */
+function makeDownloadToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+/** Constant-time comparison for order download tokens. */
+function tokenMatches(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length > 0 && a.length === b.length && timingSafeEqual(a, b);
 }
 
 const cartItemSchema = z.object({
@@ -69,13 +92,36 @@ function makeSlug(title: string, id: string): string {
  * If the stored value is an S3 object key (not an http URL), return a
  * presigned GET url. Otherwise return it untouched (supports external URLs too).
  */
-/** Shape a beat row for public consumption: sign artwork + preview audio. */
-async function publicBeat<T extends { artworkUrl: string; audioUrl: string }>(b: T): Promise<T> {
-  return { ...b, artworkUrl: await signIfKey(b.artworkUrl), audioUrl: await signIfKey(b.audioUrl) };
+/**
+ * Shape a beat row for public consumption.
+ * Explicit allow-list: never leak `fileUrls` (the S3 keys of paid deliverables).
+ */
+async function publicBeat(b: Beat): Promise<PublicBeat> {
+  return {
+    id: b.id,
+    title: b.title,
+    slug: b.slug,
+    bpm: b.bpm,
+    musicalKey: b.musicalKey,
+    genre: b.genre,
+    mood: b.mood,
+    tags: b.tags,
+    artworkUrl: await signIfKey(b.artworkUrl),
+    audioUrl: await signIfKey(b.audioUrl),
+    priceFrom: b.priceFrom,
+    soldExclusive: b.soldExclusive,
+    featured: b.featured,
+    plays: b.plays,
+    createdAt: b.createdAt,
+  };
 }
 
 async function signIfKey(key: string): Promise<string> {
   if (!key) return "";
+  // Local public assets (/beats/...) and absolute URLs are served as-is;
+  // only bare S3/R2 object keys get presigned.
+  if (key.startsWith("/") || key.startsWith("http://") || key.startsWith("https://")) return key;
+  if (!S3_BUCKET) return "";
   try {
     return await getSignedUrl(
       s3,
@@ -114,9 +160,6 @@ async function loadSettings(): Promise<SiteSettings> {
 
 /** Sign any brand asset urls that are stored S3 keys (uploads); pass through absolute/default (/brand/*) paths untouched. */
 async function signBrandUrl(value: string): Promise<string> {
-  if (!value || value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://")) {
-    return value;
-  }
   return signIfKey(value);
 }
 
@@ -157,17 +200,55 @@ const settingsSchema = z.object({
 });
 
 const app = new Hono()
-  // Serve license PDFs explicitly before SPA fallback
-app.use('/licenses/*', serveStatic({ root: './public' }))
   .basePath("api")
   .use(
     cors({
-      origin: (origin) => origin ?? "*",
+      // Same-origin SPA + explicitly allow-listed clients (mobile dev, custom domains)
+      // via ALLOWED_ORIGINS="https://a.com,https://b.com". Never reflect arbitrary origins
+      // while credentials are enabled.
+      origin: (origin) => (origin && ALLOWED_ORIGINS.includes(origin) ? origin : ""),
       credentials: true,
       exposeHeaders: ["set-auth-token"],
     }),
   )
+  // Fail fast and loudly if migrations were never applied; seeds run once.
+  .use(async (_c, next) => {
+    await ensureDatabaseReady();
+    await next();
+  })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
+
+  // ---- Stripe webhook (authoritative source of "paid") ----
+  // Reads the RAW body for signature verification — do not add body parsing
+  // middleware ahead of this route.
+  .post("/stripe/webhook", async (c) => {
+    if (!stripe || !stripeWebhookSecret) {
+      return c.json({ error: "stripe_not_configured" }, 503);
+    }
+    const signature = c.req.header("stripe-signature");
+    if (!signature) return c.json({ error: "missing_signature" }, 400);
+
+    const raw = await c.req.text();
+    let event: Stripe.Event;
+    try {
+      event = await stripe.webhooks.constructEventAsync(raw, signature, stripeWebhookSecret);
+    } catch (e) {
+      console.error("[stripe] webhook signature verification failed", e);
+      return c.json({ error: "invalid_signature" }, 400);
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      const orderId = session.metadata?.orderId;
+      if (orderId) {
+        await fulfillOrder(orderId);
+      } else {
+        console.error("[stripe] session without orderId metadata", session.id);
+      }
+    }
+
+    return c.json({ received: true }, 200);
+  })
 
   // ---- Site settings (public — theme/font/brand for re-skin) ----
   .get("/settings", async (c) => {
@@ -200,12 +281,13 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
   })
   .post("/beats/:id/play", async (c) => {
     const id = c.req.param("id");
-    const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
-    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
-    await db
+    // Atomic increment — read-modify-write loses counts under concurrency.
+    const updated = await db
       .update(beats)
-      .set({ plays: (rows[0].plays ?? 0) + 1 })
-      .where(eq(beats.id, id));
+      .set({ plays: sql`${beats.plays} + 1` })
+      .where(eq(beats.id, id))
+      .returning({ id: beats.id });
+    if (updated.length === 0) return c.json({ error: "Not found" }, 404);
     return c.json({ ok: true }, 200);
   })
 
@@ -226,10 +308,14 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
 
     for (const item of body.items) {
       const rows = await db.select().from(beats).where(eq(beats.id, item.beatId)).limit(1);
-      if (rows.length === 0) continue;
-      const beat = rows[0];
       const tier = TIER_BY_ID[item.tier];
-      if (!tier) continue;
+      if (rows.length === 0 || !tier) {
+        return c.json(
+          { error: "item_unavailable", message: "An item in your cart is no longer available. Refresh and try again." },
+          409,
+        );
+      }
+      const beat = rows[0];
       if (item.tier === "exclusive" && beat.soldExclusive) {
         return c.json({ error: `"${beat.title}" is already sold exclusively.` }, 409);
       }
@@ -239,13 +325,24 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
       } catch {
         files = {};
       }
+      // Never silently deliver the tagged preview in place of a paid deliverable.
+      const fileUrl = files[item.tier] || (tier.priceCents === 0 ? beat.audioUrl : "");
+      if (!fileUrl) {
+        return c.json(
+          {
+            error: "tier_unavailable",
+            message: `"${beat.title}" has no ${tier.name} file uploaded yet. Contact us and we'll sort it.`,
+          },
+          409,
+        );
+      }
       resolved.push({
         beatId: beat.id,
         beatTitle: beat.title,
         tier: item.tier,
         licenseName: tier.name,
         priceCents: tier.priceCents,
-        fileUrl: files[item.tier] || beat.audioUrl,
+        fileUrl,
         artworkUrl: beat.artworkUrl,
       });
     }
@@ -254,7 +351,7 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
 
     const totalCents = resolved.reduce((s, i) => s + i.priceCents, 0);
     const orderId = rid("order");
-    const downloadToken = rid("dl") + rid("tk");
+    const downloadToken = makeDownloadToken();
 
     // Free-only orders: skip Stripe, mark paid immediately
     const allFree = totalCents === 0;
@@ -309,19 +406,21 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: body.email,
-      line_items: resolved
-        .filter((i) => i.priceCents > 0)
-        .map((i) => ({
-          quantity: 1,
-          price_data: {
-            currency: "cad",
-            unit_amount: i.priceCents,
-            product_data: {
-              name: `${i.beatTitle} — ${i.licenseName}`,
-              images: i.artworkUrl.startsWith("http") ? [i.artworkUrl] : [],
+      line_items: await Promise.all(
+        resolved
+          .filter((i) => i.priceCents > 0)
+          .map(async (i) => ({
+            quantity: 1,
+            price_data: {
+              currency: "cad",
+              unit_amount: i.priceCents,
+              product_data: {
+                name: `${i.beatTitle} — ${i.licenseName}`,
+                images: await signedHttpImage(i.artworkUrl),
+              },
             },
-          },
-        })),
+          })),
+      ),
       metadata: { orderId, downloadToken },
       success_url: `${base}/success?order=${orderId}&token=${downloadToken}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/cart?cancelled=1`,
@@ -339,27 +438,14 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
     const rows = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const order = rows[0];
-    if (order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
+    if (!tokenMatches(token, order.downloadToken)) return c.json({ error: "Invalid token" }, 403);
 
     if (order.status !== "paid" && stripe && order.stripeSessionId) {
       try {
         const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
         if (session.payment_status === "paid") {
-          await db
-            .update(orders)
-            .set({ status: "paid", paidAt: new Date().toISOString() })
-            .where(eq(orders.id, id));
+          await fulfillOrder(id);
           order.status = "paid";
-          // mark exclusives as sold
-          const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
-          for (const it of items) {
-            if (it.licenseTier === "exclusive") {
-              await db.update(beats).set({ soldExclusive: true, published: false }).where(eq(beats.id, it.beatId));
-            }
-          }
-          await sendDeliveryEmail(order.email, id, token).catch((e) =>
-            console.error("[email] paid order", e),
-          );
         }
       } catch (e) {
         console.error("[confirm] stripe retrieve failed", e);
@@ -376,7 +462,7 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
     const rows = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const order = rows[0];
-    if (order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
+    if (!tokenMatches(token, order.downloadToken)) return c.json({ error: "Invalid token" }, 403);
     const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
     const unlocked = order.status === "paid";
     return c.json(
@@ -420,13 +506,19 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
   // ========================================================================
 
   // ---- Login: exchange password for a token ----
-  .post("/admin/login", zValidator("json", z.object({ password: z.string() })), async (c) => {
-    const { password } = c.req.valid("json");
-    if (!checkPassword(password)) {
-      return c.json({ error: "invalid_password" }, 401);
-    }
-    return c.json({ token: makeAdminToken() }, 200);
-  })
+  .post(
+    "/admin/login",
+    loginRateLimit,
+    zValidator("json", z.object({ password: z.string() })),
+    async (c) => {
+      const { password } = c.req.valid("json");
+      if (!checkPassword(password)) {
+        return c.json({ error: "invalid_password" }, 401);
+      }
+      resetLoginAttempts(c);
+      return c.json({ token: makeAdminToken() }, 200);
+    },
+  )
 
   // ---- Verify token still valid (for app boot) ----
   .get("/admin/me", requireAdmin, (c) => c.json({ ok: true }, 200))
@@ -468,7 +560,9 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
 
   // ---- Get single beat (raw, for editing) ----
   .get("/admin/beats/:id", requireAdmin, async (c) => {
-    const rows = await db.select().from(beats).where(eq(beats.id, c.req.param("id"))).limit(1);
+    const beatId = c.req.param("id");
+    if (!beatId) return c.json({ error: "Missing id" }, 400);
+    const rows = await db.select().from(beats).where(eq(beats.id, beatId)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
     return c.json(
@@ -534,7 +628,9 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
 
   // ---- Delete beat ----
   .delete("/admin/beats/:id", requireAdmin, async (c) => {
-    await db.delete(beats).where(eq(beats.id, c.req.param("id")));
+    const beatId = c.req.param("id");
+    if (!beatId) return c.json({ error: "Missing id" }, 400);
+    await db.delete(beats).where(eq(beats.id, beatId));
     return c.json({ ok: true }, 200);
   })
 
@@ -617,6 +713,52 @@ export type AppType = typeof app;
 export default app;
 
 // --- helpers ---
+
+/**
+ * Stripe only accepts absolute http(s) image URLs on `product_data.images`.
+ * Presign S3 keys; drop anything that can't be turned into an absolute URL
+ * (a relative `/beats/x.jpg` would make the Checkout session creation fail).
+ */
+async function signedHttpImage(url: string): Promise<string[]> {
+  const signed = await signIfKey(url);
+  if (signed.startsWith("http://") || signed.startsWith("https://")) return [signed];
+  return [];
+}
+
+/**
+ * Mark an order paid and apply the side effects of a sale. Idempotent: safe to
+ * call from both the Stripe webhook and the success-page confirm route, and
+ * safe to call twice for the same order.
+ */
+async function fulfillOrder(orderId: string): Promise<void> {
+  const rows = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (rows.length === 0) {
+    console.error("[fulfill] unknown order", orderId);
+    return;
+  }
+  const order = rows[0];
+  if (order.status === "paid") return; // already fulfilled
+
+  await db
+    .update(orders)
+    .set({ status: "paid", paidAt: new Date().toISOString() })
+    .where(eq(orders.id, orderId));
+
+  // An exclusive sale takes the beat off the market.
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  for (const item of items) {
+    if (item.licenseTier === "exclusive") {
+      await db
+        .update(beats)
+        .set({ soldExclusive: true, published: false })
+        .where(eq(beats.id, item.beatId));
+    }
+  }
+
+  await sendDeliveryEmail(order.email, order.id, order.downloadToken).catch((e) =>
+    console.error("[email] paid order", e),
+  );
+}
 
 async function sendDeliveryEmail(email: string, orderId: string, token: string) {
   const base = appUrl();

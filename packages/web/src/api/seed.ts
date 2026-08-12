@@ -127,12 +127,11 @@ export async function seedDatabase() {
   if ((existing[0]?.c ?? 0) > 0) return;
 
   for (const b of SEED) {
+    // Only the free tier maps to the tagged preview. Paid tiers are left
+    // UNSET on purpose: checkout returns 409 tier_unavailable until real
+    // deliverables are uploaded, so we can never sell someone a preview.
     const fileUrls = JSON.stringify({
       free: `/beats/audio/preview-${b.audio}.mp3`,
-      mp3: `/beats/audio/preview-${b.audio}.mp3`,
-      wav: `/beats/audio/preview-${b.audio}.mp3`,
-      unlimited: `/beats/audio/preview-${b.audio}.mp3`,
-      exclusive: `/beats/audio/preview-${b.audio}.mp3`,
     });
     await db.insert(beats).values({
       id: b.id,
