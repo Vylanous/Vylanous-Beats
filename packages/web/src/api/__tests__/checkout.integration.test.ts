@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { eq } from "drizzle-orm";
 
 // Set env BEFORE importing the app / db so the temp DB is used.
 const dbDir = mkdtempSync(join(tmpdir(), "vylanous-test-"));
@@ -12,6 +13,9 @@ process.env.BETTER_AUTH_SECRET = "integration-test-secret-that-is-long-enough";
 process.env.STRIPE_SECRET_KEY = "";
 process.env.RESEND_API_KEY = "";
 process.env.APP_URL = "";
+
+const { createTestSchema } = await import("./create-schema");
+await createTestSchema(process.env.DATABASE_URL);
 
 const [{ default: app }, { db }, { beats }, { orders, orderItems }] = await Promise.all([
   import("../index"),
@@ -67,12 +71,12 @@ describe("checkout", () => {
     expect(body.orderId).toBeTruthy();
     expect(body.token).toBeTruthy();
 
-    const orderRows = await db.select().from(orders).where((o) => o.id === body.orderId);
+    const orderRows = await db.select().from(orders).where(eq(orders.id, body.orderId));
     expect(orderRows.length).toBe(1);
     expect(orderRows[0].status).toBe("paid");
     expect(orderRows[0].totalCents).toBe(0);
 
-    const itemRows = await db.select().from(orderItems).where((i) => i.orderId === body.orderId);
+    const itemRows = await db.select().from(orderItems).where(eq(orderItems.orderId, body.orderId));
     expect(itemRows.length).toBe(1);
     expect(itemRows[0].licenseTier).toBe("free");
   });
