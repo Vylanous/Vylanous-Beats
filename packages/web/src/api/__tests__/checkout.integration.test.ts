@@ -14,9 +14,6 @@ process.env.STRIPE_SECRET_KEY = "";
 process.env.RESEND_API_KEY = "";
 process.env.APP_URL = "";
 
-const { createTestSchema } = await import("./create-schema");
-await createTestSchema(process.env.DATABASE_URL);
-
 const [{ default: app }, { db }, { beats }, { orders, orderItems }] = await Promise.all([
   import("../index"),
   import("../database"),
