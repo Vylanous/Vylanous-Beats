@@ -13,9 +13,10 @@ process.env.STRIPE_SECRET_KEY = "";
 process.env.RESEND_API_KEY = "";
 process.env.APP_URL = "";
 
-const [{ default: app }, { db }, { beats }] = await Promise.all([
+const [{ default: app }, { db }, { beats }, { orders, orderItems }] = await Promise.all([
   import("../index"),
   import("../database"),
+  import("../database/schema"),
   import("../database/schema"),
 ]);
 
@@ -66,17 +67,10 @@ describe("checkout", () => {
     expect(body.orderId).toBeTruthy();
     expect(body.token).toBeTruthy();
 
-    const orderRows = await db
-      .select()
-      .from(beats)
-      .where((b) => b.id === body.orderId);
-    void orderRows;
-
-    const { orders, orderItems } = await import("../database/schema");
-    const orderRows2 = await db.select().from(orders).where((o) => o.id === body.orderId);
-    expect(orderRows2.length).toBe(1);
-    expect(orderRows2[0].status).toBe("paid");
-    expect(orderRows2[0].totalCents).toBe(0);
+    const orderRows = await db.select().from(orders).where((o) => o.id === body.orderId);
+    expect(orderRows.length).toBe(1);
+    expect(orderRows[0].status).toBe("paid");
+    expect(orderRows[0].totalCents).toBe(0);
 
     const itemRows = await db.select().from(orderItems).where((i) => i.orderId === body.orderId);
     expect(itemRows.length).toBe(1);
