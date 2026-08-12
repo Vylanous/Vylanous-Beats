@@ -4,6 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { eq, desc, and } from "drizzle-orm";
 import Stripe from "stripe";
+import { randomBytes } from "node:crypto";
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db } from "./database";
@@ -24,8 +25,9 @@ function appUrl(): string {
   return process.env.APP_URL || process.env.PUBLIC_URL || "";
 }
 
+/** Cryptographically-random id so tokens/ids aren't guessable. */
 function rid(prefix: string): string {
-  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return `${prefix}_${Date.now().toString(36)}${randomBytes(6).toString("hex")}`;
 }
 
 const cartItemSchema = z.object({
@@ -93,23 +95,47 @@ async function signIfKey(key: string): Promise<string> {
   }
 }
 
+/** Parse the JSON `fileUrls` blob defensively; never let a malformed blob crash checkout. */
+function parseFileUrls(raw: string | null | undefined): Record<string, string> {
+  if (!raw) return {};
+  try {
+    const v = JSON.parse(raw);
+    if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, string>;
+  } catch {
+    // fall through
+  }
+  return {};
+}
+
 const SETTINGS_ID = "site";
+const SETTINGS_TTL_MS = 30_000;
+let settingsCache: { value: SiteSettings; at: number } | null = null;
+function invalidateSettingsCache(): void {
+  settingsCache = null;
+}
 
 async function loadSettings(): Promise<SiteSettings> {
-  // The settings table might not exist yet in some environments (fresh DB/migrations not run).
-  // Wrap the DB access in try/catch so the app still boots even if migrations weren't applied.
+  if (settingsCache && Date.now() - settingsCache.at < SETTINGS_TTL_MS) {
+    return settingsCache.value;
+  }
+  let value: SiteSettings;
   try {
     const rows = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
-    if (rows.length === 0) return mergeSettings(null);
-    try {
-      return mergeSettings(JSON.parse(rows[0].json || "{}"));
-    } catch {
-      return mergeSettings(null);
+    if (rows.length === 0) {
+      value = mergeSettings(null);
+    } else {
+      try {
+        value = mergeSettings(JSON.parse(rows[0].json || "{}"));
+      } catch {
+        value = mergeSettings(null);
+      }
     }
   } catch (e) {
     console.error("[db] loadSettings failed (table may be missing)", e);
-    return mergeSettings(null);
+    value = mergeSettings(null);
   }
+  settingsCache = { value, at: Date.now() };
+  return value;
 }
 
 /** Sign any brand asset urls that are stored S3 keys (uploads); pass through absolute/default (/brand/*) paths untouched. */
@@ -233,12 +259,7 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
       if (item.tier === "exclusive" && beat.soldExclusive) {
         return c.json({ error: `"${beat.title}" is already sold exclusively.` }, 409);
       }
-      let files: Record<string, string> = {};
-      try {
-        files = JSON.parse(beat.fileUrls || "{}");
-      } catch {
-        files = {};
-      }
+      const files = parseFileUrls(beat.fileUrls);
       resolved.push({
         beatId: beat.id,
         beatTitle: beat.title,
@@ -254,34 +275,37 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
 
     const totalCents = resolved.reduce((s, i) => s + i.priceCents, 0);
     const orderId = rid("order");
-    const downloadToken = rid("dl") + rid("tk");
+    const downloadToken = randomBytes(24).toString("base64url");
 
     // Free-only orders: skip Stripe, mark paid immediately
     const allFree = totalCents === 0;
 
-    await db.insert(orders).values({
-      id: orderId,
-      email: body.email,
-      name: body.name,
-      status: allFree ? "paid" : "pending",
-      totalCents,
-      currency: "cad",
-      downloadToken,
-      paidAt: allFree ? new Date().toISOString() : null,
-    });
-
-    for (const item of resolved) {
-      await db.insert(orderItems).values({
-        id: rid("item"),
-        orderId,
-        beatId: item.beatId,
-        beatTitle: item.beatTitle,
-        licenseTier: item.tier,
-        licenseName: item.licenseName,
-        priceCents: item.priceCents,
-        fileUrl: item.fileUrl,
+    // Atomic: insert the order and all line items in one transaction so a
+    // mid-loop failure can't leave a partial order / partial delivery.
+    await db.transaction(async (tx) => {
+      await tx.insert(orders).values({
+        id: orderId,
+        email: body.email,
+        name: body.name,
+        status: allFree ? "paid" : "pending",
+        totalCents,
+        currency: "cad",
+        downloadToken,
+        paidAt: allFree ? new Date().toISOString() : null,
       });
-    }
+      for (const item of resolved) {
+        await tx.insert(orderItems).values({
+          id: rid("item"),
+          orderId,
+          beatId: item.beatId,
+          beatTitle: item.beatTitle,
+          licenseTier: item.tier,
+          licenseName: item.licenseName,
+          priceCents: item.priceCents,
+          fileUrl: item.fileUrl,
+        });
+      }
+    });
 
     if (allFree) {
       await sendDeliveryEmail(body.email, orderId, downloadToken).catch((e) =>
@@ -538,16 +562,25 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
     return c.json({ ok: true }, 200);
   })
 
-  // ---- Orders list ----
+  // ---- Orders list (single join — fixes the N+1) ----
   .get("/admin/orders", requireAdmin, async (c) => {
-    const all = await db.select().from(orders).orderBy(desc(orders.createdAt)).limit(200);
-    const withItems = await Promise.all(
-      all.map(async (o) => {
-        const items = await db.select().from(orderItems).where(eq(orderItems.orderId, o.id));
-        return { ...o, items };
-      }),
-    );
-    return c.json({ orders: withItems }, 200);
+    const rows = await db
+      .select({ order: orders, item: orderItems })
+      .from(orders)
+      .leftJoin(orderItems, eq(orderItems.orderId, orders.id))
+      .orderBy(desc(orders.createdAt))
+      .limit(200);
+    type OrderWithItems = typeof orders.$inferSelect & { items: (typeof orderItems.$inferSelect)[] };
+    const byId = new Map<string, OrderWithItems>();
+    for (const { order, item } of rows) {
+      let entry = byId.get(order.id);
+      if (!entry) {
+        entry = { ...order, items: [] };
+        byId.set(order.id, entry);
+      }
+      if (item) entry.items.push(item);
+    }
+    return c.json({ orders: [...byId.values()] }, 200);
   })
 
   // ---- Subscribers list ----
@@ -579,6 +612,7 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
     } else {
       await db.update(settings).set({ json, updatedAt: new Date().toISOString() }).where(eq(settings.id, SETTINGS_ID));
     }
+    invalidateSettingsCache();
     return c.json({ settings: merged }, 200);
   })
   .post("/admin/settings/reset", requireAdmin, async (c) => {
@@ -590,6 +624,7 @@ app.use('/licenses/*', serveStatic({ root: './public' }))
     } else {
       await db.update(settings).set({ json, updatedAt: new Date().toISOString() }).where(eq(settings.id, SETTINGS_ID));
     }
+    invalidateSettingsCache();
     return c.json({ settings: merged }, 200);
   })
 
@@ -621,27 +656,35 @@ export default app;
 async function sendDeliveryEmail(email: string, orderId: string, token: string) {
   const base = appUrl();
   const link = `${base}/success?order=${orderId}&token=${token}`;
-  // Use platform send-email CLI if available
-  try {
-    const proc = Bun.spawn(
-      [
-        "send-email",
-        "--to",
-        email,
-        "--subject",
-        "Your Vylanous Beats download is ready",
-        "--html",
-        `<div style="font-family:sans-serif;background:#0a0a0c;color:#edeef2;padding:32px;border-radius:12px">
-          <h1 style="color:#a24df5;letter-spacing:1px">VYLANOUS BEATS</h1>
-          <p>Thanks for your purchase. Your beats are ready to download.</p>
-          <p><a href="${link}" style="background:#7c2fcb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Download your beats</a></p>
-          <p style="color:#7a7c88;font-size:13px">Order ${orderId}. Keep this email — your download link is private.</p>
-        </div>`,
-      ],
-      { stdout: "pipe", stderr: "pipe" },
-    );
-    await proc.exited;
-  } catch (e) {
-    console.error("[email] send failed", e);
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    // Fail loudly instead of silently swallowing lost delivery emails.
+    throw new Error("RESEND_API_KEY is not set; cannot send delivery email");
+  }
+
+  const from = process.env.EMAIL_FROM || "Vylanous Beats <onboarding@resend.dev>";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      subject: "Your Vylanous Beats download is ready",
+      html: `<div style="font-family:sans-serif;background:#0a0a0c;color:#edeef2;padding:32px;border-radius:12px">
+        <h1 style="color:#a24df5;letter-spacing:1px">VYLANOUS BEATS</h1>
+        <p>Thanks for your purchase. Your beats are ready to download.</p>
+        <p><a href="${link}" style="background:#7c2fcb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Download your beats</a></p>
+        <p style="color:#7a7c88;font-size:13px">Order ${orderId}. Keep this email — your download link is private.</p>
+      </div>`,
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`resend email failed ${res.status}: ${detail}`);
   }
 }
