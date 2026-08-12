@@ -101,7 +101,15 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
     body: file,
     headers: { "Content-Type": file.type || "application/octet-stream" },
   });
-  if (!put.ok) throw new Error("Upload failed");
+  if (!put.ok) {
+    let detail = "";
+    try {
+      detail = (await put.text()).slice(0, 200);
+    } catch {
+      /* noop */
+    }
+    throw new Error(`Upload failed (${put.status})${detail ? `: ${detail}` : ""}`);
+  }
   return key;
 }
 
