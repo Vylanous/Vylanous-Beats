@@ -41,14 +41,27 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setIsPlaying(false);
       setProgress(0);
     };
+    const onError = () => {
+      // A missing/expired preview url used to fail silently — the play button
+      // just did nothing. Surface it in the console and reset the UI state.
+      try {
+        console.error("[player] preview failed to load", audio.src, audio.error?.message);
+      } catch {
+        /* noop */
+      }
+      setIsPlaying(false);
+      setProgress(0);
+    };
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onLoaded);
     audio.addEventListener("ended", onEnd);
+    audio.addEventListener("error", onError);
     return () => {
       audio.pause();
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", onLoaded);
       audio.removeEventListener("ended", onEnd);
+      audio.removeEventListener("error", onError);
     };
   }, []);
 
@@ -56,6 +69,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     (beat: PlayingBeat) => {
       const audio = audioRef.current;
       if (!audio) return;
+      if (!beat.audioUrl) {
+        try {
+          console.error("[player] beat has no playable preview url", beat.id, beat.title);
+        } catch {
+          /* noop */
+        }
+        return;
+      }
       if (current?.id === beat.id) {
         if (audio.paused) {
           audio.play();
