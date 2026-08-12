@@ -10,7 +10,7 @@ import { requireAdmin, checkPassword, makeAdminToken } from "../lib/admin-auth";
 import { loadSettings, publicSettings, invalidateSettingsCache, SETTINGS_ID } from "../lib/settings";
 import { mergeSettings } from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
-import { signIfKey } from "../lib/url-sign";
+import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET } from "../lib/s3";
 
 const beatInputSchema = z.object({
@@ -54,6 +54,12 @@ const settingsSchema = z.object({
     .optional(),
 });
 
+function normalizeFileUrls(files: Record<string, string> | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(files || {})) out[k] = normalizeKey(v);
+  return out;
+}
+
 export function adminRoutes(app: Hono) {
   app.post("/admin/login", zValidator("json", z.object({ password: z.string() })), async (c) => {
     const { password } = c.req.valid("json");
@@ -90,8 +96,10 @@ export function adminRoutes(app: Hono) {
     const withUrls = await Promise.all(
       all.map(async (b) => ({
         ...b,
-        artworkUrl: await signIfKey(b.artworkUrl),
-        audioUrl: await signIfKey(b.audioUrl),
+        // NOTE: never overwrite the raw keys here — the edit form saves these
+        // values straight back, and persisting a presigned url corrupts the row.
+        artworkSignedUrl: await signIfKey(b.artworkUrl),
+        audioSignedUrl: await signIfKey(b.audioUrl),
       })),
     );
     return c.json({ beats: withUrls }, 200);
@@ -126,9 +134,9 @@ export function adminRoutes(app: Hono) {
       genre: input.genre || "Hip-Hop",
       mood: input.mood,
       tags: input.tags,
-      artworkUrl: input.artworkUrl,
-      audioUrl: input.audioUrl,
-      fileUrls: JSON.stringify(input.fileUrls || {}),
+      artworkUrl: normalizeKey(input.artworkUrl),
+      audioUrl: normalizeKey(input.audioUrl),
+      fileUrls: JSON.stringify(normalizeFileUrls(input.fileUrls)),
       priceFrom: input.priceFrom ?? 2400,
       soldExclusive: input.soldExclusive ?? false,
       featured: input.featured ?? false,
@@ -149,9 +157,9 @@ export function adminRoutes(app: Hono) {
     if (input.genre !== undefined) patch.genre = input.genre;
     if (input.mood !== undefined) patch.mood = input.mood;
     if (input.tags !== undefined) patch.tags = input.tags;
-    if (input.artworkUrl !== undefined) patch.artworkUrl = input.artworkUrl;
-    if (input.audioUrl !== undefined) patch.audioUrl = input.audioUrl;
-    if (input.fileUrls !== undefined) patch.fileUrls = JSON.stringify(input.fileUrls);
+    if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
+    if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
+    if (input.fileUrls !== undefined) patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
     if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
     if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
     if (input.featured !== undefined) patch.featured = input.featured;
