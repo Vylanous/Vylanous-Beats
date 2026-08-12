@@ -11,7 +11,7 @@ import { loadSettings, publicSettings, invalidateSettingsCache, SETTINGS_ID } fr
 import { mergeSettings } from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
-import { s3, S3_BUCKET } from "../lib/s3";
+import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
 
 const beatInputSchema = z.object({
   title: z.string().min(1),
@@ -79,6 +79,16 @@ export function adminRoutes(app: Hono) {
       z.object({ filename: z.string(), contentType: z.string(), folder: z.string().optional() }),
     ),
     async (c) => {
+      if (!S3_CONFIGURED) {
+        return c.json(
+          {
+            error: "storage_not_configured",
+            message:
+              "Object storage is not configured. Set R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY (or the S3_* equivalents) on the server.",
+          },
+          503,
+        );
+      }
       const { filename, contentType, folder } = c.req.valid("json");
       const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
       const key = `${folder || "uploads"}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
