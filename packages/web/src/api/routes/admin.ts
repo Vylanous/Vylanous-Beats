@@ -35,6 +35,25 @@ const beatInputSchema = z.object({
   published: z.boolean().default(true),
 });
 
+// Keep PATCH-style updates free of field defaults. Applying `.partial()` to the
+// create schema would allow its media defaults to replace omitted artwork/audio
+// fields when an admin only changes `featured` or `published`.
+const beatUpdateSchema = z.object({
+  title: z.string().min(1).optional(),
+  bpm: z.number().int().min(0).max(400).optional(),
+  musicalKey: z.string().optional(),
+  genre: z.string().optional(),
+  mood: z.string().optional(),
+  tags: z.string().optional(),
+  artworkUrl: z.string().optional(),
+  audioUrl: z.string().optional(),
+  fileUrls: z.record(z.string(), z.string()).optional(),
+  priceFrom: z.number().int().min(0).optional(),
+  soldExclusive: z.boolean().optional(),
+  featured: z.boolean().optional(),
+  published: z.boolean().optional(),
+});
+
 const settingsSchema = z.object({
   theme: z
     .object({
@@ -205,35 +224,30 @@ export function adminRoutes(app: Hono) {
     return c.json({ id, slug }, 200);
   });
 
-  app.put(
-    "/admin/beats/:id",
-    requireAdmin,
-    zValidator("json", beatInputSchema.partial()),
-    async (c) => {
-      const id = c.req.param("id");
-      if (!id) return c.json({ error: "invalid_beat_id" }, 400);
-      const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
-      if (rows.length === 0) return c.json({ error: "Not found" }, 404);
-      const input = c.req.valid("json");
-      const patch: Record<string, unknown> = {};
-      if (input.title !== undefined) patch.title = input.title;
-      if (input.bpm !== undefined) patch.bpm = input.bpm;
-      if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
-      if (input.genre !== undefined) patch.genre = input.genre;
-      if (input.mood !== undefined) patch.mood = input.mood;
-      if (input.tags !== undefined) patch.tags = input.tags;
-      if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
-      if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
-      if (input.fileUrls !== undefined)
-        patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
-      if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
-      if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
-      if (input.featured !== undefined) patch.featured = input.featured;
-      if (input.published !== undefined) patch.published = input.published;
-      await db.update(beats).set(patch).where(eq(beats.id, id));
-      return c.json({ ok: true }, 200);
-    },
-  );
+  app.put("/admin/beats/:id", requireAdmin, zValidator("json", beatUpdateSchema), async (c) => {
+    const id = c.req.param("id");
+    if (!id) return c.json({ error: "invalid_beat_id" }, 400);
+    const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
+    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
+    const input = c.req.valid("json");
+    const patch: Record<string, unknown> = {};
+    if (input.title !== undefined) patch.title = input.title;
+    if (input.bpm !== undefined) patch.bpm = input.bpm;
+    if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
+    if (input.genre !== undefined) patch.genre = input.genre;
+    if (input.mood !== undefined) patch.mood = input.mood;
+    if (input.tags !== undefined) patch.tags = input.tags;
+    if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
+    if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
+    if (input.fileUrls !== undefined)
+      patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
+    if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
+    if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
+    if (input.featured !== undefined) patch.featured = input.featured;
+    if (input.published !== undefined) patch.published = input.published;
+    await db.update(beats).set(patch).where(eq(beats.id, id));
+    return c.json({ ok: true }, 200);
+  });
 
   app.delete("/admin/beats/:id", requireAdmin, async (c) => {
     const id = c.req.param("id");

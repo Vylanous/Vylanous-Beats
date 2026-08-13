@@ -66,3 +66,9 @@
 - [x] Show only applicable controls and contextual guidance in the section editor.
 - [x] Restore monorepo type checking by adding the missing desktop Node.js types, aligning AWS SDK versions, and guarding required route parameters.
 - [x] Validate and publish the simplified editor experience.
+
+## Featured Beat Media Preservation
+
+- [x] Trace the admin featured-toggle payload and beat-update persistence path.
+- [x] Preserve existing artwork and media keys when only featured status changes.
+- [x] Add regression coverage, validate, and publish the fix.
