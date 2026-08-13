@@ -54,6 +54,27 @@ const beatUpdateSchema = z.object({
   published: z.boolean().optional(),
 });
 
+const PAGE_BUILDER_IMAGE_FOLDER = "site-builder/images";
+const PAGE_BUILDER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PAGE_BUILDER_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
+const uploadPresignSchema = z.object({
+  filename: z.string().min(1).max(180),
+  contentType: z.string().min(1).max(120),
+  folder: z.string().min(1).max(120).optional(),
+  size: z
+    .number()
+    .int()
+    .positive()
+    .max(250 * 1024 * 1024)
+    .optional(),
+});
+
 const settingsSchema = z.object({
   theme: z
     .object({
@@ -248,11 +269,26 @@ export function adminRoutes(app: Hono) {
   app.post(
     "/admin/upload/presign",
     requireAdmin,
-    zValidator(
-      "json",
-      z.object({ filename: z.string(), contentType: z.string(), folder: z.string().optional() }),
-    ),
+    zValidator("json", uploadPresignSchema),
     async (c) => {
+      const { filename, contentType, folder, size } = c.req.valid("json");
+      if (folder === PAGE_BUILDER_IMAGE_FOLDER) {
+        if (!PAGE_BUILDER_IMAGE_TYPES.has(contentType.toLowerCase())) {
+          return c.json(
+            {
+              error: "unsupported_image_type",
+              message: "Use a JPG, PNG, WebP, GIF, or AVIF image.",
+            },
+            415,
+          );
+        }
+        if (!size || size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
+          return c.json(
+            { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+            413,
+          );
+        }
+      }
       if (!S3_CONFIGURED) {
         return c.json(
           {
@@ -263,7 +299,6 @@ export function adminRoutes(app: Hono) {
           503,
         );
       }
-      const { filename, contentType, folder } = c.req.valid("json");
       const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
       const key = `${folder || "uploads"}/${Date.now()}-${randomUUID()}-${safe}`;
       const url = await getSignedUrl(
@@ -392,7 +427,7 @@ export function adminRoutes(app: Hono) {
 
   app.get("/admin/settings", requireAdmin, async (c) => {
     const s = await loadSettings();
-    const preview = (await publicSettings(s)).brand;
+    const preview = await publicSettings(s);
     return c.json({ settings: s, preview }, 200);
   });
 
