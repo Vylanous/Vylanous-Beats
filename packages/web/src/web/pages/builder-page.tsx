@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useRoute } from "wouter";
 import { Download, ExternalLink, FileText } from "lucide-react";
 import { Layout } from "../components/layout";
@@ -120,6 +121,37 @@ export default function BuilderPage() {
   const { pages, fourthwall } = useSiteSettings();
   const page = pages.find((candidate) => candidate.slug === params?.slug && candidate.published);
 
+  useEffect(() => {
+    if (!page) return;
+    const title = page.seo?.title || `${page.title} | Vylanous Beats`;
+    const description =
+      page.seo?.description || page.sections.find((section) => section.body)?.body || "";
+    const canonicalPath = page.seo?.canonicalPath || `/${page.slug}`;
+    const canonicalUrl = new URL(canonicalPath, window.location.origin).toString();
+    const imageUrl =
+      page.seo?.ogImageUrl ||
+      new URL("/brand/Logo_full_transparent.png", window.location.origin).toString();
+    document.title = title;
+    setMeta("name", "description", description);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:url", canonicalUrl);
+    setMeta("property", "og:image", imageUrl);
+    setMeta("name", "twitter:card", "summary_large_image");
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+    setMeta("name", "twitter:image", imageUrl);
+    setMeta("name", "robots", page.seo?.noIndex ? "noindex, nofollow" : "index, follow");
+    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
+  }, [page]);
+
   if (!page) {
     return (
       <Layout>
@@ -151,4 +183,16 @@ export default function BuilderPage() {
       ))}
     </Layout>
   );
+}
+
+function setMeta(attribute: "name" | "property", key: string, value: string) {
+  let element = document.head.querySelector(
+    `meta[${attribute}="${key}"]`,
+  ) as HTMLMetaElement | null;
+  if (!element) {
+    element = document.createElement("meta");
+    element.setAttribute(attribute, key);
+    document.head.appendChild(element);
+  }
+  element.content = value;
 }

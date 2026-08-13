@@ -41,6 +41,7 @@ function blankPage(): BuilderPage {
     navLabel: "New Page",
     published: false,
     showInNav: false,
+    seo: { canonicalPath: "/new-page" },
     sections: [blankSection("hero")],
   };
 }
@@ -254,6 +255,59 @@ export default function PageBuilderPanel() {
                   onMove={(direction) => moveSection(index, direction)}
                 />
               ))}
+            </div>
+          </section>
+          <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
+            <h2 className="font-sub text-xl uppercase tracking-wide">Search & social sharing</h2>
+            <p className="mt-1 font-body text-sm text-vb-silver/50">
+              Set the title, description, canonical URL, and social-card image for this page.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field
+                label="SEO title"
+                value={page.seo?.title || ""}
+                onChange={(value) => setField("seo", { ...page.seo, title: value })}
+              />
+              <Field
+                label="Canonical path"
+                value={page.seo?.canonicalPath || `/${page.slug}`}
+                onChange={(value) =>
+                  setField("seo", {
+                    ...page.seo,
+                    canonicalPath: value.startsWith("/") ? value : `/${value}`,
+                  })
+                }
+              />
+            </div>
+            <label className="mt-4 block font-body text-xs uppercase tracking-wider text-vb-silver/50">
+              Meta description
+              <textarea
+                aria-label="Meta description"
+                value={page.seo?.description || ""}
+                onChange={(event) =>
+                  setField("seo", { ...page.seo, description: event.target.value.slice(0, 200) })
+                }
+                rows={3}
+                maxLength={200}
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+              />
+              <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
+                {(page.seo?.description || "").length}/200 characters
+              </span>
+            </label>
+            <div className="mt-4">
+              <Field
+                label="Open Graph image URL"
+                value={page.seo?.ogImageUrl || ""}
+                onChange={(value) => setField("seo", { ...page.seo, ogImageUrl: value })}
+              />
+            </div>
+            <div className="mt-4">
+              <Toggle
+                label="Keep this page out of search indexes"
+                checked={Boolean(page.seo?.noIndex)}
+                onChange={(checked) => setField("seo", { ...page.seo, noIndex: checked })}
+              />
             </div>
           </section>
           <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">

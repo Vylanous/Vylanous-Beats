@@ -44,6 +44,14 @@ export interface PageSection {
   collection?: string;
 }
 
+export interface PageSeo {
+  title?: string;
+  description?: string;
+  canonicalPath?: string;
+  ogImageUrl?: string;
+  noIndex?: boolean;
+}
+
 export interface BuilderPage {
   id: string;
   slug: string;
@@ -52,6 +60,7 @@ export interface BuilderPage {
   published: boolean;
   showInNav: boolean;
   sections: PageSection[];
+  seo?: PageSeo;
 }
 
 export interface FourthwallSettings {
@@ -99,6 +108,11 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     navLabel: "Artist",
     published: true,
     showInNav: true,
+    seo: {
+      title: "Vylanous | Artist & Producer",
+      description: "Discover Vylanous: artist, producer, and the sound behind Vylanous Beats.",
+      canonicalPath: "/artist",
+    },
     sections: [
       {
         id: "artist_hero",
@@ -124,6 +138,12 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     navLabel: "EPK",
     published: true,
     showInNav: true,
+    seo: {
+      title: "Vylanous EPK | Press & Booking",
+      description:
+        "Official electronic press kit for Vylanous, including artist bio, press materials, and booking details.",
+      canonicalPath: "/epk",
+    },
     sections: [
       {
         id: "epk_hero",
@@ -147,6 +167,11 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     navLabel: "Merch",
     published: true,
     showInNav: true,
+    seo: {
+      title: "Vylanous Merch | Official Store",
+      description: "Shop official Vylanous merchandise and limited drops.",
+      canonicalPath: "/merch",
+    },
     sections: [
       {
         id: "merch_hero",

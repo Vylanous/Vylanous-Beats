@@ -67,6 +67,15 @@ const settingsSchema = z.object({
         navLabel: z.string(),
         published: z.boolean(),
         showInNav: z.boolean(),
+        seo: z
+          .object({
+            title: z.string().max(70).optional(),
+            description: z.string().max(200).optional(),
+            canonicalPath: z.string().startsWith("/").max(200).optional(),
+            ogImageUrl: z.string().max(2000).optional(),
+            noIndex: z.boolean().optional(),
+          })
+          .optional(),
         sections: z.array(
           z.object({
             id: z.string(),

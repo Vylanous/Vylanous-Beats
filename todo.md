@@ -34,3 +34,9 @@
 - [x] Connect Fourthwall merchandise browsing and checkout to the selected page layout.
 - [x] Validate and publish the expanded platform.
 - [ ] Add `FOURTHWALL_STOREFRONT_TOKEN` as a Vercel production secret to activate live catalog data.
+
+## Page Builder SEO
+
+- [x] Add editable title, description, canonical path, and Open Graph image metadata to builder pages.
+- [x] Apply saved metadata to public dynamic-page document tags.
+- [x] Validate, commit, and publish the SEO controls.
