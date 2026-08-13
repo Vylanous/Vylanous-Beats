@@ -66,6 +66,29 @@ export const SCHEMA_STATEMENTS: string[] = [
     "created_at" text not null default (CURRENT_TIMESTAMP),
     "updated_at" text
   )`,
+  `create table if not exists "email_events" (
+    "id" text primary key not null,
+    "provider_event_id" text not null,
+    "provider_email_id" text not null default '',
+    "event_type" text not null,
+    "payload_json" text not null default '{}',
+    "received_at" text not null default (CURRENT_TIMESTAMP)
+  )`,
+  `create unique index if not exists "email_events_provider_event_id_idx" on "email_events" ("provider_event_id")`,
+  `create index if not exists "email_events_provider_email_id_idx" on "email_events" ("provider_email_id")`,
+  `create table if not exists "inbound_emails" (
+    "id" text primary key not null,
+    "provider_event_id" text not null,
+    "from_address" text not null default '',
+    "to_json" text not null default '[]',
+    "subject" text not null default '',
+    "received_at" text not null,
+    "status" text not null default 'unread',
+    "created_at" text not null default (CURRENT_TIMESTAMP)
+  )`,
+  `create unique index if not exists "inbound_emails_provider_event_id_idx" on "inbound_emails" ("provider_event_id")`,
+  `create index if not exists "inbound_emails_status_idx" on "inbound_emails" ("status")`,
+  `create index if not exists "inbound_emails_received_at_idx" on "inbound_emails" ("received_at")`,
 ];
 
 /** Applies SCHEMA_STATEMENTS in order. Throws if the database is unreachable. */

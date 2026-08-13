@@ -40,3 +40,17 @@
 - [x] Add editable title, description, canonical path, and Open Graph image metadata to builder pages.
 - [x] Apply saved metadata to public dynamic-page document tags.
 - [x] Validate, commit, and publish the SEO controls.
+
+## Email Service Audit
+
+- [x] Inspect outbound email configuration, templates, and runtime error handling.
+- [x] Verify inbound email or contact-form receiving capability and routing.
+- [ ] Report readiness findings and any safe remediation steps.
+
+## Secure Email Inbox
+
+- [x] Add database records for inbound email events and delivery-status events.
+- [x] Add a verified Resend webhook endpoint with idempotent event handling.
+- [x] Add admin inbox and email-status views.
+- [x] Validate the workflow and prepare a safe Resend test-email verification.
+- [ ] Configure production Resend secrets and register the live inbound-email webhook.

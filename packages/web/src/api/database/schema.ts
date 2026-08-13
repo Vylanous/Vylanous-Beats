@@ -97,7 +97,50 @@ export const settings = sqliteTable("settings", {
   updatedAt: text("updated_at"),
 });
 
+/** Verified Resend webhook deliveries retained for email audit and status visibility. */
+export const emailEvents = sqliteTable(
+  "email_events",
+  {
+    id: text("id").primaryKey(),
+    providerEventId: text("provider_event_id").notNull(),
+    providerEmailId: text("provider_email_id").notNull().default(""),
+    eventType: text("event_type").notNull(),
+    payloadJson: text("payload_json").notNull().default("{}"),
+    receivedAt: text("received_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (t) => [
+    uniqueIndex("email_events_provider_event_id_idx").on(t.providerEventId),
+    index("email_events_provider_email_id_idx").on(t.providerEmailId),
+  ],
+);
+
+/** Metadata for inbound emails. Full body content is retrieved on demand from Resend. */
+export const inboundEmails = sqliteTable(
+  "inbound_emails",
+  {
+    id: text("id").primaryKey(),
+    providerEventId: text("provider_event_id").notNull(),
+    fromAddress: text("from_address").notNull().default(""),
+    toJson: text("to_json").notNull().default("[]"),
+    subject: text("subject").notNull().default(""),
+    receivedAt: text("received_at").notNull(),
+    status: text("status").notNull().default("unread"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+  },
+  (t) => [
+    uniqueIndex("inbound_emails_provider_event_id_idx").on(t.providerEventId),
+    index("inbound_emails_status_idx").on(t.status),
+    index("inbound_emails_received_at_idx").on(t.receivedAt),
+  ],
+);
+
 export type Beat = typeof beats.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type SettingsRow = typeof settings.$inferSelect;
+export type EmailEvent = typeof emailEvents.$inferSelect;
+export type InboundEmail = typeof inboundEmails.$inferSelect;

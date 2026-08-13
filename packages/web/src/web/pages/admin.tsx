@@ -11,6 +11,7 @@ import {
   Upload,
   Palette,
   PanelsTopLeft,
+  Mail,
 } from "lucide-react";
 import {
   adminApi,
@@ -25,9 +26,18 @@ import { BeatForm } from "../components/admin/beat-form";
 import { BeatTable } from "../components/admin/beat-table";
 import CustomizationPanel from "../components/admin/customization";
 import PageBuilderPanel from "../components/admin/page-builder";
+import EmailInboxPanel from "../components/admin/email-inbox";
 import { BulkUpload } from "../components/admin/bulk-upload";
 
-type Tab = "overview" | "beats" | "bulk" | "orders" | "subscribers" | "customization" | "builder";
+type Tab =
+  | "overview"
+  | "beats"
+  | "bulk"
+  | "orders"
+  | "subscribers"
+  | "customization"
+  | "builder"
+  | "inbox";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -146,6 +156,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "subscribers", label: "Fan List", icon: Users },
     { id: "customization", label: "Customization", icon: Palette },
     { id: "builder", label: "Page Builder", icon: PanelsTopLeft },
+    { id: "inbox", label: "Email Inbox", icon: Mail },
   ];
 
   const closeForm = () => {
@@ -240,6 +251,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {tab === "subscribers" && <SubscribersTab />}
             {tab === "customization" && <CustomizationPanel />}
             {tab === "builder" && <PageBuilderPanel />}
+            {tab === "inbox" && <EmailInboxPanel />}
           </>
         )}
       </main>

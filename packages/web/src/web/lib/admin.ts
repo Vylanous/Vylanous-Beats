@@ -70,6 +70,15 @@ export const adminApi = {
   listOrders: () => req<{ orders: AdminOrder[] }>("/admin/orders"),
   listSubscribers: () =>
     req<{ subscribers: { id: string; email: string; createdAt: string }[] }>("/admin/subscribers"),
+  listInbox: () => req<{ messages: InboundEmail[]; events: EmailEvent[] }>("/admin/inbox"),
+  updateInboxStatus: (id: string, status: InboundEmail["status"]) =>
+    req<{ ok: true }>(`/admin/inbox/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  getInboxContent: (id: string) => req<{ text: string }>(`/admin/inbox/${id}/content`),
+  sendEmailTest: () =>
+    req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", { method: "POST" }),
   presign: (filename: string, contentType: string, folder: string) =>
     req<{ url: string; key: string }>("/admin/upload/presign", {
       method: "POST",
@@ -180,4 +189,20 @@ export interface AdminOrder {
     licenseTier: string;
     priceCents: number;
   }[];
+}
+
+export interface InboundEmail {
+  id: string;
+  fromAddress: string;
+  to: string[];
+  subject: string;
+  receivedAt: string;
+  status: "unread" | "read" | "archived";
+}
+
+export interface EmailEvent {
+  id: string;
+  providerEmailId: string;
+  eventType: string;
+  receivedAt: string;
 }
