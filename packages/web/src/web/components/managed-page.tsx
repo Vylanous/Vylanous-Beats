@@ -12,6 +12,7 @@ import { FourthwallMerch } from "./fourthwall-merch";
 import { Marquee } from "./marquee";
 import { api } from "../lib/api";
 import { useSiteSettings } from "../lib/site-settings";
+import { customerFetch, useCustomer } from "../lib/customer";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
 import type { BuilderPage, PageSection, SectionLayout } from "../../shared/site-settings";
@@ -539,10 +540,39 @@ function FeaturedBeats({
 }
 
 function BeatCatalog() {
+  const { ready, customer } = useCustomer();
   const { data, isLoading } = useQuery({
     queryKey: ["beats", "all"],
-    queryFn: async () => (await api.beats.$get()).json(),
+    enabled: Boolean(customer),
+    queryFn: async () => (await customerFetch("/api/beats")).json(),
   });
+  if (!ready)
+    return (
+      <div className="py-20 text-center font-sub uppercase tracking-wide text-vb-purple-bright">
+        Loading catalog access…
+      </div>
+    );
+  if (!customer)
+    return (
+      <div className="rounded-2xl border border-vb-purple/30 bg-vb-ink p-7 sm:p-10">
+        <p className="font-sub text-xs uppercase tracking-[.24em] text-vb-purple-bright">
+          Full catalog access
+        </p>
+        <h2 className="mt-3 font-display text-4xl uppercase text-chrome">
+          Sign in to browse the vault.
+        </h2>
+        <p className="mt-4 max-w-2xl font-body leading-7 text-vb-silver/65">
+          Featured beats remain public. Create a customer account to search every beat, purchase
+          licenses, and keep secure downloads in one shared music vault.
+        </p>
+        <Link
+          to="/login"
+          className="mt-6 inline-flex rounded-xl bg-vb-purple px-5 py-3 font-sub text-sm uppercase tracking-wide text-white hover:bg-vb-purple-bright"
+        >
+          Sign in or create account
+        </Link>
+      </div>
+    );
   const beats = useMemo(() => (data && "beats" in data ? data.beats : []) as Beat[], [data]);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All");

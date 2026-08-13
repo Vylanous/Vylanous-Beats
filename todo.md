@@ -111,3 +111,21 @@
 - [x] Inspect Fourthwall product image data and the current card renderer.
 - [x] Add an accessible all-image gallery experience to merchandise product cards.
 - [x] Validate, test, and publish the merchandise gallery update.
+
+## Customer Accounts, Dashboard, and Catalog Access
+
+- [x] Audit current authentication, featured-beat visibility, full-catalog, cart, and checkout behavior.
+- [x] Define customer-account, session, library, insights, and marketing-preference data structures.
+- [x] Add secure customer registration, login, logout, and authenticated-session handling.
+- [x] Require customer sign-in for the full beat catalog and purchase flow while retaining public featured beats.
+- [x] Build an authenticated customer dashboard with purchase insights, license library, newsletter preference, and relevant upsells.
+- [x] Add security and behavior regression coverage, validate, and publish the account experience.
+
+## Shared Customer Portal Service
+
+- [x] Audit the mobile app and web purchase, order, fulfillment, and download paths that must use one backend authority.
+- [x] Define shared customer identity, order ownership, entitlement, session, and download-authorization contracts for mobile and web clients.
+- [x] Implement shared mobile-first customer portal routes and services for every client surface.
+- [x] Bind mobile sign-in, account dashboard, purchases, entitlement library, and downloads to the shared service.
+- [x] Bind web checkout, customer dashboard, catalog access, and downloads to the same shared service.
+- [x] Add cross-client authorization and entitlement regression coverage, validate, and publish the shared portal service.

@@ -1,3 +1,47 @@
-import * as Linking from "expo-linking";
+import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-export default function LibraryScreen(){return <View style={s.page}><Text style={s.eyebrow}>YOUR MUSIC</Text><Text style={s.title}>License library</Text><View style={s.card}><Text style={s.cardTitle}>Your files are delivered by email.</Text><Text style={s.copy}>Every confirmed purchase includes your license and download links at the delivery email entered during checkout.</Text><Pressable style={s.button} onPress={()=>Linking.openURL("mailto:support@vylanous.com?subject=Vylanous%20Beats%20mobile%20order%20support")}><Text style={s.buttonText}>CONTACT SUPPORT</Text></Pressable></View><Text style={s.hint}>Sign-in based order history and in-app downloads are planned for a future update.</Text></View>};const s=StyleSheet.create({page:{flex:1,backgroundColor:"#0B0A11",padding:22,paddingTop:22},eyebrow:{color:"#B982FF",fontSize:10,fontWeight:"900",letterSpacing:1.4},title:{color:"#F8F6FB",fontSize:30,fontWeight:"900",marginTop:6},card:{backgroundColor:"#17141F",borderRadius:18,borderWidth:1,borderColor:"rgba(255,255,255,.08)",padding:20,marginTop:28},cardTitle:{color:"#F8F6FB",fontSize:18,fontWeight:"900"},copy:{color:"#ABA6B5",fontSize:13,lineHeight:20,marginTop:9},button:{borderWidth:1,borderColor:"#A855F7",borderRadius:12,padding:13,alignItems:"center",marginTop:20},buttonText:{color:"#DDBDFF",fontWeight:"900",fontSize:11,letterSpacing:.8},hint:{color:"#817B8B",fontSize:11,lineHeight:17,marginTop:18}});
+import { useCustomer } from "../../lib/customer";
+
+export default function LibraryScreen() {
+  const { customer, dashboard } = useCustomer();
+  if (!customer)
+    return (
+      <View style={s.page}>
+        <Text style={s.eyebrow}>YOUR MUSIC</Text>
+        <Text style={s.title}>License library</Text>
+        <Text style={s.copy}>
+          Sign in to see every license and secure download in your account.
+        </Text>
+        <Pressable style={s.button} onPress={() => router.push("/login")}>
+          <Text style={s.buttonText}>SIGN IN</Text>
+        </Pressable>
+      </View>
+    );
+  return (
+    <View style={s.page}>
+      <Text style={s.eyebrow}>YOUR MUSIC</Text>
+      <Text style={s.title}>License library</Text>
+      <Text style={s.copy}>
+        {dashboard?.insights.licensesOwned ?? 0} active license
+        {dashboard?.insights.licensesOwned === 1 ? "" : "s"} are available in your account.
+      </Text>
+      <Pressable style={s.button} onPress={() => router.push("/(tabs)/profile")}>
+        <Text style={s.buttonText}>OPEN MUSIC VAULT</Text>
+      </Pressable>
+    </View>
+  );
+}
+const s = StyleSheet.create({
+  page: { flex: 1, backgroundColor: "#0B0A11", padding: 22, paddingTop: 22 },
+  eyebrow: { color: "#B982FF", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
+  title: { color: "#F8F6FB", fontSize: 30, fontWeight: "900", marginTop: 6 },
+  copy: { color: "#ABA6B5", fontSize: 13, lineHeight: 20, marginTop: 18 },
+  button: {
+    backgroundColor: "#A855F7",
+    borderRadius: 12,
+    padding: 14,
+    alignItems: "center",
+    marginTop: 22,
+  },
+  buttonText: { color: "#fff", fontWeight: "900", fontSize: 11, letterSpacing: 0.8 },
+});

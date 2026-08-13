@@ -1,14 +1,16 @@
 /** Vylanous navigation: global chrome rendered from Site Builder header, social, and page settings. */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, UserRound, LogOut } from "lucide-react";
 import { useCart } from "../lib/cart";
 import { useSiteSettings } from "../lib/site-settings";
+import { useCustomer } from "../lib/customer";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
   const { count, setOpen } = useCart();
+  const { customer, signOut } = useCustomer();
   const [loc] = useLocation();
   const { brand, header, pages, socials } = useSiteSettings();
   const links = useMemo(
@@ -79,6 +81,30 @@ export function Nav() {
           {header.ctaLabel && header.ctaHref && (
             <HeaderAction href={header.ctaHref} label={header.ctaLabel} />
           )}
+          {customer ? (
+            <>
+              <Link
+                to="/dashboard"
+                className="hidden items-center gap-2 rounded-lg border border-white/10 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-silver hover:border-vb-purple hover:text-white xl:inline-flex"
+              >
+                <UserRound size={14} /> Vault
+              </Link>
+              <button
+                onClick={() => signOut()}
+                aria-label="Sign out"
+                className="hidden rounded-lg border border-white/10 p-2 text-vb-silver hover:border-vb-purple hover:text-white xl:inline-flex"
+              >
+                <LogOut size={15} />
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden rounded-lg border border-vb-purple/50 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10 xl:inline-flex"
+            >
+              Sign in
+            </Link>
+          )}
           {header.showCart && (
             <button
               onClick={() => setOpen(true)}
@@ -116,6 +142,29 @@ export function Nav() {
             ))}
             {header.ctaLabel && header.ctaHref && (
               <HeaderAction href={header.ctaHref} label={header.ctaLabel} mobile />
+            )}
+            {customer ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="mt-2 py-2.5 font-sub text-xl uppercase tracking-wider text-vb-silver hover:text-purple-glow"
+                >
+                  Your vault
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="mt-1 w-fit py-2 font-sub text-sm uppercase tracking-wide text-vb-silver/60 hover:text-white"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="mt-2 py-2.5 font-sub text-xl uppercase tracking-wider text-vb-purple-bright hover:text-white"
+              >
+                Sign in / Create account
+              </Link>
             )}
           </nav>
         </div>

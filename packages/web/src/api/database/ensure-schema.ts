@@ -33,6 +33,7 @@ export const SCHEMA_STATEMENTS: string[] = [
   `create unique index if not exists "beats_slug_idx" on "beats" ("slug")`,
   `create table if not exists "orders" (
     "id" text primary key not null,
+    "customer_id" text not null default '',
     "email" text not null,
     "name" text not null default '',
     "status" text not null default 'pending',
@@ -44,6 +45,40 @@ export const SCHEMA_STATEMENTS: string[] = [
     "paid_at" text
   )`,
   `create index if not exists "orders_status_idx" on "orders" ("status")`,
+  `create table if not exists "customers" (
+    "id" text primary key not null,
+    "email" text not null,
+    "display_name" text not null default '',
+    "password_hash" text not null,
+    "marketing_opt_in" integer not null default 0,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "updated_at" text
+  )`,
+  `create unique index if not exists "customers_email_idx" on "customers" ("email")`,
+  `create table if not exists "customer_sessions" (
+    "id" text primary key not null,
+    "customer_id" text not null,
+    "token_hash" text not null,
+    "expires_at" text not null,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "revoked_at" text
+  )`,
+  `create unique index if not exists "customer_sessions_token_hash_idx" on "customer_sessions" ("token_hash")`,
+  `create index if not exists "customer_sessions_customer_idx" on "customer_sessions" ("customer_id")`,
+  `create table if not exists "customer_entitlements" (
+    "id" text primary key not null,
+    "customer_id" text not null,
+    "order_id" text not null,
+    "order_item_id" text not null,
+    "beat_id" text not null,
+    "status" text not null default 'pending',
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "activated_at" text,
+    "revoked_at" text
+  )`,
+  `create unique index if not exists "customer_entitlements_order_item_idx" on "customer_entitlements" ("order_item_id")`,
+  `create index if not exists "customer_entitlements_customer_idx" on "customer_entitlements" ("customer_id")`,
+  `create index if not exists "customer_entitlements_order_idx" on "customer_entitlements" ("order_id")`,
   `create table if not exists "order_items" (
     "id" text primary key not null,
     "order_id" text not null,
@@ -117,4 +152,16 @@ export async function ensureSchema(client: Client): Promise<void> {
   for (const statement of SCHEMA_STATEMENTS) {
     await client.execute(statement);
   }
+  // Existing installations predate customer-owned orders. SQLite has no
+  // portable `ADD COLUMN IF NOT EXISTS`, so an already-applied migration is
+  // deliberately ignored while other schema errors remain fatal.
+  try {
+    await client.execute(`alter table "orders" add column "customer_id" text not null default ''`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message.toLowerCase() : "";
+    if (!message.includes("duplicate column")) throw error;
+  }
+  await client.execute(
+    `create index if not exists "orders_customer_idx" on "orders" ("customer_id")`,
+  );
 }
