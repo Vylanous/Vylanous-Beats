@@ -35,8 +35,8 @@ export function Footer() {
           </p>
           <p className="font-body text-sm text-vb-muted mt-4 flex items-center gap-2">
             <Mail size={15} className="text-vb-purple-bright" />
-            <a href="mailto:vylanousbeats@gmail.com" className="hover:text-vb-purple-bright">
-              vylanousbeats@gmail.com
+            <a href="mailto:support@vylanous.com" className="hover:text-vb-purple-bright">
+              support@vylanous.com
             </a>
           </p>
         </div>

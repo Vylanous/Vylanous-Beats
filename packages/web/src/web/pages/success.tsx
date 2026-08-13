@@ -151,8 +151,7 @@ export default function SuccessPage() {
 
           <div className="text-center mt-8">
             <p className="font-body text-vb-muted text-sm">
-              Save this page — your link is private to your order. Questions?
-              vylanousbeats@gmail.com
+              Save this page — your link is private to your order. Questions? support@vylanous.com
             </p>
             <Link
               to="/beats"

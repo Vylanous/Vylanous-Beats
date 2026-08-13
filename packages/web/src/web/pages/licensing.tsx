@@ -147,8 +147,7 @@ export default function Licensing() {
             <h3 className="font-display uppercase text-2xl mb-2">Need a custom deal?</h3>
             <p className="font-body text-vb-muted">
               Bulk licensing, custom beats, or split agreements — reach out at{" "}
-              <span className="text-vb-purple-bright">vylanousbeats@gmail.com</span> and we'll sort
-              it.
+              <span className="text-vb-purple-bright">support@vylanous.com</span> and we'll sort it.
             </p>
             <Link
               to="/about"

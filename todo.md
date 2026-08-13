@@ -54,3 +54,8 @@
 - [x] Add admin inbox and email-status views.
 - [x] Validate the workflow and prepare a safe Resend test-email verification.
 - [ ] Configure production Resend secrets and register the live inbound-email webhook.
+
+## Support Email Correction
+
+- [x] Locate and replace all customer-facing contact-email references with support@vylanous.com.
+- [x] Validate the updated website references and publish the correction for review.

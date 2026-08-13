@@ -68,10 +68,10 @@ export default function About() {
             gets a reply.
           </p>
           <a
-            href="mailto:vylanousbeats@gmail.com"
+            href="mailto:support@vylanous.com"
             className="inline-flex items-center gap-2 mt-6 font-sub uppercase tracking-widest text-lg px-7 py-3.5 rounded-xl bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors"
           >
-            <Mail size={18} /> vylanousbeats@gmail.com
+            <Mail size={18} /> support@vylanous.com
           </a>
         </div>
 
