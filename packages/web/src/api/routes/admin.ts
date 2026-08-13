@@ -77,15 +77,72 @@ const settingsSchema = z.object({
     })
     .partial()
     .optional(),
+  header: z
+    .object({
+      showWordmark: z.boolean(),
+      sticky: z.boolean(),
+      transparentAtTop: z.boolean(),
+      showCart: z.boolean(),
+      showSocialLinks: z.boolean(),
+      ctaLabel: z.string().max(80).optional(),
+      ctaHref: z.string().max(2000).optional(),
+    })
+    .partial()
+    .optional(),
+  footer: z
+    .object({
+      description: z.string().max(1000),
+      contactEmail: z.string().email(),
+      showNavigation: z.boolean(),
+      showNewsletter: z.boolean(),
+      newsletterHeading: z.string().max(100),
+      newsletterButton: z.string().max(80),
+      legalLine: z.string().max(200),
+    })
+    .partial()
+    .optional(),
+  socials: z
+    .array(
+      z.object({
+        id: z.string(),
+        platform: z.enum([
+          "instagram",
+          "tiktok",
+          "youtube",
+          "spotify",
+          "soundcloud",
+          "facebook",
+          "x",
+          "custom",
+        ]),
+        label: z.string().max(80),
+        url: z.string().url().max(2000),
+        showInHeader: z.boolean().optional(),
+        showInFooter: z.boolean().optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
   pages: z
     .array(
       z.object({
         id: z.string(),
         slug: z.string().regex(/^[a-z0-9-]+$/),
+        path: z.string().startsWith("/").max(200).optional(),
         title: z.string(),
         navLabel: z.string(),
         published: z.boolean(),
         showInNav: z.boolean(),
+        showInFooter: z.boolean().optional(),
+        navOrder: z.number().int().min(0).max(10000).optional(),
+        isSystem: z.boolean().optional(),
+        layout: z
+          .object({
+            showHeader: z.boolean().optional(),
+            showFooter: z.boolean().optional(),
+            background: z.enum(["default", "mesh", "ink"]).optional(),
+          })
+          .optional(),
         seo: z
           .object({
             title: z.string().max(70).optional(),
@@ -98,14 +155,64 @@ const settingsSchema = z.object({
         sections: z.array(
           z.object({
             id: z.string(),
-            type: z.enum(["hero", "text", "image", "pressKit", "merch"]),
+            type: z.enum([
+              "hero",
+              "text",
+              "image",
+              "video",
+              "gallery",
+              "featureCards",
+              "callout",
+              "marquee",
+              "divider",
+              "spacer",
+              "pressKit",
+              "merch",
+              "featuredBeats",
+              "beatCatalog",
+              "licenseTiers",
+              "licenseComparison",
+            ]),
             eyebrow: z.string().optional(),
             title: z.string().optional(),
             body: z.string().optional(),
             imageUrl: z.string().optional(),
+            videoUrl: z.string().optional(),
             ctaLabel: z.string().optional(),
             ctaHref: z.string().optional(),
+            secondaryCtaLabel: z.string().optional(),
+            secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
+            items: z
+              .array(
+                z.object({
+                  id: z.string(),
+                  title: z.string(),
+                  body: z.string().optional(),
+                  imageUrl: z.string().optional(),
+                  href: z.string().optional(),
+                  label: z.string().optional(),
+                }),
+              )
+              .max(24)
+              .optional(),
+            layout: z
+              .object({
+                width: z.enum(["narrow", "standard", "wide", "full"]).optional(),
+                spacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
+                alignment: z.enum(["left", "center", "right"]).optional(),
+                surface: z.enum(["transparent", "ink", "mesh", "accent", "bordered"]).optional(),
+                columns: z
+                  .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+                  .optional(),
+                mediaPosition: z.enum(["none", "left", "right", "background", "top"]).optional(),
+                mediaFit: z.enum(["cover", "contain"]).optional(),
+                mediaAspect: z.enum(["auto", "square", "wide", "portrait", "cinema"]).optional(),
+                imageOverlay: z.enum(["none", "soft", "strong"]).optional(),
+                borderRadius: z.enum(["none", "soft", "rounded"]).optional(),
+                emphasis: z.enum(["standard", "accent", "muted"]).optional(),
+              })
+              .optional(),
           }),
         ),
       }),
@@ -296,6 +403,9 @@ export function adminRoutes(app: Hono) {
       theme: { ...current.theme, ...input.theme },
       fontId: input.fontId ?? current.fontId,
       brand: { ...current.brand, ...input.brand },
+      header: { ...current.header, ...input.header },
+      footer: { ...current.footer, ...input.footer },
+      socials: input.socials ?? current.socials,
       pages: input.pages ?? current.pages,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
     });
