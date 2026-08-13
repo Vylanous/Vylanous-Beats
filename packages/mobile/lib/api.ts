@@ -22,19 +22,32 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return payload;
 }
 
+function absoluteAssetUrl(value: string): string {
+  if (!value || /^https?:\/\//i.test(value)) return value;
+  return new URL(value.startsWith("/") ? value : `/${value}`, `${API_BASE_URL}/`).toString();
+}
+
+function normalizeBeat(beat: Beat): Beat {
+  return {
+    ...beat,
+    artworkUrl: absoluteAssetUrl(beat.artworkUrl),
+    audioUrl: absoluteAssetUrl(beat.audioUrl),
+  };
+}
+
 export async function fetchBeats(): Promise<Beat[]> {
   const payload = await request<{ beats: Beat[] }>("/api/beats");
-  return payload.beats;
+  return payload.beats.map(normalizeBeat);
 }
 
 export async function fetchFeaturedBeats(): Promise<Beat[]> {
   const payload = await request<{ beats: Beat[] }>("/api/beats/featured");
-  return payload.beats;
+  return payload.beats.map(normalizeBeat);
 }
 
 export async function fetchBeat(slug: string): Promise<Beat> {
   const payload = await request<{ beat: Beat }>(`/api/beats/${encodeURIComponent(slug)}`);
-  return payload.beat;
+  return normalizeBeat(payload.beat);
 }
 
 export async function trackPlay(beatId: string): Promise<void> {
