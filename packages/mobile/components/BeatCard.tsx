@@ -3,61 +3,6 @@ import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Beat } from "../lib/models";
 import { formatPrice } from "../lib/models";
+import { font, vb } from "../lib/theme";
 import { PreviewButton } from "./PreviewButton";
-
-export function BeatCard({ beat, compact = false }: { beat: Beat; compact?: boolean }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${beat.title}`}
-      onPress={() => router.push(`/beats/${beat.slug}`)}
-      style={[styles.card, compact && styles.cardCompact]}
-    >
-      <Image source={{ uri: beat.artworkUrl }} style={[styles.artwork, compact && styles.artworkCompact]} />
-      <View style={styles.content}>
-        <View style={styles.metaRow}>
-          <Text numberOfLines={1} style={styles.title}>
-            {beat.title}
-          </Text>
-          {beat.featured ? <View style={styles.featured}><Text style={styles.featuredText}>FEATURED</Text></View> : null}
-        </View>
-        <Text numberOfLines={1} style={styles.subline}>
-          {beat.genre} · {beat.bpm} BPM · {beat.musicalKey || "Key TBA"}
-        </Text>
-        <View style={styles.bottomRow}>
-          <View>
-            <Text style={styles.priceLabel}>LICENSE FROM</Text>
-            <Text style={styles.price}>{formatPrice(beat.priceFrom)}</Text>
-          </View>
-          <PreviewButton uri={beat.audioUrl} beatId={beat.id} size={42} />
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" color="#77727F" size={18} />
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: "row",
-    gap: 13,
-    backgroundColor: "#16141D",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.07)",
-    borderRadius: 18,
-    padding: 10,
-    alignItems: "center",
-  },
-  cardCompact: { width: 282, flexDirection: "column", alignItems: "stretch" },
-  artwork: { width: 86, height: 86, borderRadius: 12, backgroundColor: "#292630" },
-  artworkCompact: { width: "100%", height: 178, borderRadius: 12 },
-  content: { flex: 1, minWidth: 0, justifyContent: "space-between", alignSelf: "stretch", paddingVertical: 2 },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  title: { color: "#F9F7FC", fontSize: 15, fontWeight: "800", flex: 1 },
-  featured: { backgroundColor: "rgba(168,85,247,0.16)", paddingHorizontal: 6, paddingVertical: 3, borderRadius: 5 },
-  featuredText: { color: "#D8B4FE", fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
-  subline: { color: "#A39EAC", fontSize: 11, marginTop: 4 },
-  bottomRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
-  priceLabel: { color: "#77727F", fontSize: 8, fontWeight: "800", letterSpacing: 0.7 },
-  price: { color: "#E7D8FF", fontSize: 15, fontWeight: "900", marginTop: 1 },
-});
+export function BeatCard({beat,compact=false}:{beat:Beat;compact?:boolean}){return <Pressable onPress={()=>router.push(`/beats/${beat.slug}`)} style={[s.card,compact&&s.compact]}><Image source={{uri:beat.artworkUrl}} style={[s.art,compact&&s.artCompact]}/><View style={s.content}><View style={s.metaRow}><Text numberOfLines={1} style={s.title}>{beat.title}</Text>{beat.featured?<View style={s.featured}><Text style={s.featuredText}>FEATURED</Text></View>:null}</View><Text numberOfLines={1} style={s.sub}>{beat.genre} · {beat.bpm} BPM · {beat.musicalKey||"KEY TBA"}</Text><View style={s.bottom}><View><Text style={s.label}>LICENSE FROM</Text><Text style={s.price}>{formatPrice(beat.priceFrom)}</Text></View><PreviewButton uri={beat.audioUrl} beatId={beat.id} size={42}/></View></View><Ionicons name="chevron-forward" color={vb.muted} size={18}/></Pressable>};const s=StyleSheet.create({card:{flexDirection:"row",gap:13,backgroundColor:vb.ink,borderWidth:1,borderColor:vb.border,borderRadius:10,padding:10,alignItems:"center"},compact:{width:282,flexDirection:"column",alignItems:"stretch"},art:{width:86,height:86,borderRadius:6,backgroundColor:vb.ink2},artCompact:{width:"100%",height:178,borderRadius:6},content:{flex:1,minWidth:0,justifyContent:"space-between",alignSelf:"stretch",paddingVertical:2},metaRow:{flexDirection:"row",alignItems:"center",gap:8},title:{color:vb.silverBright,fontFamily:font.display,fontSize:21,letterSpacing:.25,flex:1},featured:{backgroundColor:"rgba(124,47,203,.18)",paddingHorizontal:6,paddingVertical:3,borderRadius:4},featuredText:{color:vb.purpleBright,fontFamily:font.bodyBold,fontSize:8,letterSpacing:.7},sub:{color:vb.muted,fontFamily:font.bodyMedium,fontSize:12,marginTop:4},bottom:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginTop:8},label:{color:vb.muted,fontFamily:font.bodyBold,fontSize:8,letterSpacing:.7},price:{color:vb.silverBright,fontFamily:font.display,fontSize:21,marginTop:1}});
