@@ -11,28 +11,41 @@ const { S3_CONFIGURED } = await import("../lib/s3.ts");
 describe("storage", () => {
   it("picks up R2_* env names", () => expect(S3_CONFIGURED).toBe(true));
 
-  it("plain key untouched", () => expect(normalizeKey("audio/1712-abc-beat.mp3")).toBe("audio/1712-abc-beat.mp3"));
+  it("plain key untouched", () =>
+    expect(normalizeKey("audio/1712-abc-beat.mp3")).toBe("audio/1712-abc-beat.mp3"));
 
   it("unwraps a presigned r2 url back to the key", () => {
-    const signed = "https://abc123account.r2.cloudflarestorage.com/vylanous/audio/1712-abc-beat.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=deadbeef&X-Amz-Expires=3600";
+    const signed =
+      "https://abc123account.r2.cloudflarestorage.com/vylanous/audio/1712-abc-beat.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=deadbeef&X-Amz-Expires=3600";
     expect(normalizeKey(signed)).toBe("audio/1712-abc-beat.mp3");
   });
 
   it("unwraps a doubly nested presigned url", () => {
-    const nested = "https://abc123account.r2.cloudflarestorage.com/vylanous/" + encodeURIComponent("https://abc123account.r2.cloudflarestorage.com/vylanous/audio/x.mp3?X-Amz-Signature=aa") + "?X-Amz-Signature=bb";
+    const nested =
+      "https://abc123account.r2.cloudflarestorage.com/vylanous/" +
+      encodeURIComponent(
+        "https://abc123account.r2.cloudflarestorage.com/vylanous/audio/x.mp3?X-Amz-Signature=aa",
+      ) +
+      "?X-Amz-Signature=bb";
     expect(normalizeKey(nested)).toBe("audio/x.mp3");
   });
 
   it("leaves external urls alone", () => {
-    expect(normalizeKey("https://cdn.example.com/song.mp3")).toBe("https://cdn.example.com/song.mp3");
+    expect(normalizeKey("https://cdn.example.com/song.mp3")).toBe(
+      "https://cdn.example.com/song.mp3",
+    );
   });
 
   it("leaves locally served public assets alone", async () => {
-    await expect(signIfKey("/beats/audio/preview-1.mp3")).resolves.toBe("/beats/audio/preview-1.mp3");
+    await expect(signIfKey("/beats/audio/preview-1.mp3")).resolves.toBe(
+      "/beats/audio/preview-1.mp3",
+    );
   });
 
   it("signs a key into a working single-layer url", async () => {
-    const url = await signIfKey("https://abc123account.r2.cloudflarestorage.com/vylanous/audio/1712-abc-beat.mp3?X-Amz-Signature=old");
+    const url = await signIfKey(
+      "https://abc123account.r2.cloudflarestorage.com/vylanous/audio/1712-abc-beat.mp3?X-Amz-Signature=old",
+    );
     const u = new URL(url);
     expect(u.host).toBe("abc123account.r2.cloudflarestorage.com");
     expect(u.pathname).toBe("/vylanous/audio/1712-abc-beat.mp3");

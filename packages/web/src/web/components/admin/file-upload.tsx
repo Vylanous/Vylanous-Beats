@@ -16,7 +16,16 @@ interface Props {
   onChange: (key: string) => void;
 }
 
-export function FileUpload({ label, hint, accept, folder, kind = "file", value, previewUrl, onChange }: Props) {
+export function FileUpload({
+  label,
+  hint,
+  accept,
+  folder,
+  kind = "file",
+  value,
+  previewUrl,
+  onChange,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [uploading, setUploading] = useState(false);
@@ -47,7 +56,12 @@ export function FileUpload({ label, hint, accept, folder, kind = "file", value, 
 
   return (
     <div>
-      <label htmlFor={inputId} className="font-body text-xs uppercase tracking-wider text-vb-silver/50 mb-1.5 block">{label}</label>
+      <label
+        htmlFor={inputId}
+        className="font-body text-xs uppercase tracking-wider text-vb-silver/50 mb-1.5 block"
+      >
+        {label}
+      </label>
       {/* A semantic button cannot contain the file input, preview player, and remove button. */}
       <div
         role="button"
@@ -74,23 +88,47 @@ export function FileUpload({ label, hint, accept, folder, kind = "file", value, 
         {kind === "image" && preview ? (
           <img src={preview} alt="" className="h-12 w-12 rounded-lg object-cover shrink-0" />
         ) : (
-          <span className={`h-12 w-12 rounded-lg grid place-items-center shrink-0 ${hasFile ? "bg-emerald-500/15 text-emerald-400" : "bg-vb-purple/15 text-purple-glow"}`}>
-            {uploading ? <Loader2 className="animate-spin" size={20} /> : hasFile ? <CheckCircle2 size={20} /> : <Icon size={20} />}
+          <span
+            className={`h-12 w-12 rounded-lg grid place-items-center shrink-0 ${hasFile ? "bg-emerald-500/15 text-emerald-400" : "bg-vb-purple/15 text-purple-glow"}`}
+          >
+            {uploading ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : hasFile ? (
+              <CheckCircle2 size={20} />
+            ) : (
+              <Icon size={20} />
+            )}
           </span>
         )}
 
         <div className="min-w-0 flex-1">
           <div className="font-body text-sm text-vb-silver-bright truncate">
-            {uploading ? "Uploading…" : hasFile ? filename || "File attached" : "Click or drag to upload"}
+            {uploading
+              ? "Uploading…"
+              : hasFile
+                ? filename || "File attached"
+                : "Click or drag to upload"}
           </div>
-          {hint && !hasFile && !uploading && <div className="font-body text-xs text-vb-silver/40 mt-0.5">{hint}</div>}
-          {hasFile && !uploading && <div className="font-body text-xs text-emerald-400/70 mt-0.5">Ready</div>}
+          {hint && !hasFile && !uploading && (
+            <div className="font-body text-xs text-vb-silver/40 mt-0.5">{hint}</div>
+          )}
+          {hasFile && !uploading && (
+            <div className="font-body text-xs text-emerald-400/70 mt-0.5">Ready</div>
+          )}
         </div>
 
-        {kind === "audio" && preview && hasFile && (
-          // oxlint-disable-next-line jsx-a11y/media-has-caption -- uploaded instrumental preview; no spoken content to caption
-          <audio src={preview} controls aria-label={`${label} preview`} className="h-8 max-w-[140px]" onClick={(e) => e.stopPropagation()} />
-        )}
+        {kind === "audio" &&
+          preview &&
+          hasFile && (
+            // oxlint-disable-next-line jsx-a11y/media-has-caption -- uploaded instrumental preview; no spoken content to caption
+            <audio
+              src={preview}
+              controls
+              aria-label={`${label} preview`}
+              className="h-8 max-w-[140px]"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
 
         {hasFile && !uploading && (
           <button

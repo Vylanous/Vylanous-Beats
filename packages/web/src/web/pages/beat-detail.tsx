@@ -43,7 +43,10 @@ export default function BeatDetail() {
       <Layout>
         <div className="max-w-3xl mx-auto px-5 pt-40 pb-20 text-center">
           <h1 className="font-display uppercase text-5xl text-chrome">Beat Not Found</h1>
-          <Link to="/beats" className="inline-block mt-6 font-sub uppercase tracking-wider text-vb-purple-bright">
+          <Link
+            to="/beats"
+            className="inline-block mt-6 font-sub uppercase tracking-wider text-vb-purple-bright"
+          >
             ← Back to catalog
           </Link>
         </div>
@@ -59,7 +62,10 @@ export default function BeatDetail() {
     <Layout>
       <section className="bg-mesh grain relative pt-28">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
-          <Link to="/beats" className="inline-flex items-center gap-2 font-sub uppercase tracking-wider text-vb-muted hover:text-vb-purple-bright mb-8">
+          <Link
+            to="/beats"
+            className="inline-flex items-center gap-2 font-sub uppercase tracking-wider text-vb-muted hover:text-vb-purple-bright mb-8"
+          >
             <ArrowLeft size={16} /> All Beats
           </Link>
 
@@ -67,7 +73,11 @@ export default function BeatDetail() {
             {/* Artwork + player */}
             <div>
               <div className="relative rounded-2xl overflow-hidden border border-white/10 glow-purple">
-                <img src={beat.artworkUrl} alt={beat.title} className="w-full aspect-square object-cover" />
+                <img
+                  src={beat.artworkUrl}
+                  alt={beat.title}
+                  className="w-full aspect-square object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-vb-black/80 to-transparent" />
                 <button
                   onClick={() =>
@@ -83,7 +93,11 @@ export default function BeatDetail() {
                   className="absolute inset-0 grid place-items-center"
                 >
                   <span className="grid place-items-center w-20 h-20 rounded-full bg-vb-purple text-white glow-purple-strong hover:bg-vb-purple-bright transition-colors">
-                    {beatPlaying ? <Pause size={30} fill="currentColor" /> : <Play size={30} fill="currentColor" className="ml-1" />}
+                    {beatPlaying ? (
+                      <Pause size={30} fill="currentColor" />
+                    ) : (
+                      <Play size={30} fill="currentColor" className="ml-1" />
+                    )}
                   </span>
                 </button>
               </div>
@@ -109,25 +123,44 @@ export default function BeatDetail() {
                   }
                 }}
               >
-                <Waveform active={!!beatPlaying} bars={72} progress={current?.id === beat.id ? progress : 0} />
+                <Waveform
+                  active={!!beatPlaying}
+                  bars={72}
+                  progress={current?.id === beat.id ? progress : 0}
+                />
               </button>
             </div>
 
             {/* Info + license */}
             <div>
-              <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">{beat.genre} · {beat.mood}</p>
-              <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-[0.85] mt-1">{beat.title}</h1>
+              <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+                {beat.genre} · {beat.mood}
+              </p>
+              <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-[0.85] mt-1">
+                {beat.title}
+              </h1>
               <div className="flex flex-wrap gap-3 mt-4">
-                <span className="font-sub uppercase text-sm px-3 py-1 rounded-lg bg-vb-ink border border-white/10">{beat.bpm} BPM</span>
-                <span className="font-sub uppercase text-sm px-3 py-1 rounded-lg bg-vb-ink border border-white/10">Key {beat.musicalKey}</span>
+                <span className="font-sub uppercase text-sm px-3 py-1 rounded-lg bg-vb-ink border border-white/10">
+                  {beat.bpm} BPM
+                </span>
+                <span className="font-sub uppercase text-sm px-3 py-1 rounded-lg bg-vb-ink border border-white/10">
+                  Key {beat.musicalKey}
+                </span>
                 {tags.map((t) => (
-                  <span key={t} className="font-body text-sm px-3 py-1 rounded-lg bg-vb-ink border border-white/10 text-vb-muted lowercase">#{t}</span>
+                  <span
+                    key={t}
+                    className="font-body text-sm px-3 py-1 rounded-lg bg-vb-ink border border-white/10 text-vb-muted lowercase"
+                  >
+                    #{t}
+                  </span>
                 ))}
               </div>
 
               {/* License selector */}
               <div className="mt-8">
-                <p className="font-sub uppercase tracking-widest text-vb-silver mb-3">Choose License</p>
+                <p className="font-sub uppercase tracking-widest text-vb-silver mb-3">
+                  Choose License
+                </p>
                 <div className="grid sm:grid-cols-2 gap-2.5">
                   {LICENSE_TIERS.map((t) => (
                     <button
@@ -141,7 +174,9 @@ export default function BeatDetail() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-display uppercase text-xl">{t.name}</span>
-                        <span className="font-display text-xl text-chrome">{formatCad(t.priceCents)}</span>
+                        <span className="font-display text-xl text-chrome">
+                          {formatCad(t.priceCents)}
+                        </span>
                       </div>
                       <span className="font-body text-sm text-vb-muted">{t.fileFormat}</span>
                     </button>
@@ -152,7 +187,10 @@ export default function BeatDetail() {
               {/* Selected tier features */}
               <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 mt-6">
                 {selected.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 font-body text-vb-silver/80 text-sm">
+                  <li
+                    key={f}
+                    className="flex items-start gap-2 font-body text-vb-silver/80 text-sm"
+                  >
                     <Check size={15} className="text-vb-purple-bright mt-0.5 shrink-0" /> {f}
                   </li>
                 ))}
@@ -173,12 +211,20 @@ export default function BeatDetail() {
                 className="w-full mt-8 inline-flex items-center justify-center gap-2 font-sub uppercase tracking-widest text-xl py-4 rounded-xl bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors glow-purple disabled:opacity-60"
               >
                 {has(beat.id, tier) ? (
-                  <><Check size={20} /> In Cart</>
+                  <>
+                    <Check size={20} /> In Cart
+                  </>
                 ) : (
-                  <><ShoppingCart size={20} /> Add {selected.name} — {formatCad(selected.priceCents)}</>
+                  <>
+                    <ShoppingCart size={20} /> Add {selected.name} —{" "}
+                    {formatCad(selected.priceCents)}
+                  </>
                 )}
               </button>
-              <Link to="/licensing" className="block text-center mt-4 font-sub uppercase tracking-wider text-vb-muted hover:text-vb-purple-bright">
+              <Link
+                to="/licensing"
+                className="block text-center mt-4 font-sub uppercase tracking-wider text-vb-muted hover:text-vb-purple-bright"
+              >
                 Read full license terms →
               </Link>
             </div>

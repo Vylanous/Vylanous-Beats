@@ -45,10 +45,16 @@ export function BeatCard({ beat }: { beat: Beat }) {
         >
           <span
             className={`grid place-items-center w-14 h-14 rounded-full bg-vb-purple text-white transition-all duration-300 ${
-              playing ? "opacity-100 scale-100" : "opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+              playing
+                ? "opacity-100 scale-100"
+                : "opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
             } glow-purple-strong`}
           >
-            {playing ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-0.5" />}
+            {playing ? (
+              <Pause size={22} fill="currentColor" />
+            ) : (
+              <Play size={22} fill="currentColor" className="ml-0.5" />
+            )}
           </span>
         </button>
         {/* BPM / key badges */}
@@ -76,7 +82,9 @@ export function BeatCard({ beat }: { beat: Beat }) {
               {beat.title}
             </h3>
           </Link>
-          <span className="font-sub text-vb-purple-bright text-sm uppercase shrink-0 mt-1">{beat.genre}</span>
+          <span className="font-sub text-vb-purple-bright text-sm uppercase shrink-0 mt-1">
+            {beat.genre}
+          </span>
         </div>
 
         <div className="flex flex-wrap gap-1.5 mt-2">

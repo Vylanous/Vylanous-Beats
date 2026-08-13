@@ -13,7 +13,11 @@ import type { Beat } from "../../api/database/schema";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
-  show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] } }),
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+  }),
 };
 
 export default function Index() {
@@ -97,7 +101,11 @@ export default function Index() {
             >
               <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-vb-ink glow-purple">
                 <div className="relative aspect-square">
-                  <img src={hero.artworkUrl} alt={hero.title} className="w-full h-full object-cover" />
+                  <img
+                    src={hero.artworkUrl}
+                    alt={hero.title}
+                    className="w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-vb-black via-vb-black/20 to-transparent" />
                   <button
                     onClick={() =>
@@ -112,22 +120,36 @@ export default function Index() {
                     }
                     className="absolute top-4 right-4 grid place-items-center w-14 h-14 rounded-full bg-vb-purple text-white glow-purple-strong hover:bg-vb-purple-bright transition-colors"
                   >
-                    {heroPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-0.5" />}
+                    {heroPlaying ? (
+                      <Pause size={24} fill="currentColor" />
+                    ) : (
+                      <Play size={24} fill="currentColor" className="ml-0.5" />
+                    )}
                   </button>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <p className="font-sub uppercase tracking-widest text-vb-purple-bright">Featured Drop</p>
-                    <h3 className="font-display uppercase text-4xl leading-none mt-1">{hero.title}</h3>
+                    <p className="font-sub uppercase tracking-widest text-vb-purple-bright">
+                      Featured Drop
+                    </p>
+                    <h3 className="font-display uppercase text-4xl leading-none mt-1">
+                      {hero.title}
+                    </h3>
                     <p className="font-sub uppercase text-sm text-vb-silver tracking-wider mt-1">
                       {hero.bpm} BPM · {hero.musicalKey} · {hero.genre}
                     </p>
                     <div className="h-10 mt-3">
-                      <Waveform active={!!heroPlaying} bars={56} progress={current?.id === hero.id ? progress : 0} />
+                      <Waveform
+                        active={!!heroPlaying}
+                        bars={56}
+                        progress={current?.id === hero.id ? progress : 0}
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between px-5 py-4 border-t border-white/[0.06]">
                   <span className="font-body text-vb-muted">From</span>
-                  <span className="font-display text-2xl text-chrome">{formatCad(hero.priceFrom)} CAD</span>
+                  <span className="font-display text-2xl text-chrome">
+                    {formatCad(hero.priceFrom)} CAD
+                  </span>
                   <Link
                     to={`/beats/${hero.slug}`}
                     className="font-sub uppercase tracking-wider text-vb-purple-bright hover:underline"
@@ -147,8 +169,12 @@ export default function Index() {
       <section className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
         <div className="flex items-end justify-between mb-10">
           <div>
-            <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">Hand-picked</p>
-            <h2 className="font-display uppercase text-5xl sm:text-6xl text-chrome leading-none">Featured Beats</h2>
+            <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+              Hand-picked
+            </p>
+            <h2 className="font-display uppercase text-5xl sm:text-6xl text-chrome leading-none">
+              Featured Beats
+            </h2>
           </div>
           <Link
             to="/beats"
@@ -168,9 +194,21 @@ export default function Index() {
       <section className="max-w-7xl mx-auto px-5 sm:px-8 pb-8">
         <div className="grid md:grid-cols-3 gap-5">
           {[
-            { icon: Zap, title: "Instant Delivery", body: "Pay and download immediately. Files hit your inbox too." },
-            { icon: ShieldCheck, title: "Clear Licensing", body: "Five tiers from free to full exclusive ownership. No fine-print games." },
-            { icon: Music4, title: "Studio Quality", body: "WAV, MP3, and trackout stems mixed for radio and streaming." },
+            {
+              icon: Zap,
+              title: "Instant Delivery",
+              body: "Pay and download immediately. Files hit your inbox too.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Clear Licensing",
+              body: "Five tiers from free to full exclusive ownership. No fine-print games.",
+            },
+            {
+              icon: Music4,
+              title: "Studio Quality",
+              body: "WAV, MP3, and trackout stems mixed for radio and streaming.",
+            },
           ].map((f, i) => (
             <div key={i} className="bg-vb-ink border border-white/[0.06] rounded-xl p-6">
               <div className="grid place-items-center w-12 h-12 rounded-lg bg-vb-purple/15 text-vb-purple-bright mb-4">
@@ -186,8 +224,12 @@ export default function Index() {
       {/* LICENSE PREVIEW */}
       <section className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
         <div className="text-center mb-12">
-          <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">Pick Your Rights</p>
-          <h2 className="font-display uppercase text-5xl sm:text-6xl text-chrome leading-none">Licensing</h2>
+          <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+            Pick Your Rights
+          </p>
+          <h2 className="font-display uppercase text-5xl sm:text-6xl text-chrome leading-none">
+            Licensing
+          </h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {LICENSE_TIERS.map((t) => (

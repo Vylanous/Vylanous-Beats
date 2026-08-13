@@ -38,8 +38,12 @@ export default function BeatsPage() {
     <Layout>
       <section className="bg-mesh grain relative">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-32 pb-12">
-          <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">The Catalog</p>
-          <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none">All Beats</h1>
+          <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+            The Catalog
+          </p>
+          <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none">
+            All Beats
+          </h1>
           <p className="font-body text-vb-silver/60 mt-3 max-w-lg">
             Browse the full library. Hit play, pick a license, drop it in your cart.
           </p>
@@ -50,7 +54,10 @@ export default function BeatsPage() {
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-3 mb-8">
           <div className="relative flex-1">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-vb-muted" />
+            <Search
+              size={18}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-vb-muted"
+            />
             <input
               aria-label="Search beats, moods, and tags"
               value={q}
@@ -67,11 +74,16 @@ export default function BeatsPage() {
               className="bg-vb-ink border border-white/10 rounded-xl px-4 py-3 font-body text-vb-silver focus:border-vb-purple outline-none cursor-pointer"
             >
               {genres.map((g) => (
-                <option key={g} value={g}>{g}</option>
+                <option key={g} value={g}>
+                  {g}
+                </option>
               ))}
             </select>
             <div className="relative">
-              <SlidersHorizontal size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-vb-muted pointer-events-none" />
+              <SlidersHorizontal
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-vb-muted pointer-events-none"
+              />
               <select
                 aria-label="Sort beats"
                 value={sort}
@@ -89,7 +101,10 @@ export default function BeatsPage() {
         {isLoading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-vb-ink border border-white/[0.06] rounded-xl overflow-hidden animate-pulse">
+              <div
+                key={i}
+                className="bg-vb-ink border border-white/[0.06] rounded-xl overflow-hidden animate-pulse"
+              >
                 <div className="aspect-square bg-white/5" />
                 <div className="p-4 space-y-3">
                   <div className="h-5 bg-white/5 rounded w-2/3" />
@@ -99,7 +114,9 @@ export default function BeatsPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-24 text-vb-muted font-body">No beats match your search.</div>
+          <div className="text-center py-24 text-vb-muted font-body">
+            No beats match your search.
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((b) => (

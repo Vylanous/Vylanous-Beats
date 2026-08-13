@@ -1,6 +1,8 @@
 node_modules/
+.turbo/
 .env
 dist/
+packages/desktop/dist-electron/
 .DS_Store
 *.log
 .fly/

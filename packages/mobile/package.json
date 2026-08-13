@@ -1,6 +1,7 @@
 {
   "name": "@template/mobile",
   "version": "1.0.0",
+  "private": true,
   "main": "expo-router/entry",
   "scripts": {
     "dev": "expo start",
@@ -31,6 +32,5 @@
   "devDependencies": {
     "@types/react": "19.1.17",
     "typescript": "~5.9.2"
-  },
-  "private": true
+  }
 }

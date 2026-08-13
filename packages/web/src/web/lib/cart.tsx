@@ -54,7 +54,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clear = useCallback(() => setItems([]), []);
   const has = useCallback(
-    (beatId: string, tier: LicenseTierId) => items.some((i) => i.beatId === beatId && i.tier === tier),
+    (beatId: string, tier: LicenseTierId) =>
+      items.some((i) => i.beatId === beatId && i.tier === tier),
     [items],
   );
 

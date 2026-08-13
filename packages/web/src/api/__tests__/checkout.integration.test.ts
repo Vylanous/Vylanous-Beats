@@ -11,8 +11,12 @@ process.env.DATABASE_URL = `file:${join(dbDir, "test.db")}`;
 process.env.ADMIN_PASSWORD = "integration-test-password";
 process.env.BETTER_AUTH_SECRET = "integration-test-secret-that-is-long-enough";
 process.env.STRIPE_SECRET_KEY = "";
-process.env.RESEND_API_KEY = "";
+process.env.RESEND_API_KEY = "test-resend-key";
 process.env.APP_URL = "";
+
+// Free checkouts send a delivery email. Keep this integration test offline and
+// assert the checkout behavior without depending on Resend.
+globalThis.fetch = (async () => new Response(null, { status: 202 })) as typeof fetch;
 
 const [{ default: app }, { db }, { beats }, { orders, orderItems }] = await Promise.all([
   import("../index"),
@@ -34,7 +38,10 @@ async function seedBeat(overrides: Record<string, unknown> = {}) {
     tags: "",
     artworkUrl: "https://cdn.example.com/art.png",
     audioUrl: "https://cdn.example.com/preview.mp3",
-    fileUrls: JSON.stringify({ free: "https://cdn.example.com/free.mp3", mp3: "https://cdn.example.com/mp3.mp3" }),
+    fileUrls: JSON.stringify({
+      free: "https://cdn.example.com/free.mp3",
+      mp3: "https://cdn.example.com/mp3.mp3",
+    }),
     priceFrom: 2400,
     soldExclusive: false,
     featured: false,

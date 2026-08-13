@@ -15,7 +15,11 @@ export function publicRoutes(app: Hono) {
 
   app.post("/subscribe", zValidator("json", z.object({ email: z.string().email() })), async (c) => {
     const { email } = c.req.valid("json");
-    const existing = await db.select().from(subscribers).where(eq(subscribers.email, email)).limit(1);
+    const existing = await db
+      .select()
+      .from(subscribers)
+      .where(eq(subscribers.email, email))
+      .limit(1);
     if (existing.length === 0) {
       await db.insert(subscribers).values({ id: rid("sub"), email });
     }

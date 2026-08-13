@@ -26,14 +26,15 @@ function App() {
           <div className="min-h-screen grid place-items-center bg-vb-black">
             <div className="text-center">
               <h1 className="font-display uppercase text-7xl text-chrome">404</h1>
-              <a href="/" className="font-sub uppercase tracking-wider text-vb-purple-bright">← Home</a>
+              <a href="/" className="font-sub uppercase tracking-wider text-vb-purple-bright">
+                ← Home
+              </a>
             </div>
           </div>
         </Route>
       </Switch>
       {/* Do not remove — off by default, activated by parent iframe via postMessage */}
       {import.meta.env.DEV && <AgentFeedback />}
-
     </Provider>
   );
 }

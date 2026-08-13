@@ -17,7 +17,12 @@ function heights(n: number): number[] {
   return out;
 }
 
-export function Waveform({ active = false, bars = 48, className = "", progress = 0 }: WaveformProps) {
+export function Waveform({
+  active = false,
+  bars = 48,
+  className = "",
+  progress = 0,
+}: WaveformProps) {
   const hs = heights(bars);
   return (
     <div className={`flex items-center gap-[2px] h-full w-full ${className}`}>
