@@ -7,6 +7,7 @@ import { checkoutRoutes } from "./routes/checkout";
 import { ordersRoutes } from "./routes/orders";
 import { publicRoutes } from "./routes/public";
 import { adminRoutes } from "./routes/admin";
+import { fourthwallRoutes } from "./routes/fourthwall";
 
 // Seed on cold start (idempotent)
 seedDatabase().catch((e) => console.error("[seed] failed", e));
@@ -29,6 +30,7 @@ beatsRoutes(app);
 checkoutRoutes(app);
 ordersRoutes(app);
 adminRoutes(app);
+fourthwallRoutes(app);
 
 export type AppType = typeof app;
 export default app;

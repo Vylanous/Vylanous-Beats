@@ -58,6 +58,39 @@ const settingsSchema = z.object({
     })
     .partial()
     .optional(),
+  pages: z
+    .array(
+      z.object({
+        id: z.string(),
+        slug: z.string().regex(/^[a-z0-9-]+$/),
+        title: z.string(),
+        navLabel: z.string(),
+        published: z.boolean(),
+        showInNav: z.boolean(),
+        sections: z.array(
+          z.object({
+            id: z.string(),
+            type: z.enum(["hero", "text", "image", "pressKit", "merch"]),
+            eyebrow: z.string().optional(),
+            title: z.string().optional(),
+            body: z.string().optional(),
+            imageUrl: z.string().optional(),
+            ctaLabel: z.string().optional(),
+            ctaHref: z.string().optional(),
+            collection: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .optional(),
+  fourthwall: z
+    .object({
+      shopDomain: z.string(),
+      defaultCollection: z.string(),
+      currency: z.string().length(3),
+    })
+    .partial()
+    .optional(),
 });
 
 function normalizeFileUrls(files: Record<string, string> | undefined): Record<string, string> {
@@ -239,6 +272,8 @@ export function adminRoutes(app: Hono) {
       theme: { ...current.theme, ...input.theme },
       fontId: input.fontId ?? current.fontId,
       brand: { ...current.brand, ...input.brand },
+      pages: input.pages ?? current.pages,
+      fourthwall: { ...current.fourthwall, ...input.fourthwall },
     });
     const json = JSON.stringify(merged);
     const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);

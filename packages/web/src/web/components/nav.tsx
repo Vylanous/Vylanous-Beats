@@ -4,7 +4,7 @@ import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "../lib/cart";
 import { useSiteSettings } from "../lib/site-settings";
 
-const LINKS = [
+const BASE_LINKS = [
   { href: "/beats", label: "Beats" },
   { href: "/licensing", label: "Licensing" },
   { href: "/about", label: "About" },
@@ -15,7 +15,13 @@ export function Nav() {
   const [mobile, setMobile] = useState(false);
   const { count, setOpen } = useCart();
   const [loc] = useLocation();
-  const { brand } = useSiteSettings();
+  const { brand, pages } = useSiteSettings();
+  const links = [
+    ...BASE_LINKS,
+    ...pages
+      .filter((page) => page.published && page.showInNav)
+      .map((page) => ({ href: `/${page.slug}`, label: page.navLabel })),
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -48,7 +54,7 @@ export function Nav() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.href}
               to={l.href}
@@ -88,7 +94,7 @@ export function Nav() {
       {mobile && (
         <div className="md:hidden bg-vb-black/95 backdrop-blur-xl border-b border-white/[0.06]">
           <nav className="flex flex-col px-5 py-4 gap-1">
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <Link
                 key={l.href}
                 to={l.href}
