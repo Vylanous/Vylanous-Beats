@@ -79,6 +79,42 @@ export const orderItems = sqliteTable(
 /**
  * Newsletter / fan list signups.
  */
+/**
+ * Mobile purchase transactions — durable, idempotent record of store-native
+ * purchases. A verified transaction may fulfill exactly one Vylanous order.
+ */
+export const mobilePurchaseTransactions = sqliteTable(
+  "mobile_purchase_transactions",
+  {
+    id: text("id").primaryKey(),
+    platform: text("platform").notNull(), // apple | google
+    transactionId: text("transaction_id").notNull(),
+    productId: text("product_id").notNull(),
+    purchaseToken: text("purchase_token").notNull().default(""),
+    beatId: text("beat_id").notNull(),
+    licenseTier: text("license_tier").notNull(),
+    buyerEmail: text("buyer_email").notNull(),
+    orderId: text("order_id").notNull().default(""),
+    status: text("status").notNull().default("pending"), // pending | verified | fulfilled | revoked | failed
+    storeEnvironment: text("store_environment").notNull().default(""),
+    verificationPayload: text("verification_payload").notNull().default("{}"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    verifiedAt: text("verified_at"),
+    fulfilledAt: text("fulfilled_at"),
+    revokedAt: text("revoked_at"),
+  },
+  (t) => [
+    uniqueIndex("mobile_purchase_transactions_platform_transaction_idx").on(
+      t.platform,
+      t.transactionId,
+    ),
+    index("mobile_purchase_transactions_order_idx").on(t.orderId),
+    index("mobile_purchase_transactions_buyer_idx").on(t.buyerEmail),
+  ],
+);
+
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
@@ -141,6 +177,7 @@ export const inboundEmails = sqliteTable(
 export type Beat = typeof beats.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type MobilePurchaseTransaction = typeof mobilePurchaseTransactions.$inferSelect;
 export type SettingsRow = typeof settings.$inferSelect;
 export type EmailEvent = typeof emailEvents.$inferSelect;
 export type InboundEmail = typeof inboundEmails.$inferSelect;

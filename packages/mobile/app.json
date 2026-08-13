@@ -1,38 +1,58 @@
 {
   "expo": {
+    "name": "Vylanous Beats",
+    "slug": "vylanous-beats",
+    "version": "1.0.0",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "android": {
-      "package": "com.appId.runable",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+    "scheme": "vylanousbeats",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
-    "extra": {
-      "apiUrl": "https://vylanou-xfm5wvi-preview-4200.runable.site/",
-      "applicationId": "vylanou-xfm5wvi"
+    "updates": {
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "ios": {
-      "bundleIdentifier": "com.appId.runable",
-      "supportsTablet": true
+      "bundleIdentifier": "com.vylanousbeats.app",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "associatedDomains": ["applinks:www.vylanous.com", "applinks:vylanous.com"]
+    },
+    "android": {
+      "package": "com.vylanousbeats.app",
+      "versionCode": 1,
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0A11"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "www.vylanous.com", "pathPrefix": "/" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0A11"
     },
-    "name": "mobile",
-    "slug": "mobile",
-    "version": "1.0.0",
-    "scheme": "mobile",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "plugins": ["expo-router", "expo-iap", "expo-updates"],
+    "extra": {
+      "apiUrl": "https://www.vylanous.com",
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
-    },
-    "plugins": ["expo-router"]
+    }
   }
 }
