@@ -12,6 +12,7 @@ process.env.ADMIN_PASSWORD = "integration-test-password";
 process.env.BETTER_AUTH_SECRET = "integration-test-secret-that-is-long-enough";
 process.env.STRIPE_SECRET_KEY = "";
 process.env.RESEND_API_KEY = "test-resend-key";
+process.env.EMAIL_FROM = "Vylanous Beats <onboarding@resend.dev>";
 process.env.APP_URL = "";
 
 // Free checkouts send a delivery email. Keep this integration test offline and
