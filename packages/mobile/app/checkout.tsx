@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useIAP } from "expo-iap";
 import { useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandHeader } from "../components/BrandHeader";
 import { fulfillFreeLicense, fulfillMobilePurchase } from "../lib/api";

@@ -129,3 +129,15 @@
 - [x] Bind mobile sign-in, account dashboard, purchases, entitlement library, and downloads to the shared service.
 - [x] Bind web checkout, customer dashboard, catalog access, and downloads to the same shared service.
 - [x] Add cross-client authorization and entitlement regression coverage, validate, and publish the shared portal service.
+
+## Shared Customer Portal PR Conflict Resolution
+
+- [x] Inspect the current main-branch divergence and identify all PR #27 conflicts.
+- [x] Resolve the shared portal conflicts while retaining current main-branch enhancements.
+- [x] Revalidate the merged change set and update PR #27 for review.
+
+## Admin Upload Repair
+
+- [x] Trace the failing admin-panel upload request through browser controls, authorization, API validation, and storage.
+- [x] Repair the upload path and present actionable configuration feedback when storage is unavailable.
+- [x] Add regression coverage, validate the repaired workflow, and include it in the PR #27 update.

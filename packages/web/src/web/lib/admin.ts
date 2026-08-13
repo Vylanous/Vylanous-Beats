@@ -119,11 +119,18 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
     folder,
     file.size,
   );
-  const put = await fetch(url, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": file.type || "application/octet-stream" },
-  });
+  let put: Response;
+  try {
+    put = await fetch(url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+    });
+  } catch {
+    throw new Error(
+      "The upload could not reach object storage. Confirm the R2 bucket CORS policy allows this site origin and the Content-Type header.",
+    );
+  }
   if (!put.ok) {
     let detail = "";
     try {
