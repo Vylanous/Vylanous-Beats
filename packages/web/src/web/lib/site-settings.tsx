@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { DEFAULT_SETTINGS, getFontPair, type SiteSettings } from "../../shared/site-settings";
+import {
+  DEFAULT_SETTINGS,
+  getFontPair,
+  mergeSettings,
+  type SiteSettings,
+} from "../../shared/site-settings";
 
 const SiteSettingsContext = createContext<SiteSettings>(DEFAULT_SETTINGS);
 const SETTINGS_CACHE_KEY = "vb-site-settings";
@@ -17,7 +22,7 @@ function readCachedSettings(): SiteSettings | null {
     if (!raw) return null;
     const cached = JSON.parse(raw) as { expiresAt?: number; settings?: SiteSettings };
     return cached.expiresAt && cached.expiresAt > Date.now() && cached.settings
-      ? cached.settings
+      ? mergeSettings(cached.settings)
       : null;
   } catch {
     return null;
@@ -106,9 +111,10 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
       .then((r) => r.json())
       .then((data) => {
         if (cancelled || !data?.settings) return;
-        setSettings(data.settings);
-        cacheSettings(data.settings);
-        applySettings(data.settings);
+        const normalized = mergeSettings(data.settings);
+        setSettings(normalized);
+        cacheSettings(normalized);
+        applySettings(normalized);
       })
       .catch(() => {
         /* keep defaults on failure */

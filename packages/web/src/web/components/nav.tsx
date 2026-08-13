@@ -1,27 +1,26 @@
-import { useEffect, useState } from "react";
+/** Vylanous navigation: global chrome rendered from Site Builder header, social, and page settings. */
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "../lib/cart";
 import { useSiteSettings } from "../lib/site-settings";
-
-const BASE_LINKS = [
-  { href: "/beats", label: "Beats" },
-  { href: "/licensing", label: "Licensing" },
-  { href: "/about", label: "About" },
-];
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
   const { count, setOpen } = useCart();
   const [loc] = useLocation();
-  const { brand, pages } = useSiteSettings();
-  const links = [
-    ...BASE_LINKS,
-    ...pages
-      .filter((page) => page.published && page.showInNav)
-      .map((page) => ({ href: `/${page.slug}`, label: page.navLabel })),
-  ];
+  const { brand, header, pages, socials } = useSiteSettings();
+  const links = useMemo(
+    () =>
+      [...pages]
+        .filter((page) => page.published && page.showInNav)
+        .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000))
+        .map((page) => ({ href: page.path || `/${page.slug}`, label: page.navLabel })),
+    [pages],
+  );
+  const headerSocials = socials.filter((social) => social.showInHeader);
+  const opaque = !header.transparentAtTop || scrolled;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -29,17 +28,15 @@ export function Nav() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
   useEffect(() => setMobile(false), [loc]);
 
+  const chromeClass = header.sticky ? "fixed top-0 inset-x-0 z-50" : "relative z-50";
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-vb-black/85 backdrop-blur-xl border-b border-white/[0.06]" : "bg-transparent"
-      }`}
+      className={`${chromeClass} transition-all duration-300 ${opaque ? "bg-vb-black/85 backdrop-blur-xl border-b border-white/[0.06]" : "bg-transparent"}`}
     >
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5">
           <img
             src={brand.squareLogoUrl}
             alt="Vylanous Beats"
@@ -47,65 +44,105 @@ export function Nav() {
             decoding="async"
             className="h-9 w-9 object-contain"
           />
-          <span className="font-display text-xl uppercase tracking-wide leading-none hidden sm:block">
-            <span className="text-vb-silver-bright">Vylanous</span>{" "}
-            <span className="text-purple-glow">Beats</span>
-          </span>
+          {header.showWordmark && (
+            <span className="hidden font-display text-xl uppercase leading-none tracking-wide sm:block">
+              <span className="text-vb-silver-bright">Vylanous</span>{" "}
+              <span className="text-purple-glow">Beats</span>
+            </span>
+          )}
         </Link>
-
-        <nav className="hidden md:flex items-center gap-8">
-          {links.map((l) => (
+        <nav className="hidden items-center gap-6 lg:flex">
+          {links.map((link) => (
             <Link
-              key={l.href}
-              to={l.href}
-              className={`font-sub uppercase text-base tracking-wider transition-colors ${
-                loc === l.href ? "text-purple-glow" : "text-vb-silver hover:text-vb-silver-bright"
-              }`}
+              key={link.href}
+              to={link.href}
+              className={`font-sub text-base uppercase tracking-wider transition-colors ${loc === link.href ? "text-purple-glow" : "text-vb-silver hover:text-vb-silver-bright"}`}
             >
-              {l.label}
+              {link.label}
             </Link>
           ))}
         </nav>
-
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {header.showSocialLinks &&
+            headerSocials.slice(0, 3).map((social) => (
+              <a
+                key={social.id}
+                href={social.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={social.label}
+                className="hidden rounded-md px-1.5 py-1 font-sub text-xs uppercase tracking-wide text-vb-silver hover:text-vb-purple-bright xl:inline"
+              >
+                {social.label.slice(0, 3)}
+              </a>
+            ))}
+          {header.ctaLabel && header.ctaHref && (
+            <HeaderAction href={header.ctaHref} label={header.ctaLabel} />
+          )}
+          {header.showCart && (
+            <button
+              onClick={() => setOpen(true)}
+              className="relative grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-vb-ink hover:border-vb-purple/60"
+              aria-label="Cart"
+            >
+              <ShoppingCart size={18} className="text-vb-silver-bright" />
+              {count > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full bg-vb-purple px-1 text-[11px] font-bold text-white">
+                  {count}
+                </span>
+              )}
+            </button>
+          )}
           <button
-            onClick={() => setOpen(true)}
-            className="relative grid place-items-center w-10 h-10 rounded-lg bg-vb-ink border border-white/10 hover:border-vb-purple/60 transition-colors"
-            aria-label="Cart"
-          >
-            <ShoppingCart size={18} className="text-vb-silver-bright" />
-            {count > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 grid place-items-center min-w-5 h-5 px-1 rounded-full bg-vb-purple text-white text-[11px] font-bold">
-                {count}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setMobile((v) => !v)}
-            className="md:hidden grid place-items-center w-10 h-10 rounded-lg bg-vb-ink border border-white/10"
+            onClick={() => setMobile((value) => !value)}
+            className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
             aria-label="Menu"
           >
             {mobile ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
       {mobile && (
-        <div className="md:hidden bg-vb-black/95 backdrop-blur-xl border-b border-white/[0.06]">
-          <nav className="flex flex-col px-5 py-4 gap-1">
-            {links.map((l) => (
+        <div className="border-b border-white/[0.06] bg-vb-black/95 backdrop-blur-xl lg:hidden">
+          <nav className="flex flex-col gap-1 px-5 py-4">
+            {links.map((link) => (
               <Link
-                key={l.href}
-                to={l.href}
-                className="font-sub uppercase text-xl tracking-wider py-2.5 text-vb-silver hover:text-purple-glow"
+                key={link.href}
+                to={link.href}
+                className="py-2.5 font-sub text-xl uppercase tracking-wider text-vb-silver hover:text-purple-glow"
               >
-                {l.label}
+                {link.label}
               </Link>
             ))}
+            {header.ctaLabel && header.ctaHref && (
+              <HeaderAction href={header.ctaHref} label={header.ctaLabel} mobile />
+            )}
           </nav>
         </div>
       )}
     </header>
+  );
+}
+
+function HeaderAction({
+  href,
+  label,
+  mobile = false,
+}: {
+  href: string;
+  label: string;
+  mobile?: boolean;
+}) {
+  const className = mobile
+    ? "mt-2 inline-flex w-fit rounded-lg bg-vb-purple px-4 py-2.5 font-sub text-sm uppercase tracking-wide text-white"
+    : "hidden rounded-lg bg-vb-purple px-3 py-2 font-sub text-xs uppercase tracking-wide text-white hover:bg-vb-purple-bright xl:inline-flex";
+  return href.startsWith("/") ? (
+    <Link to={href} className={className}>
+      {label}
+    </Link>
+  ) : (
+    <a href={href} target="_blank" rel="noreferrer" className={className}>
+      {label}
+    </a>
   );
 }

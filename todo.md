@@ -72,3 +72,29 @@
 - [x] Trace the admin featured-toggle payload and beat-update persistence path.
 - [x] Preserve existing artwork and media keys when only featured status changes.
 - [x] Add regression coverage, validate, and publish the fix.
+
+## Full-Site Page Builder and Navigation Management
+
+- [x] Audit every public page, existing navigation link, and current builder-page behavior.
+- [x] Define saved page visibility, navigation-order, and advanced section-layout settings.
+- [x] Bring existing public pages under the Page Builder without changing their canonical routes.
+- [x] Add configurable navigation visibility, labels, and drag-free ordering controls.
+- [x] Add advanced section layout, spacing, emphasis, and visual treatment controls.
+- [x] Apply saved builder settings to public pages and the live site navigation.
+- [x] Add regression coverage, validate, and publish the full-site builder expansion.
+
+## Comprehensive Site Builder Expansion
+
+- [x] Preserve existing page builder, SEO, navigation, Fourthwall, and email capabilities while expanding the configuration model.
+- [x] Add global header, footer, social-link, and utility-navigation configuration.
+- [x] Add reusable headline, text, image, video, gallery, callout, divider, and spacer section capabilities.
+- [x] Add media sizing, fit, overlay, alignment, spacing, width, background, and column layout controls.
+- [x] Add page-level layout and visibility controls for all public marketing routes.
+- [x] Render the saved design system across public pages, header, footer, and navigation.
+- [x] Add migration safeguards, regression coverage, validation, and deployment-ready review materials.
+
+## PR #22 Conflict Resolution
+
+- [x] Inspect the latest main changes and identify the conflicting Site Builder files.
+- [x] Rebase the comprehensive Site Builder branch and reconcile all conflicts.
+- [x] Revalidate the resolved branch and confirm PR #22 is mergeable.
