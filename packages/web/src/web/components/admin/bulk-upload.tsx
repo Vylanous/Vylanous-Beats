@@ -61,16 +61,13 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
       }));
       setItems((prev) => [...prev, ...newItems]);
     },
-    [mode]
+    [mode],
   );
 
-  const remove = (id: string) =>
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const remove = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id));
 
   const updateItem = (id: string, patch: Partial<BulkItem>) =>
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, ...patch } : i))
-    );
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
 
   const updateTitle = (id: string, title: string) =>
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, title } : i)));
@@ -143,8 +140,8 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
           Bulk Upload
         </h1>
         <p className="font-body text-sm text-vb-silver/50">
-          Upload multiple beats at once. Each file becomes a draft — finish
-          details (BPM, key, pricing, delivery files) by editing individually.
+          Upload multiple beats at once. Each file becomes a draft — finish details (BPM, key,
+          pricing, delivery files) by editing individually.
         </p>
       </div>
 
@@ -164,9 +161,7 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
           </button>
         ))}
         <span className="font-body text-xs text-vb-silver/35 self-center ml-2">
-          {mode === "preview"
-            ? "MP3/WAV — tagged preview files"
-            : "JPG/PNG — square artwork"}
+          {mode === "preview" ? "MP3/WAV — tagged preview files" : "JPG/PNG — square artwork"}
         </span>
       </div>
 
@@ -239,11 +234,7 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
             </span>
             {!running && hasPending && (
               <button
-                onClick={() =>
-                  setItems((prev) =>
-                    prev.filter((i) => i.status !== "pending")
-                  )
-                }
+                onClick={() => setItems((prev) => prev.filter((i) => i.status !== "pending"))}
                 className="font-body text-xs text-vb-silver/40 hover:text-red-400 transition"
               >
                 Clear pending
@@ -287,16 +278,14 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
                       className="w-full bg-transparent font-body text-sm text-vb-silver-bright border-b border-white/10 focus:border-vb-purple-bright/50 focus:outline-none pb-0.5 transition"
                     />
                   ) : (
-                    <p className="font-body text-sm text-vb-silver-bright truncate">
-                      {item.title}
-                    </p>
+                    <p className="font-body text-sm text-vb-silver-bright truncate">{item.title}</p>
                   )}
                   <p className="font-body text-xs text-vb-silver/35 truncate mt-0.5">
                     {item.status === "done"
                       ? "Draft created — edit to add details"
                       : item.status === "error"
-                      ? item.error
-                      : item.file.name}
+                        ? item.error
+                        : item.file.name}
                   </p>
                 </div>
 
@@ -330,11 +319,7 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
               disabled={running}
               className="flex items-center gap-2 bg-vb-purple hover:bg-vb-purple-bright disabled:opacity-50 text-white font-sub uppercase tracking-wide px-6 py-3 rounded-xl transition"
             >
-              {running ? (
-                <Loader2 className="animate-spin" size={18} />
-              ) : (
-                <UploadCloud size={18} />
-              )}
+              {running ? <Loader2 className="animate-spin" size={18} /> : <UploadCloud size={18} />}
               {running
                 ? "Uploading…"
                 : `Upload ${items.filter((i) => i.status === "pending").length} beat${items.filter((i) => i.status === "pending").length !== 1 ? "s" : ""}`}

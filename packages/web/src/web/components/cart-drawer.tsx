@@ -58,7 +58,9 @@ export function CartDrawer() {
                 >
                   <img src={it.artworkUrl} alt="" className="w-14 h-14 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
-                    <p className="font-display uppercase text-lg leading-none truncate">{it.beatTitle}</p>
+                    <p className="font-display uppercase text-lg leading-none truncate">
+                      {it.beatTitle}
+                    </p>
                     <p className="font-sub uppercase text-xs text-vb-purple-bright tracking-wider mt-1">
                       {it.tierName}
                     </p>

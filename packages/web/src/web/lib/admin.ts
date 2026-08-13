@@ -60,12 +60,16 @@ export const adminApi = {
   listBeats: () => req<{ beats: AdminBeat[] }>("/admin/beats"),
   getBeat: (id: string) => req<{ beat: AdminBeat }>(`/admin/beats/${id}`),
   createBeat: (data: BeatInput) =>
-    req<{ id: string; slug: string }>("/admin/beats", { method: "POST", body: JSON.stringify(data) }),
+    req<{ id: string; slug: string }>("/admin/beats", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   updateBeat: (id: string, data: Partial<BeatInput>) =>
     req<{ ok: true }>(`/admin/beats/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteBeat: (id: string) => req<{ ok: true }>(`/admin/beats/${id}`, { method: "DELETE" }),
   listOrders: () => req<{ orders: AdminOrder[] }>("/admin/orders"),
-  listSubscribers: () => req<{ subscribers: { id: string; email: string; createdAt: string }[] }>("/admin/subscribers"),
+  listSubscribers: () =>
+    req<{ subscribers: { id: string; email: string; createdAt: string }[] }>("/admin/subscribers"),
   presign: (filename: string, contentType: string, folder: string) =>
     req<{ url: string; key: string }>("/admin/upload/presign", {
       method: "POST",
@@ -76,12 +80,17 @@ export const adminApi = {
 /** Fetch the site customization settings (admin-authenticated).
  * `settings.brand.*` are raw keys/paths (save these back as-is).
  * `preview.*` are signed/displayable urls for admin thumbnails only — never save these back. */
-export async function getAdminSettings(): Promise<{ settings: SiteSettings; preview: SiteSettings["brand"] }> {
+export async function getAdminSettings(): Promise<{
+  settings: SiteSettings;
+  preview: SiteSettings["brand"];
+}> {
   return req<{ settings: SiteSettings; preview: SiteSettings["brand"] }>("/admin/settings");
 }
 
 /** Persist a partial patch of the site customization settings (merged server-side). */
-export async function saveAdminSettings(patch: Partial<SiteSettings>): Promise<{ settings: SiteSettings }> {
+export async function saveAdminSettings(
+  patch: Partial<SiteSettings>,
+): Promise<{ settings: SiteSettings }> {
   return req<{ settings: SiteSettings }>("/admin/settings", {
     method: "PUT",
     body: JSON.stringify(patch),
@@ -95,7 +104,11 @@ export async function resetAdminSettings(): Promise<{ settings: SiteSettings }> 
 
 /** Upload a file to Tigris via presigned PUT. Returns the stored object key. */
 export async function uploadFile(file: File, folder: string): Promise<string> {
-  const { url, key } = await adminApi.presign(file.name, file.type || "application/octet-stream", folder);
+  const { url, key } = await adminApi.presign(
+    file.name,
+    file.type || "application/octet-stream",
+    folder,
+  );
   const put = await fetch(url, {
     method: "PUT",
     body: file,

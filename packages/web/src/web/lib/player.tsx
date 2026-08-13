@@ -90,7 +90,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setCurrent(beat);
       audio.src = beat.audioUrl;
       audio.currentTime = 0;
-      audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      audio
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
       // fire-and-forget play count
       fetch(`/api/beats/${beat.id}/play`, { method: "POST" }).catch(() => {});
     },

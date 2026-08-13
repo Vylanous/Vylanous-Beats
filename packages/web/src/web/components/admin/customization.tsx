@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { Loader2, Check, RotateCcw, Save } from "lucide-react";
 import { getAdminSettings, saveAdminSettings, resetAdminSettings } from "../../lib/admin";
 import { FileUpload } from "./file-upload";
-import { DEFAULT_SETTINGS, DEFAULT_BRAND, FONT_PAIRS, getFontPair, type SiteSettings, type ThemeColors } from "../../../shared/site-settings";
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_BRAND,
+  FONT_PAIRS,
+  getFontPair,
+  type SiteSettings,
+  type ThemeColors,
+} from "../../../shared/site-settings";
 
 const COLOR_FIELDS: { key: keyof ThemeColors; label: string; hint: string }[] = [
   { key: "primary", label: "Brand / Primary", hint: "Buttons, links, prices" },
@@ -56,7 +63,10 @@ export default function CustomizationPanel() {
   };
 
   const reset = async () => {
-    if (!confirm("Reset colors, fonts, and logos back to the original Vylanous Beats brand defaults?")) return;
+    if (
+      !confirm("Reset colors, fonts, and logos back to the original Vylanous Beats brand defaults?")
+    )
+      return;
     setResetting(true);
     setErr("");
     try {
@@ -85,9 +95,12 @@ export default function CustomizationPanel() {
     <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-display text-2xl uppercase tracking-wide text-chrome">Site Customization</h2>
+          <h2 className="font-display text-2xl uppercase tracking-wide text-chrome">
+            Site Customization
+          </h2>
           <p className="font-body text-sm text-vb-silver/50 mt-1">
-            Re-skin the live site — colors, typography, and brand images. Changes apply instantly for visitors once saved.
+            Re-skin the live site — colors, typography, and brand images. Changes apply instantly
+            for visitors once saved.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -104,7 +117,13 @@ export default function CustomizationPanel() {
             disabled={saving || resetting}
             className="flex items-center gap-1.5 font-sub uppercase tracking-wider text-sm px-5 py-2.5 rounded-lg bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors disabled:opacity-50"
           >
-            {saving ? <Loader2 className="animate-spin" size={15} /> : saved ? <Check size={15} /> : <Save size={15} />}
+            {saving ? (
+              <Loader2 className="animate-spin" size={15} />
+            ) : saved ? (
+              <Check size={15} />
+            ) : (
+              <Save size={15} />
+            )}
             {saved ? "Saved" : "Save changes"}
           </button>
         </div>
@@ -130,7 +149,10 @@ export default function CustomizationPanel() {
         >
           Beats that hit different
         </p>
-        <p className="text-sm max-w-md" style={{ fontFamily: activeFont.body, color: settings.theme.muted }}>
+        <p
+          className="text-sm max-w-md"
+          style={{ fontFamily: activeFont.body, color: settings.theme.muted }}
+        >
           This is a live preview of your chosen palette and typography pairing.
         </p>
         <button
@@ -143,10 +165,15 @@ export default function CustomizationPanel() {
 
       {/* Color palette */}
       <section className="mb-8">
-        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Color Palette</h3>
+        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+          Color Palette
+        </h3>
         <div className="grid sm:grid-cols-2 gap-4">
           {COLOR_FIELDS.map(({ key, label, hint }) => (
-            <div key={key} className="flex items-center gap-3 bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3">
+            <div
+              key={key}
+              className="flex items-center gap-3 bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3"
+            >
               <input
                 type="color"
                 aria-label={`${label} color picker`}
@@ -172,7 +199,9 @@ export default function CustomizationPanel() {
 
       {/* Typography */}
       <section className="mb-8">
-        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Typography</h3>
+        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+          Typography
+        </h3>
         <div className="grid sm:grid-cols-2 gap-3">
           {FONT_PAIRS.map((pair) => (
             <button
@@ -186,7 +215,8 @@ export default function CustomizationPanel() {
             >
               <div className="font-body text-sm text-vb-silver-bright">{pair.label}</div>
               <div className="font-body text-xs text-vb-silver/40 mt-0.5">
-                {pair.display.split(",")[0].replace(/'/g, "")} · {pair.body.split(",")[0].replace(/'/g, "")}
+                {pair.display.split(",")[0].replace(/'/g, "")} ·{" "}
+                {pair.body.split(",")[0].replace(/'/g, "")}
               </div>
             </button>
           ))}
@@ -195,7 +225,9 @@ export default function CustomizationPanel() {
 
       {/* Brand assets */}
       <section className="mb-4">
-        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Brand Images</h3>
+        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+          Brand Images
+        </h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <FileUpload
             label="Nav / square logo mark"
@@ -205,7 +237,9 @@ export default function CustomizationPanel() {
             kind="image"
             value={settings.brand.squareLogoUrl}
             previewUrl={preview.squareLogoUrl}
-            onChange={(key) => setSettings((s) => ({ ...s, brand: { ...s.brand, squareLogoUrl: key } }))}
+            onChange={(key) =>
+              setSettings((s) => ({ ...s, brand: { ...s.brand, squareLogoUrl: key } }))
+            }
           />
           <FileUpload
             label="Full wordmark logo"
@@ -215,7 +249,9 @@ export default function CustomizationPanel() {
             kind="image"
             value={settings.brand.fullLogoUrl}
             previewUrl={preview.fullLogoUrl}
-            onChange={(key) => setSettings((s) => ({ ...s, brand: { ...s.brand, fullLogoUrl: key } }))}
+            onChange={(key) =>
+              setSettings((s) => ({ ...s, brand: { ...s.brand, fullLogoUrl: key } }))
+            }
           />
           <FileUpload
             label="Favicon"
@@ -225,7 +261,9 @@ export default function CustomizationPanel() {
             kind="image"
             value={settings.brand.faviconUrl}
             previewUrl={preview.faviconUrl}
-            onChange={(key) => setSettings((s) => ({ ...s, brand: { ...s.brand, faviconUrl: key } }))}
+            onChange={(key) =>
+              setSettings((s) => ({ ...s, brand: { ...s.brand, faviconUrl: key } }))
+            }
           />
         </div>
       </section>

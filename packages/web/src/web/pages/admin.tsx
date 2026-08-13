@@ -51,7 +51,14 @@ export default function AdminPage() {
   }
 
   if (!authed) return <Login onSuccess={() => setAuthed(true)} />;
-  return <Dashboard onLogout={() => { clearToken(); setAuthed(false); }} />;
+  return (
+    <Dashboard
+      onLogout={() => {
+        clearToken();
+        setAuthed(false);
+      }}
+    />
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -81,13 +88,24 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
     <div className="min-h-screen grid place-items-center bg-vb-black px-5">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/brand/skull-mark.png" alt="" className="h-16 w-16 mx-auto object-contain mb-4" />
-          <h1 className="font-display text-3xl uppercase tracking-wide text-chrome">Admin Studio</h1>
-          <p className="font-body text-vb-silver/60 mt-1 text-sm">Vylanous Beats — owner access only</p>
+          <img
+            src="/brand/skull-mark.png"
+            alt=""
+            className="h-16 w-16 mx-auto object-contain mb-4"
+          />
+          <h1 className="font-display text-3xl uppercase tracking-wide text-chrome">
+            Admin Studio
+          </h1>
+          <p className="font-body text-vb-silver/60 mt-1 text-sm">
+            Vylanous Beats — owner access only
+          </p>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-vb-silver/40" size={18} />
+            <Lock
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-vb-silver/40"
+              size={18}
+            />
             <input
               aria-label="Admin password"
               type="password"
@@ -144,7 +162,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           {nav.map((n) => (
             <button
               key={n.id}
-              onClick={() => { setTab(n.id); closeForm(); }}
+              onClick={() => {
+                setTab(n.id);
+                closeForm();
+              }}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg font-body text-sm transition ${
                 tab === n.id
                   ? "bg-vb-purple/20 text-purple-glow border border-vb-purple/30"
@@ -157,10 +178,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           ))}
         </nav>
         <div className="p-3 border-t border-white/[0.06] space-y-1">
-          <a href="/" className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg font-body text-sm text-vb-silver/70 hover:text-vb-silver-bright hover:bg-white/[0.04] transition">
+          <a
+            href="/"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg font-body text-sm text-vb-silver/70 hover:text-vb-silver-bright hover:bg-white/[0.04] transition"
+          >
             View store →
           </a>
-          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg font-body text-sm text-vb-silver/70 hover:text-red-400 hover:bg-white/[0.04] transition">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg font-body text-sm text-vb-silver/70 hover:text-red-400 hover:bg-white/[0.04] transition"
+          >
             <LogOut size={18} /> Log out
           </button>
         </div>
@@ -171,11 +198,21 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         <span className="font-display uppercase tracking-wide">Studio</span>
         <div className="flex gap-1">
           {nav.map((n) => (
-            <button aria-label={n.label} key={n.id} onClick={() => { setTab(n.id); closeForm(); }} className={`p-2 rounded-lg ${tab === n.id ? "text-purple-glow" : "text-vb-silver/60"}`}>
+            <button
+              aria-label={n.label}
+              key={n.id}
+              onClick={() => {
+                setTab(n.id);
+                closeForm();
+              }}
+              className={`p-2 rounded-lg ${tab === n.id ? "text-purple-glow" : "text-vb-silver/60"}`}
+            >
               <n.icon size={18} />
             </button>
           ))}
-          <button aria-label="Log out" onClick={onLogout} className="p-2 text-vb-silver/60"><LogOut size={18} /></button>
+          <button aria-label="Log out" onClick={onLogout} className="p-2 text-vb-silver/60">
+            <LogOut size={18} />
+          </button>
         </div>
       </div>
 
@@ -185,7 +222,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           <BeatForm
             beat={editing}
             onCancel={closeForm}
-            onSaved={() => { closeForm(); }}
+            onSaved={() => {
+              closeForm();
+            }}
           />
         ) : (
           <>
@@ -207,48 +246,84 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 /* ------------------------------------------------------------------ */
 /* Overview                                                            */
 /* ------------------------------------------------------------------ */
-function Overview({ onAdd, onTab }: { onAdd: () => void; onTab: (t: Tab) => void; }) {
+function Overview({ onAdd, onTab }: { onAdd: () => void; onTab: (t: Tab) => void }) {
   const [stats, setStats] = useState<Awaited<ReturnType<typeof adminApi.stats>> | null>(null);
   useEffect(() => {
-    adminApi.stats().then(setStats).catch(() => {});
+    adminApi
+      .stats()
+      .then(setStats)
+      .catch(() => {});
   }, []);
 
   const cards = [
     { label: "Total Beats", value: stats?.beats ?? "—", sub: `${stats?.published ?? 0} live` },
     { label: "Orders", value: stats?.orders ?? "—", sub: `${stats?.paidOrders ?? 0} paid` },
-    { label: "Revenue", value: stats ? "$" + (stats.revenueCents / 100).toFixed(0) : "—", sub: "all time CAD" },
+    {
+      label: "Revenue",
+      value: stats ? "$" + (stats.revenueCents / 100).toFixed(0) : "—",
+      sub: "all time CAD",
+    },
     { label: "Fan List", value: stats?.subscribers ?? "—", sub: "subscribers" },
   ];
 
   return (
     <div>
-      <Header
-        title="Overview"
-        action={<AddBtn onClick={onAdd} />}
-      />
+      <Header title="Overview" action={<AddBtn onClick={onAdd} />} />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((c) => (
           <div key={c.label} className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
-            <div className="font-body text-xs uppercase tracking-wider text-vb-silver/50">{c.label}</div>
+            <div className="font-body text-xs uppercase tracking-wider text-vb-silver/50">
+              {c.label}
+            </div>
             <div className="font-display text-4xl text-chrome mt-2 leading-none">{c.value}</div>
             <div className="font-body text-xs text-vb-silver/40 mt-1.5">{c.sub}</div>
           </div>
         ))}
       </div>
       <div className="grid sm:grid-cols-3 gap-4">
-        <QuickCard title="New beat" desc="Add a single beat with artwork, preview & files." onClick={onAdd} icon={Plus} />
-        <QuickCard title="Bulk upload" desc="Drop multiple audio files or artwork at once." onClick={() => onTab("bulk")} icon={Upload} />
-        <QuickCard title="View orders" desc="See who bought what and license tiers." onClick={() => onTab("orders")} icon={ShoppingBag} />
+        <QuickCard
+          title="New beat"
+          desc="Add a single beat with artwork, preview & files."
+          onClick={onAdd}
+          icon={Plus}
+        />
+        <QuickCard
+          title="Bulk upload"
+          desc="Drop multiple audio files or artwork at once."
+          onClick={() => onTab("bulk")}
+          icon={Upload}
+        />
+        <QuickCard
+          title="View orders"
+          desc="See who bought what and license tiers."
+          onClick={() => onTab("orders")}
+          icon={ShoppingBag}
+        />
       </div>
     </div>
   );
 }
 
-function QuickCard({ title, desc, onClick, icon: Icon }: { title: string; desc: string; onClick: () => void; icon: typeof Plus }) {
+function QuickCard({
+  title,
+  desc,
+  onClick,
+  icon: Icon,
+}: {
+  title: string;
+  desc: string;
+  onClick: () => void;
+  icon: typeof Plus;
+}) {
   return (
-    <button onClick={onClick} className="text-left bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.07] hover:border-vb-purple/40 rounded-2xl p-5 transition group">
+    <button
+      onClick={onClick}
+      className="text-left bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.07] hover:border-vb-purple/40 rounded-2xl p-5 transition group"
+    >
       <div className="flex items-center gap-3 mb-2">
-        <span className="h-9 w-9 rounded-lg bg-vb-purple/20 grid place-items-center text-purple-glow group-hover:scale-105 transition"><Icon size={18} /></span>
+        <span className="h-9 w-9 rounded-lg bg-vb-purple/20 grid place-items-center text-purple-glow group-hover:scale-105 transition">
+          <Icon size={18} />
+        </span>
         <span className="font-sub uppercase tracking-wide text-vb-silver-bright">{title}</span>
       </div>
       <p className="font-body text-sm text-vb-silver/50">{desc}</p>
@@ -265,7 +340,10 @@ function BeatsTab({ onAdd, onEdit }: { onAdd: () => void; onEdit: (b: AdminBeat)
 
   const load = useCallback(() => {
     setErr("");
-    adminApi.listBeats().then((r) => setBeats(r.beats)).catch((e) => setErr(e.message));
+    adminApi
+      .listBeats()
+      .then((r) => setBeats(r.beats))
+      .catch((e) => setErr(e.message));
   }, []);
   useEffect(load, [load]);
 
@@ -300,7 +378,10 @@ function BeatsTab({ onAdd, onEdit }: { onAdd: () => void; onEdit: (b: AdminBeat)
 function OrdersTab() {
   const [orders, setOrders] = useState<AdminOrder[] | null>(null);
   useEffect(() => {
-    adminApi.listOrders().then((r) => setOrders(r.orders)).catch(() => setOrders([]));
+    adminApi
+      .listOrders()
+      .then((r) => setOrders(r.orders))
+      .catch(() => setOrders([]));
   }, []);
 
   return (
@@ -320,18 +401,29 @@ function OrdersTab() {
                   <div className="font-body text-xs text-vb-silver/50">{o.email}</div>
                 </div>
                 <div className="text-right">
-                  <span className={`font-sub uppercase text-xs px-2.5 py-1 rounded-full ${o.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>{o.status}</span>
-                  <div className="font-display text-xl text-chrome mt-1">{formatCad(o.totalCents)}</div>
+                  <span
+                    className={`font-sub uppercase text-xs px-2.5 py-1 rounded-full ${o.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}
+                  >
+                    {o.status}
+                  </span>
+                  <div className="font-display text-xl text-chrome mt-1">
+                    {formatCad(o.totalCents)}
+                  </div>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap gap-2">
                 {o.items.map((it) => (
-                  <span key={it.id} className="font-body text-xs bg-white/[0.04] border border-white/[0.06] rounded-md px-2 py-1 text-vb-silver/70">
+                  <span
+                    key={it.id}
+                    className="font-body text-xs bg-white/[0.04] border border-white/[0.06] rounded-md px-2 py-1 text-vb-silver/70"
+                  >
                     {it.beatTitle} · {it.licenseName}
                   </span>
                 ))}
               </div>
-              <div className="font-body text-[11px] text-vb-silver/30 mt-2">{new Date(o.createdAt).toLocaleString()}</div>
+              <div className="font-body text-[11px] text-vb-silver/30 mt-2">
+                {new Date(o.createdAt).toLocaleString()}
+              </div>
             </div>
           ))}
         </div>
@@ -346,7 +438,10 @@ function OrdersTab() {
 function SubscribersTab() {
   const [subs, setSubs] = useState<{ id: string; email: string; createdAt: string }[] | null>(null);
   useEffect(() => {
-    adminApi.listSubscribers().then((r) => setSubs(r.subscribers)).catch(() => setSubs([]));
+    adminApi
+      .listSubscribers()
+      .then((r) => setSubs(r.subscribers))
+      .catch(() => setSubs([]));
   }, []);
 
   const copyAll = () => {
@@ -357,9 +452,16 @@ function SubscribersTab() {
     <div>
       <Header
         title="Fan List"
-        action={subs && subs.length > 0 ? (
-          <button onClick={copyAll} className="font-sub uppercase text-sm tracking-wide px-4 py-2 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 transition">Copy all emails</button>
-        ) : undefined}
+        action={
+          subs && subs.length > 0 ? (
+            <button
+              onClick={copyAll}
+              className="font-sub uppercase text-sm tracking-wide px-4 py-2 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 transition"
+            >
+              Copy all emails
+            </button>
+          ) : undefined
+        }
       />
       {subs === null ? (
         <Loading />
@@ -370,7 +472,9 @@ function SubscribersTab() {
           {subs.map((s) => (
             <div key={s.id} className="flex items-center justify-between px-4 py-3">
               <span className="font-body text-sm text-vb-silver-bright">{s.email}</span>
-              <span className="font-body text-xs text-vb-silver/40">{new Date(s.createdAt).toLocaleDateString()}</span>
+              <span className="font-body text-xs text-vb-silver/40">
+                {new Date(s.createdAt).toLocaleDateString()}
+              </span>
             </div>
           ))}
         </div>
@@ -392,13 +496,20 @@ function Header({ title, action }: { title: string; action?: React.ReactNode }) 
 }
 function AddBtn({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-2 bg-vb-purple hover:bg-vb-purple-bright text-white font-sub uppercase tracking-wide text-sm px-4 py-2.5 rounded-lg transition">
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 bg-vb-purple hover:bg-vb-purple-bright text-white font-sub uppercase tracking-wide text-sm px-4 py-2.5 rounded-lg transition"
+    >
       <Plus size={16} /> New beat
     </button>
   );
 }
 function Loading() {
-  return <div className="grid place-items-center py-20"><Loader2 className="animate-spin text-vb-purple-bright" size={26} /></div>;
+  return (
+    <div className="grid place-items-center py-20">
+      <Loader2 className="animate-spin text-vb-purple-bright" size={26} />
+    </div>
+  );
 }
 function Empty({ label, onAdd }: { label: string; onAdd?: () => void }) {
   return (

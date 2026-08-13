@@ -13,7 +13,7 @@ seedDatabase().catch((e) => console.error("[seed] failed", e));
 
 const app = new Hono()
   // Serve license PDFs explicitly before SPA fallback
-  .use('/licenses/*', serveStatic({ root: './public' }))
+  .use("/licenses/*", serveStatic({ root: "./public" }))
   .basePath("api")
   .use(
     cors({

@@ -117,10 +117,13 @@ export async function seedDatabase() {
     } catch (e) {
       // If the table doesn't exist yet, or the operation isn't supported in this runtime,
       // log and continue. Migrations should create the table in production.
-      console.warn('[seed] ensure settings skipped (table missing or unsupported op)', (e as Error)?.message || e);
+      console.warn(
+        "[seed] ensure settings skipped (table missing or unsupported op)",
+        (e as Error)?.message || e,
+      );
     }
   } catch (e) {
-    console.error('[seed] unexpected error while ensuring settings', e);
+    console.error("[seed] unexpected error while ensuring settings", e);
   }
 
   const existing = await db.select({ c: sql<number>`count(*)` }).from(beats);

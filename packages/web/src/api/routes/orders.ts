@@ -27,7 +27,10 @@ export function ordersRoutes(app: Hono) {
           const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
           for (const it of items) {
             if (it.licenseTier === "exclusive") {
-              await db.update(beats).set({ soldExclusive: true, published: false }).where(eq(beats.id, it.beatId));
+              await db
+                .update(beats)
+                .set({ soldExclusive: true, published: false })
+                .where(eq(beats.id, it.beatId));
             }
           }
           await sendDeliveryEmail(order.email, id, token).catch((e) =>

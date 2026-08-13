@@ -33,7 +33,9 @@ export default function SuccessPage() {
 
     const run = async () => {
       // confirm first (verifies stripe payment if needed)
-      await fetch(`/api/orders/${orderId}/confirm?token=${token}`, { method: "POST" }).catch(() => {});
+      await fetch(`/api/orders/${orderId}/confirm?token=${token}`, { method: "POST" }).catch(
+        () => {},
+      );
       const res = await fetch(`/api/orders/${orderId}?token=${token}`);
       if (!res.ok) {
         if (!cancelled) setLoading(false);
@@ -62,7 +64,10 @@ export default function SuccessPage() {
       <Layout>
         <div className="max-w-2xl mx-auto px-5 pt-40 pb-24 text-center">
           <h1 className="font-display uppercase text-5xl text-chrome">No Order Found</h1>
-          <Link to="/beats" className="inline-block mt-6 font-sub uppercase tracking-wider text-vb-purple-bright">
+          <Link
+            to="/beats"
+            className="inline-block mt-6 font-sub uppercase tracking-wider text-vb-purple-bright"
+          >
             ← Back to beats
           </Link>
         </div>
@@ -78,11 +83,16 @@ export default function SuccessPage() {
             <div className="inline-grid place-items-center w-20 h-20 rounded-full bg-vb-purple/15 text-vb-purple-bright mb-5 glow-purple">
               <CheckCircle2 size={42} />
             </div>
-            <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">Order Confirmed</p>
-            <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none">You're In.</h1>
+            <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+              Order Confirmed
+            </p>
+            <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none">
+              You're In.
+            </h1>
             {email && (
               <p className="font-body text-vb-silver/70 mt-4 flex items-center justify-center gap-2">
-                <Mail size={16} className="text-vb-purple-bright" /> Download links also sent to {email}
+                <Mail size={16} className="text-vb-purple-bright" /> Download links also sent to{" "}
+                {email}
               </p>
             )}
           </div>
@@ -110,10 +120,17 @@ export default function SuccessPage() {
             ) : (
               <ul className="space-y-3">
                 {items.map((it, i) => (
-                  <li key={i} className="flex items-center gap-4 bg-vb-black rounded-xl p-4 border border-white/[0.06]">
+                  <li
+                    key={i}
+                    className="flex items-center gap-4 bg-vb-black rounded-xl p-4 border border-white/[0.06]"
+                  >
                     <div className="flex-1 min-w-0">
-                      <p className="font-display uppercase text-xl leading-none truncate">{it.beatTitle}</p>
-                      <p className="font-sub uppercase text-xs tracking-wider text-vb-purple-bright mt-1">{it.licenseName}</p>
+                      <p className="font-display uppercase text-xl leading-none truncate">
+                        {it.beatTitle}
+                      </p>
+                      <p className="font-sub uppercase text-xs tracking-wider text-vb-purple-bright mt-1">
+                        {it.licenseName}
+                      </p>
                     </div>
                     {it.downloadUrl ? (
                       <a
@@ -134,7 +151,8 @@ export default function SuccessPage() {
 
           <div className="text-center mt-8">
             <p className="font-body text-vb-muted text-sm">
-              Save this page — your link is private to your order. Questions? vylanousbeats@gmail.com
+              Save this page — your link is private to your order. Questions?
+              vylanousbeats@gmail.com
             </p>
             <Link
               to="/beats"

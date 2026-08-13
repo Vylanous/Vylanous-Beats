@@ -94,7 +94,12 @@ export function checkoutRoutes(app: Hono) {
         console.error("[email] free order", e),
       );
       return c.json(
-        { mode: "free", orderId, token: downloadToken, url: `/success?order=${orderId}&token=${downloadToken}` },
+        {
+          mode: "free",
+          orderId,
+          token: downloadToken,
+          url: `/success?order=${orderId}&token=${downloadToken}`,
+        },
         200,
       );
     }
@@ -103,8 +108,7 @@ export function checkoutRoutes(app: Hono) {
       return c.json(
         {
           error: "stripe_not_configured",
-          message:
-            "Stripe is not configured yet. Add STRIPE_SECRET_KEY to enable real payments.",
+          message: "Stripe is not configured yet. Add STRIPE_SECRET_KEY to enable real payments.",
         },
         503,
       );

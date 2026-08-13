@@ -1,11 +1,13 @@
 # Vylanous Beats — Design System
 
 ## Brand
+
 Premium hip-hop beat store. Street/graffiti energy meets dark premium luxury.
 Logo = grainy chrome skull with goat-style horns biting a dynamic mic. Stacked "VYLANOUS / BEATS" wordmark.
 Architected to expand later into a full Vylanous artist landing page (merch, music videos).
 
 ## Color Palette
+
 - `--vb-black: #0A0A0C` — base background (near-black, slight cool tint)
 - `--vb-ink: #131318` — elevated surfaces / cards
 - `--vb-ink-2: #1B1B22` — hover surfaces, borders
@@ -18,12 +20,14 @@ Architected to expand later into a full Vylanous artist landing page (merch, mus
 - Gradients: purple→deep-purple meshes, chrome silver sheens on headers.
 
 ## Typography
+
 - **HEADERS / display:** `Anton` (tall bold condensed, matches logo graffiti vibe). UPPERCASE, tight tracking. Use for hero, section titles, big price numbers.
 - **SUBHEADERS:** `League Gothic` — condensed, uppercase, for eyebrows/labels/card titles.
 - **BODY:** `Barlow Semi Condensed` — clean, readable, slightly condensed.
 - All from Google Fonts.
 
 ## Aesthetic Rules
+
 - Dark, moody, high-contrast. Black canvas, purple electricity, chrome accents.
 - Grain/noise texture overlay on backgrounds (subtle film grain).
 - Graffiti drip accents, diagonal cuts, asymmetric layouts — NOT a basic card grid.
@@ -33,12 +37,14 @@ Architected to expand later into a full Vylanous artist landing page (merch, mus
 - Custom audio player with animated waveform.
 
 ## Motion
+
 - One orchestrated page-load with staggered reveals (Motion / framer-motion).
 - Hover: purple glow lift on beat cards, play button morph.
 - Waveform animates while a beat is playing.
 - Marquee text bands continuously scroll.
 
 ## Layout / Pages
+
 - **Home (/):** Hero (logo + tagline + featured beat player), marquee band, featured beats grid, license tiers preview, about strip, footer.
 - **Beats (/beats):** Full catalog. Filter by genre/BPM/mood. Inline audio player + add-to-cart per license tier.
 - **Beat detail (/beats/:id):** Big player, waveform, license tier selector, related beats.
@@ -48,6 +54,7 @@ Architected to expand later into a full Vylanous artist landing page (merch, mus
 - **About (/about):** Vylanous Beats story, hip-hop aesthetic positioning, contact (vylanousbeats@gmail.com).
 
 ## Components
+
 - Sticky transparent→solid nav with skull mark + cart count.
 - Global persistent audio player bar (bottom) — survives navigation.
 - Beat card: artwork, title, BPM/key tags, play button, price-from, quick license dropdown.
@@ -56,5 +63,6 @@ Architected to expand later into a full Vylanous artist landing page (merch, mus
 - Footer with logo, links, socials, newsletter.
 
 ## Anti-patterns to avoid
+
 - No generic rounded card grids. No purple-on-white. No Inter/Roboto.
 - Must look like a premium producer brand, not a SaaS template.

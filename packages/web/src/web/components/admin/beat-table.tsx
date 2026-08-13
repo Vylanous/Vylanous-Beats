@@ -22,7 +22,11 @@ export function BeatTable({
         >
           <div className="h-14 w-14 shrink-0 rounded-lg overflow-hidden bg-vb-purple/10 grid place-items-center">
             {b.artworkSignedUrl || b.artworkUrl ? (
-              <img src={b.artworkSignedUrl || b.artworkUrl} alt="" className="h-full w-full object-cover" />
+              <img
+                src={b.artworkSignedUrl || b.artworkUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
             ) : (
               <span className="font-display text-vb-purple-bright text-xs">N/A</span>
             )}
@@ -30,10 +34,14 @@ export function BeatTable({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-sub uppercase tracking-wide text-vb-silver-bright truncate">{b.title}</span>
+              <span className="font-sub uppercase tracking-wide text-vb-silver-bright truncate">
+                {b.title}
+              </span>
               {b.featured && <Star size={13} className="text-amber-400 fill-amber-400 shrink-0" />}
               {b.soldExclusive && (
-                <span className="font-body text-[10px] uppercase bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded shrink-0">Sold</span>
+                <span className="font-body text-[10px] uppercase bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded shrink-0">
+                  Sold
+                </span>
               )}
             </div>
             <div className="font-body text-xs text-vb-silver/45 flex gap-2 mt-0.5">

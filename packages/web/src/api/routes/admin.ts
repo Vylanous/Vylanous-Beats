@@ -8,7 +8,12 @@ import { randomUUID } from "node:crypto";
 import { db } from "../database";
 import { beats, orders, orderItems, subscribers, settings } from "../database/schema";
 import { requireAdmin, checkPassword, makeAdminToken } from "../lib/admin-auth";
-import { loadSettings, publicSettings, invalidateSettingsCache, SETTINGS_ID } from "../lib/settings";
+import {
+  loadSettings,
+  publicSettings,
+  invalidateSettingsCache,
+  SETTINGS_ID,
+} from "../lib/settings";
 import { mergeSettings } from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
@@ -117,7 +122,11 @@ export function adminRoutes(app: Hono) {
   });
 
   app.get("/admin/beats/:id", requireAdmin, async (c) => {
-    const rows = await db.select().from(beats).where(eq(beats.id, c.req.param("id"))).limit(1);
+    const rows = await db
+      .select()
+      .from(beats)
+      .where(eq(beats.id, c.req.param("id")))
+      .limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
     return c.json(
@@ -156,28 +165,34 @@ export function adminRoutes(app: Hono) {
     return c.json({ id, slug }, 200);
   });
 
-  app.put("/admin/beats/:id", requireAdmin, zValidator("json", beatInputSchema.partial()), async (c) => {
-    const id = c.req.param("id");
-    const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
-    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
-    const input = c.req.valid("json");
-    const patch: Record<string, unknown> = {};
-    if (input.title !== undefined) patch.title = input.title;
-    if (input.bpm !== undefined) patch.bpm = input.bpm;
-    if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
-    if (input.genre !== undefined) patch.genre = input.genre;
-    if (input.mood !== undefined) patch.mood = input.mood;
-    if (input.tags !== undefined) patch.tags = input.tags;
-    if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
-    if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
-    if (input.fileUrls !== undefined) patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
-    if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
-    if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
-    if (input.featured !== undefined) patch.featured = input.featured;
-    if (input.published !== undefined) patch.published = input.published;
-    await db.update(beats).set(patch).where(eq(beats.id, id));
-    return c.json({ ok: true }, 200);
-  });
+  app.put(
+    "/admin/beats/:id",
+    requireAdmin,
+    zValidator("json", beatInputSchema.partial()),
+    async (c) => {
+      const id = c.req.param("id");
+      const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
+      if (rows.length === 0) return c.json({ error: "Not found" }, 404);
+      const input = c.req.valid("json");
+      const patch: Record<string, unknown> = {};
+      if (input.title !== undefined) patch.title = input.title;
+      if (input.bpm !== undefined) patch.bpm = input.bpm;
+      if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
+      if (input.genre !== undefined) patch.genre = input.genre;
+      if (input.mood !== undefined) patch.mood = input.mood;
+      if (input.tags !== undefined) patch.tags = input.tags;
+      if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
+      if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
+      if (input.fileUrls !== undefined)
+        patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
+      if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
+      if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
+      if (input.featured !== undefined) patch.featured = input.featured;
+      if (input.published !== undefined) patch.published = input.published;
+      await db.update(beats).set(patch).where(eq(beats.id, id));
+      return c.json({ ok: true }, 200);
+    },
+  );
 
   app.delete("/admin/beats/:id", requireAdmin, async (c) => {
     await db.delete(beats).where(eq(beats.id, c.req.param("id")));
@@ -191,7 +206,9 @@ export function adminRoutes(app: Hono) {
       .leftJoin(orderItems, eq(orderItems.orderId, orders.id))
       .orderBy(desc(orders.createdAt))
       .limit(200);
-    type OrderWithItems = typeof orders.$inferSelect & { items: (typeof orderItems.$inferSelect)[] };
+    type OrderWithItems = typeof orders.$inferSelect & {
+      items: (typeof orderItems.$inferSelect)[];
+    };
     const byId = new Map<string, OrderWithItems>();
     for (const { order, item } of rows) {
       let entry = byId.get(order.id);
@@ -228,7 +245,10 @@ export function adminRoutes(app: Hono) {
     if (existing.length === 0) {
       await db.insert(settings).values({ id: SETTINGS_ID, json });
     } else {
-      await db.update(settings).set({ json, updatedAt: new Date().toISOString() }).where(eq(settings.id, SETTINGS_ID));
+      await db
+        .update(settings)
+        .set({ json, updatedAt: new Date().toISOString() })
+        .where(eq(settings.id, SETTINGS_ID));
     }
     invalidateSettingsCache();
     return c.json({ settings: merged }, 200);
@@ -241,7 +261,10 @@ export function adminRoutes(app: Hono) {
     if (existing.length === 0) {
       await db.insert(settings).values({ id: SETTINGS_ID, json });
     } else {
-      await db.update(settings).set({ json, updatedAt: new Date().toISOString() }).where(eq(settings.id, SETTINGS_ID));
+      await db
+        .update(settings)
+        .set({ json, updatedAt: new Date().toISOString() })
+        .where(eq(settings.id, SETTINGS_ID));
     }
     invalidateSettingsCache();
     return c.json({ settings: merged }, 200);

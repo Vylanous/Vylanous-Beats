@@ -1,7 +1,6 @@
 {
   "name": "sandbox-app-template",
   "private": true,
-  "packageManager": "bun@1.3.14",
   "workspaces": [
     "packages/*"
   ],
@@ -15,12 +14,21 @@
     "validate:releases": "bun run .runable/validate-releases.ts",
     "lint": "bun run validate:releases && oxlint . --ignore-pattern 'packages/desktop/dist-electron/**' --deny-warnings --no-error-on-unmatched-pattern",
     "lint:fix": "oxlint . --fix --deny-warnings --no-error-on-unmatched-pattern",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate",
     "db:migrate": "turbo db:migrate",
     "db:push": "turbo db:push",
     "db:studio": "turbo db:studio",
     "kill:port": "lsof -t -i :${PORT:-4200} | xargs kill -9"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1023.0",
+    "@aws-sdk/s3-request-presigner": "^3.1075.0",
+    "@libsql/client": "^0.17.2",
+    "cloudflare": "^5.2.0",
+    "pm2": "^7.0.1"
   },
   "devDependencies": {
     "@tursodatabase/api": "^1.9.2",
@@ -33,11 +41,5 @@
     "typescript": "5.9.3",
     "zod": "^4.3.6"
   },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1023.0",
-    "@aws-sdk/s3-request-presigner": "^3.1075.0",
-    "@libsql/client": "^0.17.2",
-    "cloudflare": "^5.2.0",
-    "pm2": "^7.0.1"
-  }
+  "packageManager": "bun@1.3.14"
 }

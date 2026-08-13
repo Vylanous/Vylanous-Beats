@@ -25,14 +25,22 @@ export function PlayerBar() {
   return (
     <div className="fixed bottom-0 inset-x-0 z-40 bg-vb-ink/95 backdrop-blur-xl border-t border-white/[0.08]">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center gap-4">
-        <img src={current.artworkUrl} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
+        <img
+          src={current.artworkUrl}
+          alt=""
+          className="w-14 h-14 rounded-lg object-cover shrink-0"
+        />
 
         <button
           onClick={toggle}
           className="shrink-0 grid place-items-center w-12 h-12 rounded-full bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors glow-purple"
           aria-label={isPlaying ? "Pause" : "Play"}
         >
-          {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+          {isPlaying ? (
+            <Pause size={20} fill="currentColor" />
+          ) : (
+            <Play size={20} fill="currentColor" className="ml-0.5" />
+          )}
         </button>
 
         <div className="min-w-0 w-32 sm:w-44 shrink-0">

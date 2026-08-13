@@ -37,9 +37,7 @@ const server = Bun.serve({
 console.log(`Web server listening on http://localhost:${server.port}`);
 
 function getStaticFilePath(pathname: string) {
-  const cleanPath = decodeURIComponent(pathname)
-    .replace(/^\/+/, "")
-    .replaceAll("..", "");
+  const cleanPath = decodeURIComponent(pathname).replace(/^\/+/, "").replaceAll("..", "");
 
   return cleanPath ? `${distDir}/${cleanPath}` : indexPath;
 }

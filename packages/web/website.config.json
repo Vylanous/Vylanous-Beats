@@ -1,8 +1,8 @@
 {
-    "id": "website",
-    "name": "Vylanous Beats",
-    "description": "Premium hip-hop beats by Vylanous. Lease or own — affordable licensing for independent artists.",
-    "url": "https://www.vylanous.com",
-    "hostname": "www.vylanous.com",
-    "port": 8080
+  "id": "website",
+  "name": "Vylanous Beats",
+  "description": "Premium hip-hop beats by Vylanous. Lease or own — affordable licensing for independent artists.",
+  "url": "https://www.vylanous.com",
+  "hostname": "www.vylanous.com",
+  "port": 8080
 }

@@ -30,27 +30,49 @@ export function Footer() {
         <div className="md:col-span-2">
           <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="h-24 w-auto -ml-2" />
           <p className="font-body text-vb-muted max-w-sm mt-3">
-            Premium hip-hop beats. Rhythmic expression, melodious compositions, affordable licensing for
-            independent artists.
+            Premium hip-hop beats. Rhythmic expression, melodious compositions, affordable licensing
+            for independent artists.
           </p>
           <p className="font-body text-sm text-vb-muted mt-4 flex items-center gap-2">
             <Mail size={15} className="text-vb-purple-bright" />
-            <a href="mailto:vylanousbeats@gmail.com" className="hover:text-vb-purple-bright">vylanousbeats@gmail.com</a>
+            <a href="mailto:vylanousbeats@gmail.com" className="hover:text-vb-purple-bright">
+              vylanousbeats@gmail.com
+            </a>
           </p>
         </div>
 
         <div>
-          <h4 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Explore</h4>
+          <h4 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+            Explore
+          </h4>
           <ul className="space-y-2.5 font-body text-vb-muted">
-            <li><Link to="/beats" className="hover:text-vb-purple-bright">Beat Catalog</Link></li>
-            <li><Link to="/licensing" className="hover:text-vb-purple-bright">Licensing</Link></li>
-            <li><Link to="/about" className="hover:text-vb-purple-bright">About</Link></li>
-            <li><Link to="/cart" className="hover:text-vb-purple-bright">Cart</Link></li>
+            <li>
+              <Link to="/beats" className="hover:text-vb-purple-bright">
+                Beat Catalog
+              </Link>
+            </li>
+            <li>
+              <Link to="/licensing" className="hover:text-vb-purple-bright">
+                Licensing
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-vb-purple-bright">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link to="/cart" className="hover:text-vb-purple-bright">
+                Cart
+              </Link>
+            </li>
           </ul>
         </div>
 
         <div>
-          <h4 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Get New Drops</h4>
+          <h4 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+            Get New Drops
+          </h4>
           {done ? (
             <p className="font-body text-vb-purple-bright flex items-center gap-2">
               <Check size={16} /> You're on the list.

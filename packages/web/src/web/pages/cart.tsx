@@ -78,7 +78,9 @@ export default function CartPage() {
   return (
     <Layout>
       <section className="max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-20">
-        <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none mb-10">Checkout</h1>
+        <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none mb-10">
+          Checkout
+        </h1>
 
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Items */}
@@ -90,8 +92,12 @@ export default function CartPage() {
               >
                 <img src={it.artworkUrl} alt="" className="w-16 h-16 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-display uppercase text-xl leading-none truncate">{it.beatTitle}</p>
-                  <p className="font-sub uppercase text-xs tracking-wider text-vb-purple-bright mt-1">{it.tierName}</p>
+                  <p className="font-display uppercase text-xl leading-none truncate">
+                    {it.beatTitle}
+                  </p>
+                  <p className="font-sub uppercase text-xs tracking-wider text-vb-purple-bright mt-1">
+                    {it.tierName}
+                  </p>
                 </div>
                 <span className="font-display text-xl text-chrome">{formatCad(it.priceCents)}</span>
                 <button
@@ -107,7 +113,10 @@ export default function CartPage() {
 
           {/* Summary + form */}
           <div className="lg:col-span-2">
-            <form onSubmit={checkout} className="bg-vb-ink border border-white/[0.06] rounded-2xl p-6 sticky top-24">
+            <form
+              onSubmit={checkout}
+              className="bg-vb-ink border border-white/[0.06] rounded-2xl p-6 sticky top-24"
+            >
               <h2 className="font-display uppercase text-2xl mb-4">Order Summary</h2>
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between font-body text-vb-muted">
@@ -116,7 +125,9 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between items-center border-t border-white/[0.06] pt-3">
                   <span className="font-sub uppercase tracking-wider text-vb-silver">Total</span>
-                  <span className="font-display text-3xl text-chrome">{formatCad(totalCents)} <span className="text-base">CAD</span></span>
+                  <span className="font-display text-3xl text-chrome">
+                    {formatCad(totalCents)} <span className="text-base">CAD</span>
+                  </span>
                 </div>
               </div>
 
@@ -151,7 +162,11 @@ export default function CartPage() {
                 className="w-full inline-flex items-center justify-center gap-2 font-sub uppercase tracking-widest text-lg py-3.5 rounded-xl bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors glow-purple disabled:opacity-60"
               >
                 <Lock size={16} />
-                {loading ? "Processing…" : totalCents === 0 ? "Get Free License" : `Pay ${formatCad(totalCents)}`}
+                {loading
+                  ? "Processing…"
+                  : totalCents === 0
+                    ? "Get Free License"
+                    : `Pay ${formatCad(totalCents)}`}
               </button>
               <p className="font-body text-xs text-vb-muted text-center mt-3 flex items-center justify-center gap-1.5">
                 <Lock size={12} /> Secure checkout · instant delivery

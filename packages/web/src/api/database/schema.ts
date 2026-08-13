@@ -27,7 +27,9 @@ export const beats = sqliteTable(
     featured: integer("featured", { mode: "boolean" }).notNull().default(false),
     published: integer("published", { mode: "boolean" }).notNull().default(true),
     plays: integer("plays").notNull().default(0),
-    createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
   },
   (t) => [uniqueIndex("beats_slug_idx").on(t.slug)],
 );
@@ -48,7 +50,9 @@ export const orders = sqliteTable(
     stripeSessionId: text("stripe_session_id").notNull().default(""),
     // secure token used to access the download page
     downloadToken: text("download_token").notNull().default(""),
-    createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
     paidAt: text("paid_at"),
   },
   (t) => [index("orders_status_idx").on(t.status)],
@@ -78,14 +82,18 @@ export const orderItems = sqliteTable(
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
-  createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // New settings table
 export const settings = sqliteTable("settings", {
   id: text("id").primaryKey(),
   json: text("json").notNull().default("{}"),
-  createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
   updatedAt: text("updated_at"),
 });
 

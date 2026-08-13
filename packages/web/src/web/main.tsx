@@ -10,13 +10,13 @@ import App from "./app.tsx";
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
-	<StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<Router>
-				<App />
-			</Router>
-		</QueryClientProvider>
-		<Analytics />
-		<SpeedInsights />
-	</StrictMode>,
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <App />
+      </Router>
+    </QueryClientProvider>
+    <Analytics />
+    <SpeedInsights />
+  </StrictMode>,
 );
