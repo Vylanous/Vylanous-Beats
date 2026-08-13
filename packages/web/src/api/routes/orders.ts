@@ -5,6 +5,8 @@ import { orders, orderItems, beats } from "../database/schema";
 import { signIfKey } from "../lib/url-sign";
 import { stripe } from "../lib/stripe";
 import { sendDeliveryEmail } from "../lib/email";
+import { customerFromRequest } from "../lib/customer-auth";
+import { activateOrderEntitlements } from "../lib/customer-portal";
 
 export function ordersRoutes(app: Hono) {
   app.post("/orders/:id/confirm", async (c) => {
@@ -13,7 +15,9 @@ export function ordersRoutes(app: Hono) {
     const rows = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const order = rows[0];
-    if (order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
+    const customer = await customerFromRequest(c);
+    const owner = Boolean(customer && order.customerId && order.customerId === customer.id);
+    if (!owner && order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
 
     if (order.status !== "paid" && stripe && order.stripeSessionId) {
       try {
@@ -24,6 +28,7 @@ export function ordersRoutes(app: Hono) {
             .set({ status: "paid", paidAt: new Date().toISOString() })
             .where(eq(orders.id, id));
           order.status = "paid";
+          if (order.customerId) await activateOrderEntitlements(order.customerId, id);
           const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
           for (const it of items) {
             if (it.licenseTier === "exclusive") {
@@ -51,7 +56,9 @@ export function ordersRoutes(app: Hono) {
     const rows = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const order = rows[0];
-    if (order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
+    const customer = await customerFromRequest(c);
+    const owner = Boolean(customer && order.customerId && order.customerId === customer.id);
+    if (!owner && order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
     const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
     const unlocked = order.status === "paid";
     return c.json(

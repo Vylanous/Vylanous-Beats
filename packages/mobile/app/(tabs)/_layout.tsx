@@ -10,6 +10,7 @@ export default function TabLayout() {
   const { items } = useCart();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 10);
+
   return (
     <Tabs
       screenOptions={{
@@ -26,10 +27,52 @@ export default function TabLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="beats" options={{ title: "Beats", tabBarIcon: ({ color, size }) => <Ionicons name="musical-notes-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="cart" options={{ title: "Cart", tabBarBadge: items.length || undefined, tabBarIcon: ({ color, size }) => <Ionicons name="bag-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="library" options={{ title: "Library", tabBarIcon: ({ color, size }) => <Ionicons name="library-outline" color={color} size={size} /> }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="beats"
+        options={{
+          title: "Beats",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="musical-notes-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="cart"
+        options={{
+          title: "Cart",
+          tabBarBadge: items.length || undefined,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bag-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          title: "Library",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="library-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Account",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

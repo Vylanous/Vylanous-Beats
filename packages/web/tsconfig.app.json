@@ -23,5 +23,5 @@
       "@/*": ["./src/web/*"]
     }
   },
-  "include": ["src/web"]
+  "include": ["src/web", "api"]
 }
