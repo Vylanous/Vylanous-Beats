@@ -1,10 +1,11 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the composite drop zone contains a nested file input */
 /**
  * BulkUpload — drop or click to upload multiple beats at once.
  * For each file dropped, we create a draft beat record using the filename as title.
  * Artwork and preview audio are uploaded; delivery files can be added later via edit.
  * Supports: drag-and-drop, click-to-browse, multi-select.
  */
-import { useRef, useState, useCallback } from "react";
+import { useId, useRef, useState, useCallback } from "react";
 import {
   UploadCloud,
   Loader2,
@@ -46,6 +47,7 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
   const [dragging, setDragging] = useState(false);
   const [running, setRunning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   const addFiles = useCallback(
     (files: FileList | File[]) => {
@@ -169,7 +171,11 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
       </div>
 
       {/* Drop zone */}
+      {/* A semantic button cannot contain the file input; role keeps the drop zone keyboard-operable. */}
       <div
+        role="button"
+        tabIndex={running ? -1 : 0}
+        aria-label={`Upload ${mode === "preview" ? "preview audio" : "artwork images"}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -181,6 +187,12 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
           addFiles(e.dataTransfer.files);
         }}
         onClick={() => !running && inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (!running && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         className={`cursor-pointer rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center py-14 px-6 text-center select-none ${
           dragging
             ? "border-vb-purple-bright bg-vb-purple/10 scale-[1.01]"
@@ -204,7 +216,9 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
         </p>
         <input
           ref={inputRef}
+          id={inputId}
           type="file"
+          aria-label={`Select ${mode === "preview" ? "preview audio" : "artwork images"}`}
           multiple
           accept={
             mode === "preview"
@@ -267,6 +281,7 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
                 <div className="flex-1 min-w-0">
                   {item.status === "pending" ? (
                     <input
+                      aria-label={`Title for ${item.file.name}`}
                       value={item.title}
                       onChange={(e) => updateTitle(item.id, e.target.value)}
                       className="w-full bg-transparent font-body text-sm text-vb-silver-bright border-b border-white/10 focus:border-vb-purple-bright/50 focus:outline-none pb-0.5 transition"
@@ -294,6 +309,7 @@ export function BulkUpload({ onDone }: { onDone: () => void }) {
                 {item.status === "pending" && (
                   <button
                     onClick={() => remove(item.id)}
+                    aria-label={`Remove ${item.file.name}`}
                     className="h-7 w-7 grid place-items-center rounded-lg text-vb-silver/30 hover:text-red-400 hover:bg-red-500/10 transition shrink-0"
                   >
                     <X size={14} />

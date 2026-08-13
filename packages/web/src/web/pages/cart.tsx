@@ -122,6 +122,7 @@ export default function CartPage() {
 
               <div className="space-y-3 mb-4">
                 <input
+                  aria-label="Your name or artist name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -129,6 +130,7 @@ export default function CartPage() {
                   className="w-full bg-vb-black border border-white/10 rounded-lg px-3.5 py-3 font-body focus:border-vb-purple outline-none"
                 />
                 <input
+                  aria-label="Email address for delivery"
                   required
                   type="email"
                   value={email}

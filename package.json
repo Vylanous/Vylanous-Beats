@@ -13,7 +13,7 @@
     "build": "turbo build",
     "build:web": "cd packages/web && bunx vite build",
     "validate:releases": "bun run .runable/validate-releases.ts",
-    "lint": "bun run validate:releases && oxlint . --deny-warnings --no-error-on-unmatched-pattern",
+    "lint": "bun run validate:releases && oxlint . --ignore-pattern 'packages/desktop/dist-electron/**' --deny-warnings --no-error-on-unmatched-pattern",
     "lint:fix": "oxlint . --fix --deny-warnings --no-error-on-unmatched-pattern",
     "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate",

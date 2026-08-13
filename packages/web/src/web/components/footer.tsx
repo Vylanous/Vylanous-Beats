@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Instagram, Youtube, Music2, Mail, Check } from "lucide-react";
+import { Mail, Check } from "lucide-react";
 import { useSiteSettings } from "../lib/site-settings";
 
 export function Footer() {
@@ -35,7 +35,7 @@ export function Footer() {
           </p>
           <p className="font-body text-sm text-vb-muted mt-4 flex items-center gap-2">
             <Mail size={15} className="text-vb-purple-bright" />
-            vylanousbeats@gmail.com
+            <a href="mailto:vylanousbeats@gmail.com" className="hover:text-vb-purple-bright">vylanousbeats@gmail.com</a>
           </p>
         </div>
 
@@ -59,6 +59,7 @@ export function Footer() {
             <form onSubmit={subscribe} className="flex flex-col gap-2">
               <input
                 type="email"
+                aria-label="Email address for new beat releases"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -70,17 +71,6 @@ export function Footer() {
               </button>
             </form>
           )}
-          <div className="flex gap-3 mt-5">
-            {[Instagram, Youtube, Music2].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="grid place-items-center w-9 h-9 rounded-lg bg-vb-ink border border-white/10 text-vb-silver hover:text-vb-purple-bright hover:border-vb-purple/60 transition-colors"
-              >
-                <Icon size={16} />
-              </a>
-            ))}
-          </div>
         </div>
       </div>
 
