@@ -73,7 +73,6 @@
 - [x] Preserve existing artwork and media keys when only featured status changes.
 - [x] Add regression coverage, validate, and publish the fix.
 
-
 ## Full-Site Page Builder and Navigation Management
 
 - [x] Audit every public page, existing navigation link, and current builder-page behavior.
@@ -93,3 +92,9 @@
 - [x] Add page-level layout and visibility controls for all public marketing routes.
 - [x] Render the saved design system across public pages, header, footer, and navigation.
 - [x] Add migration safeguards, regression coverage, validation, and deployment-ready review materials.
+
+## PR #22 Conflict Resolution
+
+- [x] Inspect the latest main changes and identify the conflicting Site Builder files.
+- [x] Rebase the comprehensive Site Builder branch and reconcile all conflicts.
+- [ ] Revalidate the resolved branch and confirm PR #22 is mergeable.
