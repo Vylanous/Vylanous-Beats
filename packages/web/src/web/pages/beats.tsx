@@ -11,7 +11,7 @@ export default function BeatsPage() {
     queryKey: ["beats", "all"],
     queryFn: async () => (await api.beats.$get()).json(),
   });
-  const beats = (data && "beats" in data ? data.beats : []) as Beat[];
+  const beats = useMemo(() => (data && "beats" in data ? data.beats : []) as Beat[], [data]);
 
   const [q, setQ] = useState("");
   const [genre, setGenre] = useState("All");
@@ -52,6 +52,7 @@ export default function BeatsPage() {
           <div className="relative flex-1">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-vb-muted" />
             <input
+              aria-label="Search beats, moods, and tags"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search beats, moods, tags…"
@@ -60,6 +61,7 @@ export default function BeatsPage() {
           </div>
           <div className="flex gap-3">
             <select
+              aria-label="Filter by genre"
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
               className="bg-vb-ink border border-white/10 rounded-xl px-4 py-3 font-body text-vb-silver focus:border-vb-purple outline-none cursor-pointer"
@@ -71,6 +73,7 @@ export default function BeatsPage() {
             <div className="relative">
               <SlidersHorizontal size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-vb-muted pointer-events-none" />
               <select
+                aria-label="Sort beats"
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
                 className="bg-vb-ink border border-white/10 rounded-xl pl-10 pr-4 py-3 font-body text-vb-silver focus:border-vb-purple outline-none cursor-pointer"

@@ -83,31 +83,32 @@ export function BeatForm({
         {/* Details */}
         <Section title="Details">
           <Field label="Title">
-            <input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Midnight Drip" className={inputCls} />
+            <input aria-label="Title" value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Midnight Drip" className={inputCls} />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="BPM">
-              <input type="number" value={form.bpm || ""} onChange={(e) => set("bpm", Number(e.target.value) || 0)} placeholder="140" className={inputCls} />
+              <input aria-label="BPM" type="number" value={form.bpm || ""} onChange={(e) => set("bpm", Number(e.target.value) || 0)} placeholder="140" className={inputCls} />
             </Field>
             <Field label="Key">
-              <input value={form.musicalKey} onChange={(e) => set("musicalKey", e.target.value)} placeholder="C# Minor" className={inputCls} />
+              <input aria-label="Musical key" value={form.musicalKey} onChange={(e) => set("musicalKey", e.target.value)} placeholder="C# Minor" className={inputCls} />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Genre">
-              <input value={form.genre} onChange={(e) => set("genre", e.target.value)} placeholder="Hip-Hop" className={inputCls} />
+              <input aria-label="Genre" value={form.genre} onChange={(e) => set("genre", e.target.value)} placeholder="Hip-Hop" className={inputCls} />
             </Field>
             <Field label="Mood">
-              <input value={form.mood} onChange={(e) => set("mood", e.target.value)} placeholder="Dark / Melodic" className={inputCls} />
+              <input aria-label="Mood" value={form.mood} onChange={(e) => set("mood", e.target.value)} placeholder="Dark / Melodic" className={inputCls} />
             </Field>
           </div>
           <Field label="Tags" hint="Comma separated — helps search & discovery">
-            <input value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="trap, dark, 808, melodic" className={inputCls} />
+            <input aria-label="Tags" value={form.tags} onChange={(e) => set("tags", e.target.value)} placeholder="trap, dark, 808, melodic" className={inputCls} />
           </Field>
           <Field label="“From” price (lowest paid tier)" hint="Shown as the starting price. In dollars.">
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-vb-silver/40">$</span>
               <input
+                aria-label="Lowest paid tier price in dollars"
                 type="number"
                 step="0.01"
                 value={(form.priceFrom / 100).toString()}
@@ -206,7 +207,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 function Toggle({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!checked)} className="w-full flex items-center justify-between text-left group">
+    <button type="button" aria-label={label} onClick={() => onChange(!checked)} className="w-full flex items-center justify-between text-left group">
       <div>
         <div className="font-body text-sm text-vb-silver-bright">{label}</div>
         <div className="font-body text-xs text-vb-silver/45">{desc}</div>

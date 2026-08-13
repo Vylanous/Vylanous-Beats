@@ -78,7 +78,13 @@ function warnUnconfigured() {
  * presigned GET url. Otherwise return it untouched (supports external URLs too).
  */
 export async function signIfKey(key: string): Promise<string> {
-  const normalized = normalizeKey(key);
+  const value = key.trim();
+  if (!value) return "";
+  // Vite copies assets in public/ to the site root. They are already browser-
+  // reachable and must not be rewritten to private object-storage URLs.
+  if (value.startsWith("/")) return value;
+
+  const normalized = normalizeKey(value);
   if (!normalized) return "";
   if (isHttp(normalized)) return normalized; // external url — nothing to sign
   if (!S3_CONFIGURED) {
@@ -97,9 +103,4 @@ export async function signIfKey(key: string): Promise<string> {
     }
     return "";
   }
-}
-
-/** Shape a beat row for public consumption: sign artwork + preview audio. */
-export async function publicBeat<T extends { artworkUrl: string; audioUrl: string }>(b: T): Promise<T> {
-  return { ...b, artworkUrl: await signIfKey(b.artworkUrl), audioUrl: await signIfKey(b.audioUrl) };
 }

@@ -24,7 +24,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(opts.headers || {}),
+      ...opts.headers,
     },
   });
   if (res.status === 401) {

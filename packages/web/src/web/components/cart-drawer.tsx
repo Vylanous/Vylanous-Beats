@@ -9,7 +9,11 @@ export function CartDrawer() {
   return (
     <>
       {/* Backdrop */}
-      <div
+      <button
+        type="button"
+        aria-label="Close cart"
+        aria-hidden={!open}
+        tabIndex={open ? 0 : -1}
         onClick={() => setOpen(false)}
         className={`fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"

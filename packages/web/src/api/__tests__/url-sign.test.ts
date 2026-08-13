@@ -27,6 +27,10 @@ describe("storage", () => {
     expect(normalizeKey("https://cdn.example.com/song.mp3")).toBe("https://cdn.example.com/song.mp3");
   });
 
+  it("leaves locally served public assets alone", async () => {
+    await expect(signIfKey("/beats/audio/preview-1.mp3")).resolves.toBe("/beats/audio/preview-1.mp3");
+  });
+
   it("signs a key into a working single-layer url", async () => {
     const url = await signIfKey("https://abc123account.r2.cloudflarestorage.com/vylanous/audio/1712-abc-beat.mp3?X-Amz-Signature=old");
     const u = new URL(url);

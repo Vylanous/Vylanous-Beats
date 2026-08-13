@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- the composite drop zone contains nested controls and cannot be a button */
+import { useId, useRef, useState } from "react";
 import { UploadCloud, Loader2, CheckCircle2, X, Image as ImageIcon, Music } from "lucide-react";
 import { uploadFile } from "../../lib/admin";
 
@@ -17,6 +18,7 @@ interface Props {
 
 export function FileUpload({ label, hint, accept, folder, kind = "file", value, previewUrl, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
   const [localPreview, setLocalPreview] = useState<string>("");
@@ -45,9 +47,19 @@ export function FileUpload({ label, hint, accept, folder, kind = "file", value, 
 
   return (
     <div>
-      <label className="font-body text-xs uppercase tracking-wider text-vb-silver/50 mb-1.5 block">{label}</label>
+      <label htmlFor={inputId} className="font-body text-xs uppercase tracking-wider text-vb-silver/50 mb-1.5 block">{label}</label>
+      {/* A semantic button cannot contain the file input, preview player, and remove button. */}
       <div
+        role="button"
+        tabIndex={uploading ? -1 : 0}
+        aria-label={`Upload ${label}`}
         onClick={() => !uploading && inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (!uploading && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -76,7 +88,8 @@ export function FileUpload({ label, hint, accept, folder, kind = "file", value, 
         </div>
 
         {kind === "audio" && preview && hasFile && (
-          <audio src={preview} controls className="h-8 max-w-[140px]" onClick={(e) => e.stopPropagation()} />
+          // oxlint-disable-next-line jsx-a11y/media-has-caption -- uploaded instrumental preview; no spoken content to caption
+          <audio src={preview} controls aria-label={`${label} preview`} className="h-8 max-w-[140px]" onClick={(e) => e.stopPropagation()} />
         )}
 
         {hasFile && !uploading && (
@@ -87,6 +100,7 @@ export function FileUpload({ label, hint, accept, folder, kind = "file", value, 
               setFilename("");
               setLocalPreview("");
             }}
+            aria-label={`Remove ${label}`}
             className="h-8 w-8 grid place-items-center rounded-lg text-vb-silver/40 hover:text-red-400 hover:bg-red-500/10 transition shrink-0"
           >
             <X size={16} />
@@ -95,7 +109,9 @@ export function FileUpload({ label, hint, accept, folder, kind = "file", value, 
 
         <input
           ref={inputRef}
+          id={inputId}
           type="file"
+          aria-label={label}
           accept={accept}
           className="hidden"
           onChange={(e) => handle(e.target.files?.[0])}

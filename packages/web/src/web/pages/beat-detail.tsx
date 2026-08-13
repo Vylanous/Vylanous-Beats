@@ -87,16 +87,30 @@ export default function BeatDetail() {
                   </span>
                 </button>
               </div>
-              <div
-                className="h-14 mt-4 cursor-pointer"
+              <button
+                type="button"
+                disabled={current?.id !== beat.id}
+                aria-label="Seek beat preview; use left and right arrow keys for small adjustments"
+                className="h-14 mt-4 w-full cursor-pointer disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-vb-purple-bright rounded"
                 onClick={(e) => {
-                  if (current?.id !== beat.id) return;
+                  if (e.detail === 0 || current?.id !== beat.id) return;
                   const rect = e.currentTarget.getBoundingClientRect();
                   seek((e.clientX - rect.left) / rect.width);
                 }}
+                onKeyDown={(e) => {
+                  if (current?.id !== beat.id) return;
+                  if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    seek(Math.max(0, progress - 0.05));
+                  }
+                  if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    seek(Math.min(1, progress + 0.05));
+                  }
+                }}
               >
                 <Waveform active={!!beatPlaying} bars={72} progress={current?.id === beat.id ? progress : 0} />
-              </div>
+              </button>
             </div>
 
             {/* Info + license */}

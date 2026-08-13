@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Mail, Instagram, Youtube, Music2, ArrowRight } from "lucide-react";
+import { Mail, ArrowRight } from "lucide-react";
 import { Layout } from "../components/layout";
 import { Marquee } from "../components/marquee";
 
@@ -52,13 +52,6 @@ export default function About() {
           >
             <Mail size={18} /> vylanousbeats@gmail.com
           </a>
-          <div className="flex justify-center gap-3 mt-8">
-            {[Instagram, Youtube, Music2].map((Icon, i) => (
-              <a key={i} href="#" className="grid place-items-center w-11 h-11 rounded-lg bg-vb-ink border border-white/10 text-vb-silver hover:text-vb-purple-bright hover:border-vb-purple/60 transition-colors">
-                <Icon size={18} />
-              </a>
-            ))}
-          </div>
         </div>
 
         <div className="text-center mt-10">

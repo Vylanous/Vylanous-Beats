@@ -89,11 +89,11 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-vb-silver/40" size={18} />
             <input
+              aria-label="Admin password"
               type="password"
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               placeholder="Password"
-              autoFocus
               className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-12 pr-4 py-3.5 font-body text-vb-silver-bright placeholder:text-vb-silver/40 focus:outline-none focus:border-vb-purple-bright/60 focus:bg-white/[0.06] transition"
             />
           </div>
@@ -171,11 +171,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         <span className="font-display uppercase tracking-wide">Studio</span>
         <div className="flex gap-1">
           {nav.map((n) => (
-            <button key={n.id} onClick={() => { setTab(n.id); closeForm(); }} className={`p-2 rounded-lg ${tab === n.id ? "text-purple-glow" : "text-vb-silver/60"}`}>
+            <button aria-label={n.label} key={n.id} onClick={() => { setTab(n.id); closeForm(); }} className={`p-2 rounded-lg ${tab === n.id ? "text-purple-glow" : "text-vb-silver/60"}`}>
               <n.icon size={18} />
             </button>
           ))}
-          <button onClick={onLogout} className="p-2 text-vb-silver/60"><LogOut size={18} /></button>
+          <button aria-label="Log out" onClick={onLogout} className="p-2 text-vb-silver/60"><LogOut size={18} /></button>
         </div>
       </div>
 
