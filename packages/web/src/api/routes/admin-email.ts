@@ -36,20 +36,20 @@ export function adminEmailRoutes(app: Hono) {
     requireAdmin,
     zValidator("json", z.object({ status: z.enum(["unread", "read", "archived"]) })),
     async (c) => {
+      const id = c.req.param("id");
+      if (!id) return c.json({ error: "invalid_inbox_message_id" }, 400);
       await db
         .update(inboundEmails)
         .set({ status: c.req.valid("json").status })
-        .where(eq(inboundEmails.id, c.req.param("id")));
+        .where(eq(inboundEmails.id, id));
       return c.json({ ok: true }, 200);
     },
   );
 
   app.get("/admin/inbox/:id/content", requireAdmin, async (c) => {
-    const rows = await db
-      .select()
-      .from(inboundEmails)
-      .where(eq(inboundEmails.id, c.req.param("id")))
-      .limit(1);
+    const id = c.req.param("id");
+    if (!id) return c.json({ error: "invalid_inbox_message_id" }, 400);
+    const rows = await db.select().from(inboundEmails).where(eq(inboundEmails.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) return c.json({ error: "resend_not_configured" }, 503);

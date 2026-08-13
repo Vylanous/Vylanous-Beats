@@ -24,7 +24,7 @@
     "kill:port": "lsof -t -i :${PORT:-4200} | xargs kill -9"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1023.0",
+    "@aws-sdk/client-s3": "3.1075",
     "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@libsql/client": "^0.17.2",
     "cloudflare": "^5.2.0",
