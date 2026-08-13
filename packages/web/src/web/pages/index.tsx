@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
 import { Play, Pause, ArrowRight, Music4, ShieldCheck, Zap } from "lucide-react";
 import { Layout } from "../components/layout";
 import { Marquee } from "../components/marquee";
@@ -10,15 +9,6 @@ import { usePlayer } from "../lib/player";
 import { api } from "../lib/api";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  }),
-};
 
 export default function Index() {
   const { data } = useQuery({
@@ -37,43 +27,19 @@ export default function Index() {
         <div className="absolute inset-0 grain" />
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-32 pb-16 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7">
-            <motion.p
-              custom={0}
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg mb-4"
-            >
+            <p className="reveal-up font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg mb-4">
               Premium Hip-Hop Beats
-            </motion.p>
-            <motion.h1
-              custom={1}
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              className="font-display uppercase leading-[0.85] text-6xl sm:text-7xl md:text-8xl"
-            >
+            </p>
+            <h1 className="reveal-up reveal-up-delay-1 font-display uppercase leading-[0.85] text-6xl sm:text-7xl md:text-8xl">
               <span className="text-chrome">Beats That</span>
               <br />
               <span className="text-purple-glow">Hit Different.</span>
-            </motion.h1>
-            <motion.p
-              custom={2}
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              className="font-body text-vb-silver/70 text-lg max-w-xl mt-6"
-            >
+            </h1>
+            <p className="reveal-up reveal-up-delay-2 font-body text-vb-silver/70 text-lg max-w-xl mt-6">
               Rhythmic expression, melodious compositions, and street-ready energy. Lease or own —
               affordable licensing for independent artists who want to stand out.
-            </motion.p>
-            <motion.div
-              custom={3}
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              className="flex flex-wrap gap-4 mt-8"
-            >
+            </p>
+            <div className="reveal-up reveal-up-delay-3 flex flex-wrap gap-4 mt-8">
               <Link
                 to="/beats"
                 className="group inline-flex items-center gap-2 font-sub uppercase tracking-widest text-lg px-7 py-3.5 rounded-xl bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors glow-purple"
@@ -87,23 +53,21 @@ export default function Index() {
               >
                 View Licensing
               </Link>
-            </motion.div>
+            </div>
           </div>
 
           {/* Hero featured beat player */}
           {hero && (
-            <motion.div
-              custom={4}
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              className="lg:col-span-5"
-            >
+            <div className="reveal-up reveal-up-delay-4 lg:col-span-5">
               <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-vb-ink glow-purple">
                 <div className="relative aspect-square">
                   <img
                     src={hero.artworkUrl}
                     alt={hero.title}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    sizes="(min-width: 1024px) 40vw, 100vw"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-vb-black via-vb-black/20 to-transparent" />
@@ -158,7 +122,7 @@ export default function Index() {
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
         </div>
       </section>

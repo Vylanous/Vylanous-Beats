@@ -32,6 +32,7 @@ export function beatsRoutes(app: Hono) {
       .from(beats)
       .where(eq(beats.published, true))
       .orderBy(desc(beats.featured), desc(beats.createdAt));
+    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return c.json({ beats: await Promise.all(all.map(serializePublicBeat)) }, 200);
   });
 
@@ -41,6 +42,7 @@ export function beatsRoutes(app: Hono) {
       .from(beats)
       .where(and(eq(beats.published, true), eq(beats.featured, true)))
       .orderBy(desc(beats.createdAt));
+    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return c.json({ beats: await Promise.all(list.map(serializePublicBeat)) }, 200);
   });
 
@@ -48,6 +50,7 @@ export function beatsRoutes(app: Hono) {
     const slug = c.req.param("slug");
     const rows = await db.select().from(beats).where(eq(beats.slug, slug)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
+    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return c.json({ beat: await serializePublicBeat(rows[0]) }, 200);
   });
 

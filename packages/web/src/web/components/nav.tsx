@@ -34,7 +34,13 @@ export function Nav() {
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <img src={brand.squareLogoUrl} alt="Vylanous Beats" className="h-9 w-9 object-contain" />
+          <img
+            src={brand.squareLogoUrl}
+            alt="Vylanous Beats"
+            fetchPriority="high"
+            decoding="async"
+            className="h-9 w-9 object-contain"
+          />
           <span className="font-display text-xl uppercase tracking-wide leading-none hidden sm:block">
             <span className="text-vb-silver-bright">Vylanous</span>{" "}
             <span className="text-purple-glow">Beats</span>
