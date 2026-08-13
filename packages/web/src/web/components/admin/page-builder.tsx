@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
+import { FileUpload } from "./file-upload";
 import type {
   BuilderPage,
   PageSection,
@@ -102,14 +103,16 @@ function sortedPages(pages: BuilderPage[]) {
 
 export default function PageBuilderPanel() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [previews, setPreviews] = useState<SiteSettings | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
     getAdminSettings()
-      .then(({ settings: loaded }) => {
+      .then(({ settings: loaded, preview }) => {
         setSettings(loaded);
+        setPreviews(preview);
         setSelectedId(loaded.pages[0]?.id || "");
       })
       .catch(() => setNotice("Unable to load site-builder settings."));
@@ -135,14 +138,16 @@ export default function PageBuilderPanel() {
     setSaving(true);
     setNotice("");
     try {
-      const result = await saveAdminSettings({
+      await saveAdminSettings({
         pages: settings.pages,
         fourthwall: settings.fourthwall,
         header: settings.header,
         footer: settings.footer,
         socials: settings.socials,
       });
-      setSettings(result.settings);
+      const refreshed = await getAdminSettings();
+      setSettings(refreshed.settings);
+      setPreviews(refreshed.preview);
       setNotice("Saved. Your live design, navigation, and global chrome update immediately.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not save site-builder changes.");
@@ -190,6 +195,7 @@ export default function PageBuilderPanel() {
     [sections[index], sections[destination]] = [sections[destination], sections[index]];
     updatePage({ ...page, sections });
   };
+  const previewPage = previews?.pages.find((candidate) => candidate.id === page.id);
 
   return (
     <div className="pb-12">
@@ -327,6 +333,7 @@ export default function PageBuilderPanel() {
                 <SectionEditor
                   key={section.id}
                   section={section}
+                  preview={previewPage?.sections.find((candidate) => candidate.id === section.id)}
                   onChange={(patch) => updateSection(section.id, patch)}
                   onDelete={() =>
                     updatePage({
@@ -339,7 +346,7 @@ export default function PageBuilderPanel() {
               ))}
             </div>
           </section>
-          <SeoEditor page={page} onChange={updatePage} />
+          <SeoEditor page={page} preview={previewPage} onChange={updatePage} />
           <FourthwallEditor settings={settings} onChange={updateSettings} />
         </div>
       </div>
@@ -646,11 +653,13 @@ function PagePropertiesEditor({
 
 function SectionEditor({
   section,
+  preview,
   onChange,
   onDelete,
   onMove,
 }: {
   section: PageSection;
+  preview?: PageSection;
   onChange: (patch: Partial<PageSection>) => void;
   onDelete: () => void;
   onMove: (direction: -1 | 1) => void;
@@ -751,10 +760,11 @@ function SectionEditor({
               )}
               {supportsMedia && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <Field
-                    label={section.type === "video" ? "Poster image URL" : "Image URL"}
+                  <ImageAssetField
+                    label={section.type === "video" ? "Poster image" : "Section image"}
                     value={section.imageUrl || ""}
-                    placeholder="https://… or a stored media URL"
+                    previewUrl={preview?.imageUrl}
+                    hint="Upload a JPG, PNG, WebP, GIF, or AVIF image up to 10 MB."
                     onChange={(value) => onChange({ imageUrl: value })}
                   />
                   {section.type === "video" && (
@@ -770,6 +780,7 @@ function SectionEditor({
               {supportsItems && (
                 <ItemsEditor
                   items={section.items || []}
+                  previewItems={preview?.items || []}
                   label={section.type === "gallery" ? "Gallery images" : "Cards"}
                   onChange={(items) => onChange({ items })}
                 />
@@ -820,12 +831,53 @@ function SectionEditor({
   );
 }
 
+function ImageAssetField({
+  label,
+  hint,
+  value,
+  previewUrl,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  previewUrl?: string;
+  onChange: (value: string) => void;
+}) {
+  const externalUrl = /^(https?:)?\/\//.test(value) || value.startsWith("/") ? value : "";
+  const activePreview = value ? externalUrl || previewUrl : "";
+  return (
+    <div className="space-y-3">
+      <FileUpload
+        label={label}
+        hint={hint}
+        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+        folder="site-builder/images"
+        kind="image"
+        maxBytes={10 * 1024 * 1024}
+        value={value}
+        previewUrl={activePreview}
+        onChange={onChange}
+      />
+      <Field
+        label="Or use an image URL"
+        value={externalUrl}
+        hint="Keep using an existing hosted image by pasting its full URL here."
+        placeholder="https://…"
+        onChange={onChange}
+      />
+    </div>
+  );
+}
+
 function ItemsEditor({
   items,
+  previewItems,
   label,
   onChange,
 }: {
   items: SectionItem[];
+  previewItems: SectionItem[];
   label: string;
   onChange: (items: SectionItem[]) => void;
 }) {
@@ -837,40 +889,93 @@ function ItemsEditor({
     )
     .join("\n");
   return (
-    <label className="mt-3 block font-body text-xs uppercase tracking-wider text-vb-silver/50">
-      {label}
-      <textarea
-        aria-label={label}
-        value={text}
-        onChange={(event) =>
-          onChange(
-            event.target.value
-              .split("\n")
-              .filter(Boolean)
-              .map((line, index) => {
-                const [title = "", body = "", imageUrl = "", labelValue = "", href = ""] = line
-                  .split("|")
-                  .map((value) => value.trim());
-                return {
-                  id: items[index]?.id || newId("item"),
-                  title,
-                  body,
-                  imageUrl,
-                  label: labelValue,
-                  href,
-                };
-              }),
-          )
-        }
-        rows={Math.max(3, items.length + 1)}
-        placeholder="Title | description | image URL | button label | link"
-        className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60"
-      />
-      <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
-        One item per line. Use the pipe character to separate title, text, image URL, optional
-        button label, and optional link.
-      </span>
-    </label>
+    <div className="mt-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="font-body text-xs uppercase tracking-wider text-vb-silver/50">
+          {label}
+        </span>
+        <button
+          onClick={() => onChange([...items, { id: newId("item"), title: "New item" }])}
+          className="inline-flex items-center gap-1 rounded border border-vb-purple/40 px-2 py-1 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10"
+        >
+          <Plus size={13} /> Add item
+        </button>
+      </div>
+      {items.length > 0 && (
+        <div className="mb-3 grid gap-3 sm:grid-cols-2">
+          {items.map((item, index) => (
+            <div
+              key={item.id}
+              className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"
+            >
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="font-body text-xs text-vb-silver/55">
+                  {item.title || `Item ${index + 1}`}
+                </span>
+                <button
+                  aria-label={`Remove ${item.title || `item ${index + 1}`}`}
+                  onClick={() => onChange(items.filter((candidate) => candidate.id !== item.id))}
+                  className="rounded p-1 text-vb-silver/45 hover:bg-red-500/10 hover:text-red-400"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <FileUpload
+                label={`${label.replace(/s$/, "")} ${index + 1} image`}
+                hint="Upload a JPG, PNG, WebP, GIF, or AVIF image up to 10 MB."
+                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                folder="site-builder/images"
+                kind="image"
+                maxBytes={10 * 1024 * 1024}
+                value={item.imageUrl || ""}
+                previewUrl={previewItems.find((candidate) => candidate.id === item.id)?.imageUrl}
+                onChange={(imageUrl) =>
+                  onChange(
+                    items.map((candidate) =>
+                      candidate.id === item.id ? { ...candidate, imageUrl } : candidate,
+                    ),
+                  )
+                }
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/50">
+        Bulk item editor
+        <textarea
+          aria-label={`${label} bulk editor`}
+          value={text}
+          onChange={(event) =>
+            onChange(
+              event.target.value
+                .split("\n")
+                .filter(Boolean)
+                .map((line, index) => {
+                  const [title = "", body = "", imageUrl = "", labelValue = "", href = ""] = line
+                    .split("|")
+                    .map((value) => value.trim());
+                  return {
+                    id: items[index]?.id || newId("item"),
+                    title,
+                    body,
+                    imageUrl,
+                    label: labelValue,
+                    href,
+                  };
+                }),
+            )
+          }
+          rows={Math.max(3, items.length + 1)}
+          placeholder="Title | description | image URL | button label | link"
+          className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60"
+        />
+        <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
+          One item per line. Use the pipe character to separate title, text, image URL, optional
+          button label, and optional link.
+        </span>
+      </label>
+    </div>
   );
 }
 
@@ -970,9 +1075,11 @@ function LayoutControls({
 
 function SeoEditor({
   page,
+  preview,
   onChange,
 }: {
   page: BuilderPage;
+  preview?: BuilderPage;
   onChange: (page: BuilderPage) => void;
 }) {
   const setSeo = (patch: NonNullable<BuilderPage["seo"]>) =>
@@ -1003,9 +1110,11 @@ function SeoEditor({
         onChange={(value) => setSeo({ description: value.slice(0, 200) })}
       />
       <div className="mt-3">
-        <Field
-          label="Open Graph image URL"
+        <ImageAssetField
+          label="Open Graph social-card image"
           value={page.seo?.ogImageUrl || ""}
+          previewUrl={preview?.seo?.ogImageUrl}
+          hint="Upload the image used when this page is shared on social platforms."
           onChange={(value) => setSeo({ ogImageUrl: value })}
         />
       </div>

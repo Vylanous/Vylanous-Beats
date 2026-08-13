@@ -223,7 +223,7 @@ export function mobilePurchaseRoutes(app: Hono) {
             eq(mobilePurchaseTransactions.transactionId, body.transactionId),
           ),
         );
-    } catch (error) {
+    } catch {
       console.error("[mobile-purchase] delivery email failed", {
         platform: body.platform,
         transactionId: body.transactionId,

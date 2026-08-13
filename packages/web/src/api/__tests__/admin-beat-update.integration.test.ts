@@ -68,4 +68,34 @@ describe("admin beat updates", () => {
     expect(saved.audioUrl).toBe(beat.audioUrl);
     expect(saved.fileUrls).toBe(beat.fileUrls);
   });
+
+  test("Page Builder image uploads reject unsupported formats and oversized files", async () => {
+    const headers = {
+      Authorization: `Bearer ${makeAdminToken()}`,
+      "Content-Type": "application/json",
+    };
+    const unsupported = await app.request("/api/admin/upload/presign", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        filename: "cover.svg",
+        contentType: "image/svg+xml",
+        folder: "site-builder/images",
+        size: 1024,
+      }),
+    });
+    expect(unsupported.status).toBe(415);
+
+    const oversized = await app.request("/api/admin/upload/presign", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        filename: "cover.png",
+        contentType: "image/png",
+        folder: "site-builder/images",
+        size: 10 * 1024 * 1024 + 1,
+      }),
+    });
+    expect(oversized.status).toBe(413);
+  });
 });

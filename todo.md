@@ -98,3 +98,10 @@
 - [x] Inspect the latest main changes and identify the conflicting Site Builder files.
 - [x] Rebase the comprehensive Site Builder branch and reconcile all conflicts.
 - [x] Revalidate the resolved branch and confirm PR #22 is mergeable.
+
+## Page Builder Image Uploads
+
+- [x] Audit the existing authenticated media-upload and storage-key workflow.
+- [x] Add secure Page Builder image upload validation and persistence support.
+- [x] Add image upload, preview, replacement, and removal controls to the Site Builder.
+- [x] Add regression coverage, validate, and publish the upload workflow.
