@@ -23,5 +23,22 @@ export default defineConfig(({ mode }) => {
       hmr: { overlay: false },
       cors: false,
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return;
+            if (id.includes("react-dom") || id.includes("/react/") || id.includes("scheduler")) {
+              return "vendor-react";
+            }
+            if (id.includes("@tanstack/react-query")) return "vendor-query";
+            if (id.includes("lucide-react")) return "vendor-icons";
+            if (id.includes("@runablehq/website-runtime")) return "vendor-runtime";
+            if (id.includes("motion")) return "vendor-motion";
+            if (id.includes("/hono/")) return "vendor-hono";
+          },
+        },
+      },
+    },
   };
 });
