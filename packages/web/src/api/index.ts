@@ -10,6 +10,7 @@ import { adminRoutes } from "./routes/admin";
 import { fourthwallRoutes } from "./routes/fourthwall";
 import { resendWebhookRoutes } from "./routes/resend-webhook";
 import { adminEmailRoutes } from "./routes/admin-email";
+import { mobilePurchaseRoutes } from "./routes/mobile-purchases";
 
 // Seed on cold start (idempotent)
 seedDatabase().catch((e) => console.error("[seed] failed", e));
@@ -35,6 +36,7 @@ adminRoutes(app);
 fourthwallRoutes(app);
 resendWebhookRoutes(app);
 adminEmailRoutes(app);
+mobilePurchaseRoutes(app);
 
 export type AppType = typeof app;
 export default app;

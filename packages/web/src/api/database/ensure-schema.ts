@@ -55,6 +55,27 @@ export const SCHEMA_STATEMENTS: string[] = [
     "file_url" text not null default ''
   )`,
   `create index if not exists "order_items_order_id_idx" on "order_items" ("order_id")`,
+  `create table if not exists "mobile_purchase_transactions" (
+    "id" text primary key not null,
+    "platform" text not null,
+    "transaction_id" text not null,
+    "product_id" text not null,
+    "purchase_token" text not null default '',
+    "beat_id" text not null,
+    "license_tier" text not null,
+    "buyer_email" text not null,
+    "order_id" text not null default '',
+    "status" text not null default 'pending',
+    "store_environment" text not null default '',
+    "verification_payload" text not null default '{}',
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "verified_at" text,
+    "fulfilled_at" text,
+    "revoked_at" text
+  )`,
+  `create unique index if not exists "mobile_purchase_transactions_platform_transaction_idx" on "mobile_purchase_transactions" ("platform", "transaction_id")`,
+  `create index if not exists "mobile_purchase_transactions_order_idx" on "mobile_purchase_transactions" ("order_id")`,
+  `create index if not exists "mobile_purchase_transactions_buyer_idx" on "mobile_purchase_transactions" ("buyer_email")`,
   `create table if not exists "subscribers" (
     "id" text primary key not null,
     "email" text not null,
