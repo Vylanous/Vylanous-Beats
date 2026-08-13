@@ -30,10 +30,42 @@ export interface BrandAssets {
   faviconUrl: string;
 }
 
+export type PageSectionType = "hero" | "text" | "image" | "pressKit" | "merch";
+
+export interface PageSection {
+  id: string;
+  type: PageSectionType;
+  eyebrow?: string;
+  title?: string;
+  body?: string;
+  imageUrl?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  collection?: string;
+}
+
+export interface BuilderPage {
+  id: string;
+  slug: string;
+  title: string;
+  navLabel: string;
+  published: boolean;
+  showInNav: boolean;
+  sections: PageSection[];
+}
+
+export interface FourthwallSettings {
+  shopDomain: string;
+  defaultCollection: string;
+  currency: string;
+}
+
 export interface SiteSettings {
   theme: ThemeColors;
   fontId: string;
   brand: BrandAssets;
+  pages: BuilderPage[];
+  fourthwall: FourthwallSettings;
 }
 
 export const DEFAULT_THEME: ThemeColors = {
@@ -52,6 +84,87 @@ export const DEFAULT_BRAND: BrandAssets = {
   fullLogoUrl: "/brand/Logo_full_transparent.png",
   faviconUrl: "/brand/Favicon_sharp.png",
 };
+
+export const DEFAULT_FOURTHWALL: FourthwallSettings = {
+  shopDomain: "vylanous-shop.fourthwall.com",
+  defaultCollection: "all",
+  currency: "USD",
+};
+
+export const DEFAULT_PAGES: BuilderPage[] = [
+  {
+    id: "page_artist",
+    slug: "artist",
+    title: "Artist Profile",
+    navLabel: "Artist",
+    published: true,
+    showInNav: true,
+    sections: [
+      {
+        id: "artist_hero",
+        type: "hero",
+        eyebrow: "The Artist",
+        title: "Vylanous",
+        body: "A hip-hop artist and producer building a sound that lands hard and stays melodic.",
+        ctaLabel: "Listen to beats",
+        ctaHref: "/beats",
+      },
+      {
+        id: "artist_story",
+        type: "text",
+        title: "Built for the loudest rooms",
+        body: "Use this section to tell your story, introduce your sound, and point listeners toward your latest release.",
+      },
+    ],
+  },
+  {
+    id: "page_epk",
+    slug: "epk",
+    title: "Electronic Press Kit",
+    navLabel: "EPK",
+    published: true,
+    showInNav: true,
+    sections: [
+      {
+        id: "epk_hero",
+        type: "hero",
+        eyebrow: "Press & Booking",
+        title: "Electronic Press Kit",
+        body: "A concise home for your bio, performance highlights, contact details, and downloadable press materials.",
+      },
+      {
+        id: "epk_press",
+        type: "pressKit",
+        title: "Press Materials",
+        body: "Add your official bio, key links, performance history, and a downloadable one-sheet here.",
+      },
+    ],
+  },
+  {
+    id: "page_merch",
+    slug: "merch",
+    title: "Merch",
+    navLabel: "Merch",
+    published: true,
+    showInNav: true,
+    sections: [
+      {
+        id: "merch_hero",
+        type: "hero",
+        eyebrow: "Official Goods",
+        title: "Wear the sound",
+        body: "Limited drops, everyday staples, and pieces made for the people who move with the music.",
+      },
+      {
+        id: "merch_collection",
+        type: "merch",
+        title: "Latest Drop",
+        body: "Products ship and checkout securely through Fourthwall.",
+        collection: "all",
+      },
+    ],
+  },
+];
 
 export const FONT_PAIRS: FontPair[] = [
   {
@@ -114,6 +227,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   theme: DEFAULT_THEME,
   fontId: "graffiti-chrome",
   brand: DEFAULT_BRAND,
+  pages: DEFAULT_PAGES,
+  fourthwall: DEFAULT_FOURTHWALL,
 };
 
 export function getFontPair(id: string | undefined): FontPair {
@@ -126,5 +241,9 @@ export function mergeSettings(stored: Partial<SiteSettings> | null | undefined):
     theme: stored?.theme ? { ...DEFAULT_THEME, ...stored.theme } : { ...DEFAULT_THEME },
     fontId: stored?.fontId || DEFAULT_SETTINGS.fontId,
     brand: stored?.brand ? { ...DEFAULT_BRAND, ...stored.brand } : { ...DEFAULT_BRAND },
+    pages: Array.isArray(stored?.pages) ? stored.pages : DEFAULT_PAGES,
+    fourthwall: stored?.fourthwall
+      ? { ...DEFAULT_FOURTHWALL, ...stored.fourthwall }
+      : { ...DEFAULT_FOURTHWALL },
   };
 }

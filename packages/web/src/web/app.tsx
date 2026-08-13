@@ -10,6 +10,7 @@ const CartPage = lazy(() => import("./pages/cart"));
 const SuccessPage = lazy(() => import("./pages/success"));
 const About = lazy(() => import("./pages/about"));
 const AdminPage = lazy(() => import("./pages/admin"));
+const BuilderPage = lazy(() => import("./pages/builder-page"));
 const AgentFeedback = import.meta.env.DEV
   ? lazy(() =>
       import("@runablehq/website-runtime").then(({ AgentFeedback }) => ({
@@ -42,6 +43,7 @@ function App() {
           <Route path="/success" component={SuccessPage} />
           <Route path="/about" component={About} />
           <Route path="/admin" component={AdminPage} />
+          <Route path="/:slug" component={BuilderPage} />
           <Route>
             <div className="min-h-screen grid place-items-center bg-vb-black">
               <div className="text-center">

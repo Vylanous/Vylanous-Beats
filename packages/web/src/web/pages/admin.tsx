@@ -10,6 +10,7 @@ import {
   Lock,
   Upload,
   Palette,
+  PanelsTopLeft,
 } from "lucide-react";
 import {
   adminApi,
@@ -23,9 +24,10 @@ import { formatCad } from "../../shared/licenses";
 import { BeatForm } from "../components/admin/beat-form";
 import { BeatTable } from "../components/admin/beat-table";
 import CustomizationPanel from "../components/admin/customization";
+import PageBuilderPanel from "../components/admin/page-builder";
 import { BulkUpload } from "../components/admin/bulk-upload";
 
-type Tab = "overview" | "beats" | "bulk" | "orders" | "subscribers" | "customization";
+type Tab = "overview" | "beats" | "bulk" | "orders" | "subscribers" | "customization" | "builder";
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -143,6 +145,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "subscribers", label: "Fan List", icon: Users },
     { id: "customization", label: "Customization", icon: Palette },
+    { id: "builder", label: "Page Builder", icon: PanelsTopLeft },
   ];
 
   const closeForm = () => {
@@ -236,6 +239,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {tab === "orders" && <OrdersTab />}
             {tab === "subscribers" && <SubscribersTab />}
             {tab === "customization" && <CustomizationPanel />}
+            {tab === "builder" && <PageBuilderPanel />}
           </>
         )}
       </main>
