@@ -10,6 +10,7 @@ import { rid } from "../lib/util";
 export function publicRoutes(app: Hono) {
   app.get("/settings", async (c) => {
     const s = await loadSettings();
+    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return c.json({ settings: await publicSettings(s) }, 200);
   });
 

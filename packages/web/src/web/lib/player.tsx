@@ -31,7 +31,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const audio = new Audio();
-    audio.preload = "auto";
+    audio.preload = "metadata";
     audioRef.current = audio;
     const onTime = () => {
       if (audio.duration) setProgress(audio.currentTime / audio.duration);

@@ -2,6 +2,38 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { DEFAULT_SETTINGS, getFontPair, type SiteSettings } from "../../shared/site-settings";
 
 const SiteSettingsContext = createContext<SiteSettings>(DEFAULT_SETTINGS);
+const SETTINGS_CACHE_KEY = "vb-site-settings";
+const SETTINGS_CACHE_TTL_MS = 60_000;
+
+function applySettings(settings: SiteSettings) {
+  applyTheme(settings.theme);
+  applyFont(settings.fontId);
+  applyFavicon(settings.brand?.faviconUrl);
+}
+
+function readCachedSettings(): SiteSettings | null {
+  try {
+    const raw = sessionStorage.getItem(SETTINGS_CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as { expiresAt?: number; settings?: SiteSettings };
+    return cached.expiresAt && cached.expiresAt > Date.now() && cached.settings
+      ? cached.settings
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheSettings(settings: SiteSettings) {
+  try {
+    sessionStorage.setItem(
+      SETTINGS_CACHE_KEY,
+      JSON.stringify({ expiresAt: Date.now() + SETTINGS_CACHE_TTL_MS, settings }),
+    );
+  } catch {
+    /* Storage may be unavailable in private browsing contexts. */
+  }
+}
 
 /** Maps our named theme keys to the CSS custom properties every Tailwind
  * utility across the site already reads from (see styles.css @theme block). */
@@ -61,14 +93,22 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     let cancelled = false;
+    const cached = readCachedSettings();
+    if (cached) {
+      setSettings(cached);
+      applySettings(cached);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
         if (cancelled || !data?.settings) return;
         setSettings(data.settings);
-        applyTheme(data.settings.theme);
-        applyFont(data.settings.fontId);
-        applyFavicon(data.settings.brand?.faviconUrl);
+        cacheSettings(data.settings);
+        applySettings(data.settings);
       })
       .catch(() => {
         /* keep defaults on failure */

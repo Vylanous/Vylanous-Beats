@@ -25,6 +25,8 @@ export function BeatCard({ beat }: { beat: Beat }) {
           src={beat.artworkUrl}
           alt={beat.title}
           loading="lazy"
+          decoding="async"
+          sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-vb-black via-transparent to-transparent" />
