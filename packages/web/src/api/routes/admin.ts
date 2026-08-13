@@ -164,11 +164,9 @@ export function adminRoutes(app: Hono) {
   });
 
   app.get("/admin/beats/:id", requireAdmin, async (c) => {
-    const rows = await db
-      .select()
-      .from(beats)
-      .where(eq(beats.id, c.req.param("id")))
-      .limit(1);
+    const id = c.req.param("id");
+    if (!id) return c.json({ error: "invalid_beat_id" }, 400);
+    const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
     return c.json(
@@ -213,6 +211,7 @@ export function adminRoutes(app: Hono) {
     zValidator("json", beatInputSchema.partial()),
     async (c) => {
       const id = c.req.param("id");
+      if (!id) return c.json({ error: "invalid_beat_id" }, 400);
       const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
       if (rows.length === 0) return c.json({ error: "Not found" }, 404);
       const input = c.req.valid("json");
@@ -237,7 +236,9 @@ export function adminRoutes(app: Hono) {
   );
 
   app.delete("/admin/beats/:id", requireAdmin, async (c) => {
-    await db.delete(beats).where(eq(beats.id, c.req.param("id")));
+    const id = c.req.param("id");
+    if (!id) return c.json({ error: "invalid_beat_id" }, 400);
+    await db.delete(beats).where(eq(beats.id, id));
     return c.json({ ok: true }, 200);
   });
 

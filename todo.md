@@ -59,3 +59,10 @@
 
 - [x] Locate and replace all customer-facing contact-email references with support@vylanous.com.
 - [x] Validate the updated website references and publish the correction for review.
+
+## Contextual Page Builder Controls
+
+- [x] Map field visibility and labels to each page-section type.
+- [x] Show only applicable controls and contextual guidance in the section editor.
+- [x] Restore monorepo type checking by adding the missing desktop Node.js types, aligning AWS SDK versions, and guarding required route parameters.
+- [x] Validate and publish the simplified editor experience.
