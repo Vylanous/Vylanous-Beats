@@ -105,3 +105,9 @@
 - [x] Add secure Page Builder image upload validation and persistence support.
 - [x] Add image upload, preview, replacement, and removal controls to the Site Builder.
 - [x] Add regression coverage, validate, and publish the upload workflow.
+
+## Fourthwall Product Image Galleries
+
+- [x] Inspect Fourthwall product image data and the current card renderer.
+- [x] Add an accessible all-image gallery experience to merchandise product cards.
+- [x] Validate, test, and publish the merchandise gallery update.
