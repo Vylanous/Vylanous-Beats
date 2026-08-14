@@ -3,39 +3,29 @@ import { Link, useLocation } from "wouter";
 import { Trash2, Lock, ArrowRight, ShoppingBag } from "lucide-react";
 import { Layout } from "../components/layout";
 import { useCart } from "../lib/cart";
+import { customerFetch, useCustomer } from "../lib/customer";
 import { formatCad } from "../../shared/licenses";
 
 export default function CartPage() {
   const { items, remove, totalCents, clear } = useCart();
+  const { customer } = useCustomer();
   const [, navigate] = useLocation();
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const checkout = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const checkout = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await customerFetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
-          name,
-          items: items.map((i) => ({ beatId: i.beatId, tier: i.tier })),
+          items: items.map((item) => ({ beatId: item.beatId, tier: item.tier })),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === "stripe_not_configured") {
-          setError(
-            "Payments aren't switched on yet. Add your Stripe key to start taking real orders. (Free licenses still work.)",
-          );
-        } else {
-          setError(data.message || data.error || "Checkout failed. Try again.");
-        }
+        setError(data.message || data.error || "Checkout failed. Try again.");
         setLoading(false);
         return;
       }
@@ -46,7 +36,7 @@ export default function CartPage() {
       }
       if (data.url) {
         clear();
-        window.location.href = data.url; // Stripe Checkout
+        window.location.href = data.url;
         return;
       }
       setError("Unexpected response.");
@@ -56,52 +46,49 @@ export default function CartPage() {
       setLoading(false);
     }
   };
-
-  if (items.length === 0) {
+  if (items.length === 0)
     return (
       <Layout>
-        <div className="max-w-3xl mx-auto px-5 pt-40 pb-24 text-center">
+        <div className="mx-auto max-w-3xl px-5 pb-24 pt-40 text-center">
           <ShoppingBag size={48} className="mx-auto text-vb-muted opacity-40" />
-          <h1 className="font-display uppercase text-5xl text-chrome mt-4">Cart Empty</h1>
-          <p className="font-body text-vb-muted mt-2">Go find something that knocks.</p>
+          <h1 className="mt-4 font-display text-5xl uppercase text-chrome">Cart Empty</h1>
+          <p className="mt-2 font-body text-vb-muted">Go find something that knocks.</p>
           <Link
             to="/beats"
-            className="inline-flex items-center gap-2 mt-8 font-sub uppercase tracking-widest text-lg px-7 py-3.5 rounded-xl bg-vb-purple text-white hover:bg-vb-purple-bright glow-purple"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-vb-purple px-7 py-3.5 font-sub text-lg uppercase tracking-widest text-white hover:bg-vb-purple-bright"
           >
             Browse Beats <ArrowRight size={18} />
           </Link>
         </div>
       </Layout>
     );
-  }
-
   return (
     <Layout>
-      <section className="max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-20">
-        <h1 className="font-display uppercase text-6xl sm:text-7xl text-chrome leading-none mb-10">
+      <section className="mx-auto max-w-6xl px-5 pb-20 pt-32 sm:px-8">
+        <h1 className="mb-10 font-display text-6xl uppercase leading-none text-chrome sm:text-7xl">
           Checkout
         </h1>
-
-        <div className="grid lg:grid-cols-5 gap-8">
-          {/* Items */}
-          <div className="lg:col-span-3 space-y-3">
-            {items.map((it) => (
+        <div className="grid gap-8 lg:grid-cols-5">
+          <div className="space-y-3 lg:col-span-3">
+            {items.map((item) => (
               <div
-                key={it.beatId + it.tier}
-                className="flex items-center gap-4 bg-vb-ink border border-white/[0.06] rounded-xl p-4"
+                key={item.beatId + item.tier}
+                className="flex items-center gap-4 rounded-xl border border-white/[.06] bg-vb-ink p-4"
               >
-                <img src={it.artworkUrl} alt="" className="w-16 h-16 rounded-lg object-cover" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-display uppercase text-xl leading-none truncate">
-                    {it.beatTitle}
+                <img src={item.artworkUrl} alt="" className="h-16 w-16 rounded-lg object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display text-xl uppercase leading-none">
+                    {item.beatTitle}
                   </p>
-                  <p className="font-sub uppercase text-xs tracking-wider text-vb-purple-bright mt-1">
-                    {it.tierName}
+                  <p className="mt-1 font-sub text-xs uppercase tracking-wider text-vb-purple-bright">
+                    {item.tierName}
                   </p>
                 </div>
-                <span className="font-display text-xl text-chrome">{formatCad(it.priceCents)}</span>
+                <span className="font-display text-xl text-chrome">
+                  {formatCad(item.priceCents)}
+                </span>
                 <button
-                  onClick={() => remove(it.beatId, it.tier)}
+                  onClick={() => remove(item.beatId, item.tier)}
                   className="text-vb-muted hover:text-red-400"
                   aria-label="Remove"
                 >
@@ -110,68 +97,65 @@ export default function CartPage() {
               </div>
             ))}
           </div>
-
-          {/* Summary + form */}
           <div className="lg:col-span-2">
-            <form
-              onSubmit={checkout}
-              className="bg-vb-ink border border-white/[0.06] rounded-2xl p-6 sticky top-24"
-            >
-              <h2 className="font-display uppercase text-2xl mb-4">Order Summary</h2>
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between font-body text-vb-muted">
-                  <span>Items</span>
-                  <span>{items.length}</span>
-                </div>
-                <div className="flex justify-between items-center border-t border-white/[0.06] pt-3">
-                  <span className="font-sub uppercase tracking-wider text-vb-silver">Total</span>
-                  <span className="font-display text-3xl text-chrome">
-                    {formatCad(totalCents)} <span className="text-base">CAD</span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                <input
-                  aria-label="Your name or artist name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name / artist name"
-                  className="w-full bg-vb-black border border-white/10 rounded-lg px-3.5 py-3 font-body focus:border-vb-purple outline-none"
-                />
-                <input
-                  aria-label="Email address for delivery"
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email for your files"
-                  className="w-full bg-vb-black border border-white/10 rounded-lg px-3.5 py-3 font-body focus:border-vb-purple outline-none"
-                />
-              </div>
-
-              {error && (
-                <p className="font-body text-sm text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-lg p-3 mb-4">
-                  {error}
+            {!customer ? (
+              <div className="sticky top-24 rounded-2xl border border-vb-purple/30 bg-vb-ink p-6">
+                <Lock className="text-vb-purple-bright" size={22} />
+                <h2 className="mt-4 font-display text-3xl uppercase">Sign in to purchase</h2>
+                <p className="mt-3 font-body text-sm leading-6 text-vb-silver/60">
+                  Purchases and downloads are attached to your customer account, so every license is
+                  available in your website and mobile music vault.
                 </p>
-              )}
-
-              <button
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 font-sub uppercase tracking-widest text-lg py-3.5 rounded-xl bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors glow-purple disabled:opacity-60"
+                <Link
+                  to="/login"
+                  className="mt-6 inline-flex rounded-xl bg-vb-purple px-4 py-3 font-sub text-sm uppercase tracking-wide text-white hover:bg-vb-purple-bright"
+                >
+                  Sign in or create account
+                </Link>
+              </div>
+            ) : (
+              <form
+                onSubmit={checkout}
+                className="sticky top-24 rounded-2xl border border-white/[.06] bg-vb-ink p-6"
               >
-                <Lock size={16} />
-                {loading
-                  ? "Processing…"
-                  : totalCents === 0
-                    ? "Get Free License"
-                    : `Pay ${formatCad(totalCents)}`}
-              </button>
-              <p className="font-body text-xs text-vb-muted text-center mt-3 flex items-center justify-center gap-1.5">
-                <Lock size={12} /> Secure checkout · instant delivery
-              </p>
-            </form>
+                <h2 className="mb-4 font-display text-2xl uppercase">Order Summary</h2>
+                <div className="mb-4 space-y-2">
+                  <div className="flex justify-between font-body text-vb-muted">
+                    <span>Items</span>
+                    <span>{items.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-white/[.06] pt-3">
+                    <span className="font-sub uppercase tracking-wider text-vb-silver">Total</span>
+                    <span className="font-display text-3xl text-chrome">
+                      {formatCad(totalCents)} <span className="text-base">CAD</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="mb-4 rounded-xl border border-white/[.07] bg-vb-black/30 p-3 font-body text-sm text-vb-silver/65">
+                  License delivery and your secure music vault will be tied to{" "}
+                  <strong className="font-medium text-vb-silver-bright">{customer.email}</strong>.
+                </div>
+                {error && (
+                  <p className="mb-4 rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 font-body text-sm text-amber-400">
+                    {error}
+                  </p>
+                )}
+                <button
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-vb-purple py-3.5 font-sub text-lg uppercase tracking-widest text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
+                >
+                  <Lock size={16} />
+                  {loading
+                    ? "Processing…"
+                    : totalCents === 0
+                      ? "Get Free License"
+                      : `Pay ${formatCad(totalCents)}`}
+                </button>
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-center font-body text-xs text-vb-muted">
+                  <Lock size={12} /> Secure checkout · saved to your vault
+                </p>
+              </form>
+            )}
           </div>
         </div>
       </section>

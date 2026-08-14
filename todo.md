@@ -98,3 +98,46 @@
 - [x] Inspect the latest main changes and identify the conflicting Site Builder files.
 - [x] Rebase the comprehensive Site Builder branch and reconcile all conflicts.
 - [x] Revalidate the resolved branch and confirm PR #22 is mergeable.
+
+## Page Builder Image Uploads
+
+- [x] Audit the existing authenticated media-upload and storage-key workflow.
+- [x] Add secure Page Builder image upload validation and persistence support.
+- [x] Add image upload, preview, replacement, and removal controls to the Site Builder.
+- [x] Add regression coverage, validate, and publish the upload workflow.
+
+## Fourthwall Product Image Galleries
+
+- [x] Inspect Fourthwall product image data and the current card renderer.
+- [x] Add an accessible all-image gallery experience to merchandise product cards.
+- [x] Validate, test, and publish the merchandise gallery update.
+
+## Customer Accounts, Dashboard, and Catalog Access
+
+- [x] Audit current authentication, featured-beat visibility, full-catalog, cart, and checkout behavior.
+- [x] Define customer-account, session, library, insights, and marketing-preference data structures.
+- [x] Add secure customer registration, login, logout, and authenticated-session handling.
+- [x] Require customer sign-in for the full beat catalog and purchase flow while retaining public featured beats.
+- [x] Build an authenticated customer dashboard with purchase insights, license library, newsletter preference, and relevant upsells.
+- [x] Add security and behavior regression coverage, validate, and publish the account experience.
+
+## Shared Customer Portal Service
+
+- [x] Audit the mobile app and web purchase, order, fulfillment, and download paths that must use one backend authority.
+- [x] Define shared customer identity, order ownership, entitlement, session, and download-authorization contracts for mobile and web clients.
+- [x] Implement shared mobile-first customer portal routes and services for every client surface.
+- [x] Bind mobile sign-in, account dashboard, purchases, entitlement library, and downloads to the shared service.
+- [x] Bind web checkout, customer dashboard, catalog access, and downloads to the same shared service.
+- [x] Add cross-client authorization and entitlement regression coverage, validate, and publish the shared portal service.
+
+## Shared Customer Portal PR Conflict Resolution
+
+- [x] Inspect the current main-branch divergence and identify all PR #27 conflicts.
+- [x] Resolve the shared portal conflicts while retaining current main-branch enhancements.
+- [x] Revalidate the merged change set and update PR #27 for review.
+
+## Admin Upload Repair
+
+- [x] Trace the failing admin-panel upload request through browser controls, authorization, API validation, and storage.
+- [x] Repair the upload path and present actionable configuration feedback when storage is unavailable.
+- [x] Add regression coverage, validate the repaired workflow, and include it in the PR #27 update.

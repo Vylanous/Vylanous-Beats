@@ -9,6 +9,8 @@ import { TIER_BY_ID, type LicenseTierId } from "../../shared/licenses";
 import { rid, parseFileUrls, appUrl } from "../lib/util";
 import { stripe } from "../lib/stripe";
 import { sendDeliveryEmail } from "../lib/email";
+import { currentCustomer, requireCustomer } from "../lib/customer-auth";
+import { activateOrderEntitlements } from "../lib/customer-portal";
 
 const cartItemSchema = z.object({
   beatId: z.string(),
@@ -16,14 +18,13 @@ const cartItemSchema = z.object({
 });
 
 const checkoutSchema = z.object({
-  email: z.string().email(),
-  name: z.string().optional().default(""),
   items: z.array(cartItemSchema).min(1),
 });
 
 export function checkoutRoutes(app: Hono) {
-  app.post("/checkout", zValidator("json", checkoutSchema), async (c) => {
+  app.post("/checkout", requireCustomer, zValidator("json", checkoutSchema), async (c) => {
     const body = c.req.valid("json");
+    const customer = await currentCustomer(c);
 
     const resolved: {
       beatId: string;
@@ -67,8 +68,9 @@ export function checkoutRoutes(app: Hono) {
     await db.transaction(async (tx) => {
       await tx.insert(orders).values({
         id: orderId,
-        email: body.email,
-        name: body.name,
+        customerId: customer!.id,
+        email: customer!.email,
+        name: customer!.displayName,
         status: allFree ? "paid" : "pending",
         totalCents,
         currency: "cad",
@@ -90,7 +92,8 @@ export function checkoutRoutes(app: Hono) {
     });
 
     if (allFree) {
-      await sendDeliveryEmail(body.email, orderId, downloadToken).catch((e) =>
+      await activateOrderEntitlements(customer!.id, orderId);
+      await sendDeliveryEmail(customer!.email, orderId, downloadToken).catch((e) =>
         console.error("[email] free order", e),
       );
       return c.json(
@@ -117,7 +120,7 @@ export function checkoutRoutes(app: Hono) {
     const base = appUrl() || new URL(c.req.url).origin;
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      customer_email: body.email,
+      customer_email: customer!.email,
       line_items: resolved
         .filter((i) => i.priceCents > 0)
         .map((i) => ({
@@ -131,7 +134,7 @@ export function checkoutRoutes(app: Hono) {
             },
           },
         })),
-      metadata: { orderId, downloadToken },
+      metadata: { orderId, downloadToken, customerId: customer!.id },
       success_url: `${base}/success?order=${orderId}&token=${downloadToken}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/cart?cancelled=1`,
     });

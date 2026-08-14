@@ -9,6 +9,7 @@ interface Props {
   accept: string;
   folder: string;
   kind?: "image" | "audio" | "file";
+  maxBytes?: number;
   /** current stored key (or empty) */
   value: string;
   /** preview url if available (signed) */
@@ -22,6 +23,7 @@ export function FileUpload({
   accept,
   folder,
   kind = "file",
+  maxBytes,
   value,
   previewUrl,
   onChange,
@@ -36,6 +38,10 @@ export function FileUpload({
   const handle = async (file: File | undefined) => {
     if (!file) return;
     setErr("");
+    if (maxBytes && file.size > maxBytes) {
+      setErr(`Choose a file smaller than ${Math.round(maxBytes / 1024 / 1024)} MB.`);
+      return;
+    }
     setUploading(true);
     setFilename(file.name);
     if (kind === "image") setLocalPreview(URL.createObjectURL(file));
@@ -51,7 +57,7 @@ export function FileUpload({
   };
 
   const preview = localPreview || previewUrl || "";
-  const hasFile = !!value;
+  const hasFile = !!value || !!previewUrl;
   const Icon = kind === "image" ? ImageIcon : kind === "audio" ? Music : UploadCloud;
 
   return (

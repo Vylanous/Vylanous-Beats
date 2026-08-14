@@ -35,7 +35,7 @@ export default function CustomizationPanel() {
     getAdminSettings()
       .then((r) => {
         setSettings(r.settings);
-        setPreview(r.preview);
+        setPreview(r.preview.brand);
       })
       .catch((e) => setErr(e instanceof Error ? e.message : "Failed to load settings"))
       .finally(() => setLoading(false));
@@ -52,7 +52,7 @@ export default function CustomizationPanel() {
       await saveAdminSettings(settings);
       const fresh = await getAdminSettings();
       setSettings(fresh.settings);
-      setPreview(fresh.preview);
+      setPreview(fresh.preview.brand);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
@@ -73,7 +73,7 @@ export default function CustomizationPanel() {
       await resetAdminSettings();
       const fresh = await getAdminSettings();
       setSettings(fresh.settings);
-      setPreview(fresh.preview);
+      setPreview(fresh.preview.brand);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Reset failed");
     } finally {

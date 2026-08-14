@@ -54,10 +54,20 @@ async function seedBeat(overrides: Record<string, unknown> = {}) {
 }
 
 async function checkout(email: string, items: { beatId: string; tier: string }[]) {
-  return app.request("/api/checkout", {
+  const registration = await app.request("/api/customer/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, name: "Test User", items }),
+    body: JSON.stringify({ email, password: "customer-test-password", displayName: "Test User" }),
+  });
+  expect(registration.status).toBe(201);
+  const account = (await registration.json()) as { session: { token: string } };
+  return app.request("/api/checkout", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${account.session.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ items }),
   });
 }
 

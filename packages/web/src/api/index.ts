@@ -10,6 +10,8 @@ import { adminRoutes } from "./routes/admin";
 import { fourthwallRoutes } from "./routes/fourthwall";
 import { resendWebhookRoutes } from "./routes/resend-webhook";
 import { adminEmailRoutes } from "./routes/admin-email";
+import { mobilePurchaseRoutes } from "./routes/mobile-purchases";
+import { customerPortalRoutes } from "./routes/customer-portal";
 
 // Seed on cold start (idempotent)
 seedDatabase().catch((e) => console.error("[seed] failed", e));
@@ -28,6 +30,7 @@ const app = new Hono()
   .get("/health", (c) => c.json({ status: "ok" }, 200));
 
 publicRoutes(app);
+customerPortalRoutes(app);
 beatsRoutes(app);
 checkoutRoutes(app);
 ordersRoutes(app);
@@ -35,6 +38,7 @@ adminRoutes(app);
 fourthwallRoutes(app);
 resendWebhookRoutes(app);
 adminEmailRoutes(app);
+mobilePurchaseRoutes(app);
 
 export type AppType = typeof app;
 export default app;

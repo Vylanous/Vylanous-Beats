@@ -4,6 +4,7 @@ import { db } from "../database";
 import { beats, type Beat } from "../database/schema";
 import { signIfKey } from "../lib/url-sign";
 import type { PublicBeat } from "../../shared/beats";
+import { customerFromRequest, requireCustomer } from "../lib/customer-auth";
 
 async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
   return {
@@ -26,16 +27,18 @@ async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
 }
 
 export function beatsRoutes(app: Hono) {
-  app.get("/beats", async (c) => {
+  // The complete catalog is a customer-account benefit across the web and native app.
+  app.get("/beats", requireCustomer, async (c) => {
     const all = await db
       .select()
       .from(beats)
       .where(eq(beats.published, true))
       .orderBy(desc(beats.featured), desc(beats.createdAt));
-    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
+    c.header("Cache-Control", "private, no-store");
     return c.json({ beats: await Promise.all(all.map(serializePublicBeat)) }, 200);
   });
 
+  // Featured tracks remain public so visitors can discover the catalog before registering.
   app.get("/beats/featured", async (c) => {
     const list = await db
       .select()
@@ -49,18 +52,31 @@ export function beatsRoutes(app: Hono) {
   app.get("/beats/:slug", async (c) => {
     const slug = c.req.param("slug");
     const rows = await db.select().from(beats).where(eq(beats.slug, slug)).limit(1);
-    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
-    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
-    return c.json({ beat: await serializePublicBeat(rows[0]) }, 200);
+    const beat = rows[0];
+    if (!beat || !beat.published) return c.json({ error: "Not found" }, 404);
+    if (!beat.featured && !(await customerFromRequest(c))) {
+      return c.json({ error: "customer_auth_required" }, 401);
+    }
+    c.header(
+      "Cache-Control",
+      beat.featured
+        ? "public, max-age=60, s-maxage=300, stale-while-revalidate=600"
+        : "private, no-store",
+    );
+    return c.json({ beat: await serializePublicBeat(beat) }, 200);
   });
 
   app.post("/beats/:id/play", async (c) => {
     const id = c.req.param("id");
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
-    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
+    const beat = rows[0];
+    if (!beat) return c.json({ error: "Not found" }, 404);
+    if (!beat.featured && !(await customerFromRequest(c))) {
+      return c.json({ error: "customer_auth_required" }, 401);
+    }
     await db
       .update(beats)
-      .set({ plays: (rows[0].plays ?? 0) + 1 })
+      .set({ plays: (beat.plays ?? 0) + 1 })
       .where(eq(beats.id, id));
     return c.json({ ok: true }, 200);
   });
