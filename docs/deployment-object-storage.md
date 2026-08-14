@@ -17,13 +17,35 @@ The R2 bucket also requires a CORS policy because the browser uploads directly t
 [
   {
     "AllowedOrigins": [
-      "https://vylanous.com",
       "https://www.vylanous.com",
-      "https://vylanous-beats-web.vercel.app"
+      "https://vylanous.com"
     ],
-    "AllowedMethods": ["GET", "PUT", "HEAD"],
-    "AllowedHeaders": ["Content-Type"],
-    "ExposeHeaders": ["ETag"],
+    "AllowedMethods": [
+      "GET",
+      "PUT",
+      "POST",
+      "HEAD"
+    ],
+    "AllowedHeaders": [
+      "https://www.vylanous.com",
+      "https://vylanous.com"
+    ],
+    "MaxAgeSeconds": 3600
+  },
+  {
+    "AllowedOrigins": [
+      "http://localhost:3000"
+    ],
+    "AllowedMethods": [
+      "GET",
+      "PUT",
+      "POST",
+      "HEAD"
+    ],
+    "AllowedHeaders": [
+      "https://www.vylanous.com",
+      "https://vylanous.com"
+    ],
     "MaxAgeSeconds": 3600
   }
 ]
