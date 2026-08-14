@@ -1,6 +1,7 @@
 import { CartProvider } from "../lib/cart";
 import { PlayerProvider } from "../lib/player";
 import { SiteSettingsProvider } from "../lib/site-settings";
+import { CustomerProvider } from "../lib/customer";
 
 interface ProviderProps {
   children: React.ReactNode;
@@ -9,9 +10,11 @@ interface ProviderProps {
 export function Provider({ children }: ProviderProps) {
   return (
     <SiteSettingsProvider>
-      <CartProvider>
-        <PlayerProvider>{children}</PlayerProvider>
-      </CartProvider>
+      <CustomerProvider>
+        <CartProvider>
+          <PlayerProvider>{children}</PlayerProvider>
+        </CartProvider>
+      </CustomerProvider>
     </SiteSettingsProvider>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+/** Vylanous footer: global chrome rendered from Site Builder footer, page, and social settings. */
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Mail, Check } from "lucide-react";
 import { useSiteSettings } from "../lib/site-settings";
@@ -6,10 +7,18 @@ import { useSiteSettings } from "../lib/site-settings";
 export function Footer() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
-  const { brand } = useSiteSettings();
+  const { brand, footer, pages, socials } = useSiteSettings();
+  const links = useMemo(
+    () =>
+      [...pages]
+        .filter((page) => page.published && page.showInFooter)
+        .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000)),
+    [pages],
+  );
+  const footerSocials = socials.filter((social) => social.showInFooter);
 
-  const subscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const subscribe = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!email) return;
     try {
       await fetch("/api/subscribe", {
@@ -25,81 +34,81 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative border-t border-white/[0.06] bg-vb-black mt-24">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16 grid md:grid-cols-4 gap-10">
+    <footer className="relative mt-24 border-t border-white/[0.06] bg-vb-black">
+      <div className="grid max-w-7xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-4 mx-auto">
         <div className="md:col-span-2">
-          <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="h-24 w-auto -ml-2" />
-          <p className="font-body text-vb-muted max-w-sm mt-3">
-            Premium hip-hop beats. Rhythmic expression, melodious compositions, affordable licensing
-            for independent artists.
-          </p>
-          <p className="font-body text-sm text-vb-muted mt-4 flex items-center gap-2">
+          <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="-ml-2 h-24 w-auto" />
+          <p className="mt-3 max-w-sm font-body text-vb-muted">{footer.description}</p>
+          <p className="mt-4 flex items-center gap-2 font-body text-sm text-vb-muted">
             <Mail size={15} className="text-vb-purple-bright" />
-            <a href="mailto:support@vylanous.com" className="hover:text-vb-purple-bright">
-              support@vylanous.com
+            <a href={`mailto:${footer.contactEmail}`} className="hover:text-vb-purple-bright">
+              {footer.contactEmail}
             </a>
           </p>
         </div>
 
-        <div>
-          <h4 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
-            Explore
-          </h4>
-          <ul className="space-y-2.5 font-body text-vb-muted">
-            <li>
-              <Link to="/beats" className="hover:text-vb-purple-bright">
-                Beat Catalog
-              </Link>
-            </li>
-            <li>
-              <Link to="/licensing" className="hover:text-vb-purple-bright">
-                Licensing
-              </Link>
-            </li>
-            <li>
-              <Link to="/about" className="hover:text-vb-purple-bright">
-                About
-              </Link>
-            </li>
-            <li>
-              <Link to="/cart" className="hover:text-vb-purple-bright">
-                Cart
-              </Link>
-            </li>
-          </ul>
-        </div>
+        {footer.showNavigation && (
+          <div>
+            <h4 className="mb-4 font-sub text-lg uppercase tracking-widest text-vb-silver">
+              Explore
+            </h4>
+            <ul className="space-y-2.5 font-body text-vb-muted">
+              {links.map((page) => (
+                <li key={page.id}>
+                  <Link to={page.path || `/${page.slug}`} className="hover:text-vb-purple-bright">
+                    {page.navLabel}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        <div>
-          <h4 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
-            Get New Drops
-          </h4>
-          {done ? (
-            <p className="font-body text-vb-purple-bright flex items-center gap-2">
-              <Check size={16} /> You're on the list.
-            </p>
-          ) : (
-            <form onSubmit={subscribe} className="flex flex-col gap-2">
-              <input
-                type="email"
-                aria-label="Email address for new beat releases"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="bg-vb-ink border border-white/10 rounded-lg px-3 py-2.5 text-sm font-body focus:border-vb-purple outline-none"
-              />
-              <button className="font-sub uppercase tracking-wider py-2.5 rounded-lg bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors">
-                Subscribe
-              </button>
-            </form>
-          )}
-        </div>
+        {footer.showNewsletter && (
+          <div>
+            <h4 className="mb-4 font-sub text-lg uppercase tracking-widest text-vb-silver">
+              {footer.newsletterHeading}
+            </h4>
+            {done ? (
+              <p className="flex items-center gap-2 font-body text-vb-purple-bright">
+                <Check size={16} /> You're on the list.
+              </p>
+            ) : (
+              <form onSubmit={subscribe} className="flex flex-col gap-2">
+                <input
+                  type="email"
+                  aria-label="Email address for new beat releases"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="your@email.com"
+                  className="rounded-lg border border-white/10 bg-vb-ink px-3 py-2.5 font-body text-sm outline-none focus:border-vb-purple"
+                />
+                <button className="rounded-lg bg-vb-purple py-2.5 font-sub uppercase tracking-wider text-white transition hover:bg-vb-purple-bright">
+                  {footer.newsletterButton}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
-
       <div className="border-t border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-vb-muted text-sm font-body">
+        <div className="flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 font-body text-sm text-vb-muted sm:flex-row sm:px-8 mx-auto">
           <p>© {new Date().getFullYear()} Vylanous Beats. All rights reserved.</p>
-          <p className="font-sub uppercase tracking-wider">Prod. Vylanous Beats</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            {footerSocials.map((social) => (
+              <a
+                key={social.id}
+                href={social.url}
+                target="_blank"
+                rel="noreferrer"
+                className="font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+              >
+                {social.label}
+              </a>
+            ))}
+            <p className="font-sub uppercase tracking-wider">{footer.legalLine}</p>
+          </div>
         </div>
       </div>
     </footer>

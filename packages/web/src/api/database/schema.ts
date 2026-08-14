@@ -42,6 +42,7 @@ export const orders = sqliteTable(
   "orders",
   {
     id: text("id").primaryKey(),
+    customerId: text("customer_id").notNull().default(""),
     email: text("email").notNull(),
     name: text("name").notNull().default(""),
     status: text("status").notNull().default("pending"), // pending | paid | cancelled
@@ -55,7 +56,66 @@ export const orders = sqliteTable(
       .default(sql`(CURRENT_TIMESTAMP)`),
     paidAt: text("paid_at"),
   },
-  (t) => [index("orders_status_idx").on(t.status)],
+  (t) => [index("orders_status_idx").on(t.status), index("orders_customer_idx").on(t.customerId)],
+);
+
+/** A customer account shared by the website and native mobile application. */
+export const customers = sqliteTable(
+  "customers",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    displayName: text("display_name").notNull().default(""),
+    passwordHash: text("password_hash").notNull(),
+    marketingOptIn: integer("marketing_opt_in", { mode: "boolean" }).notNull().default(false),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    updatedAt: text("updated_at"),
+  },
+  (t) => [uniqueIndex("customers_email_idx").on(t.email)],
+);
+
+/** Revocable bearer-token sessions for customers on mobile and web. */
+export const customerSessions = sqliteTable(
+  "customer_sessions",
+  {
+    id: text("id").primaryKey(),
+    customerId: text("customer_id").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    revokedAt: text("revoked_at"),
+  },
+  (t) => [
+    uniqueIndex("customer_sessions_token_hash_idx").on(t.tokenHash),
+    index("customer_sessions_customer_idx").on(t.customerId),
+  ],
+);
+
+/** A customer-owned, server-authorized right to download a purchased license. */
+export const customerEntitlements = sqliteTable(
+  "customer_entitlements",
+  {
+    id: text("id").primaryKey(),
+    customerId: text("customer_id").notNull(),
+    orderId: text("order_id").notNull(),
+    orderItemId: text("order_item_id").notNull(),
+    beatId: text("beat_id").notNull(),
+    status: text("status").notNull().default("pending"), // pending | active | revoked
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    activatedAt: text("activated_at"),
+    revokedAt: text("revoked_at"),
+  },
+  (t) => [
+    uniqueIndex("customer_entitlements_order_item_idx").on(t.orderItemId),
+    index("customer_entitlements_customer_idx").on(t.customerId),
+    index("customer_entitlements_order_idx").on(t.orderId),
+  ],
 );
 
 /**
@@ -177,6 +237,9 @@ export const inboundEmails = sqliteTable(
 export type Beat = typeof beats.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type Customer = typeof customers.$inferSelect;
+export type CustomerSession = typeof customerSessions.$inferSelect;
+export type CustomerEntitlement = typeof customerEntitlements.$inferSelect;
 export type MobilePurchaseTransaction = typeof mobilePurchaseTransactions.$inferSelect;
 export type SettingsRow = typeof settings.$inferSelect;
 export type EmailEvent = typeof emailEvents.$inferSelect;

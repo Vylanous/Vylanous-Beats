@@ -35,6 +35,46 @@ const beatInputSchema = z.object({
   published: z.boolean().default(true),
 });
 
+// Keep PATCH-style updates free of field defaults. Applying `.partial()` to the
+// create schema would allow its media defaults to replace omitted artwork/audio
+// fields when an admin only changes `featured` or `published`.
+const beatUpdateSchema = z.object({
+  title: z.string().min(1).optional(),
+  bpm: z.number().int().min(0).max(400).optional(),
+  musicalKey: z.string().optional(),
+  genre: z.string().optional(),
+  mood: z.string().optional(),
+  tags: z.string().optional(),
+  artworkUrl: z.string().optional(),
+  audioUrl: z.string().optional(),
+  fileUrls: z.record(z.string(), z.string()).optional(),
+  priceFrom: z.number().int().min(0).optional(),
+  soldExclusive: z.boolean().optional(),
+  featured: z.boolean().optional(),
+  published: z.boolean().optional(),
+});
+
+const PAGE_BUILDER_IMAGE_FOLDER = "site-builder/images";
+const PAGE_BUILDER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PAGE_BUILDER_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
+const uploadPresignSchema = z.object({
+  filename: z.string().min(1).max(180),
+  contentType: z.string().min(1).max(120),
+  folder: z.string().min(1).max(120).optional(),
+  size: z
+    .number()
+    .int()
+    .positive()
+    .max(250 * 1024 * 1024)
+    .optional(),
+});
+
 const settingsSchema = z.object({
   theme: z
     .object({
@@ -58,15 +98,72 @@ const settingsSchema = z.object({
     })
     .partial()
     .optional(),
+  header: z
+    .object({
+      showWordmark: z.boolean(),
+      sticky: z.boolean(),
+      transparentAtTop: z.boolean(),
+      showCart: z.boolean(),
+      showSocialLinks: z.boolean(),
+      ctaLabel: z.string().max(80).optional(),
+      ctaHref: z.string().max(2000).optional(),
+    })
+    .partial()
+    .optional(),
+  footer: z
+    .object({
+      description: z.string().max(1000),
+      contactEmail: z.string().email(),
+      showNavigation: z.boolean(),
+      showNewsletter: z.boolean(),
+      newsletterHeading: z.string().max(100),
+      newsletterButton: z.string().max(80),
+      legalLine: z.string().max(200),
+    })
+    .partial()
+    .optional(),
+  socials: z
+    .array(
+      z.object({
+        id: z.string(),
+        platform: z.enum([
+          "instagram",
+          "tiktok",
+          "youtube",
+          "spotify",
+          "soundcloud",
+          "facebook",
+          "x",
+          "custom",
+        ]),
+        label: z.string().max(80),
+        url: z.string().url().max(2000),
+        showInHeader: z.boolean().optional(),
+        showInFooter: z.boolean().optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
   pages: z
     .array(
       z.object({
         id: z.string(),
         slug: z.string().regex(/^[a-z0-9-]+$/),
+        path: z.string().startsWith("/").max(200).optional(),
         title: z.string(),
         navLabel: z.string(),
         published: z.boolean(),
         showInNav: z.boolean(),
+        showInFooter: z.boolean().optional(),
+        navOrder: z.number().int().min(0).max(10000).optional(),
+        isSystem: z.boolean().optional(),
+        layout: z
+          .object({
+            showHeader: z.boolean().optional(),
+            showFooter: z.boolean().optional(),
+            background: z.enum(["default", "mesh", "ink"]).optional(),
+          })
+          .optional(),
         seo: z
           .object({
             title: z.string().max(70).optional(),
@@ -79,14 +176,64 @@ const settingsSchema = z.object({
         sections: z.array(
           z.object({
             id: z.string(),
-            type: z.enum(["hero", "text", "image", "pressKit", "merch"]),
+            type: z.enum([
+              "hero",
+              "text",
+              "image",
+              "video",
+              "gallery",
+              "featureCards",
+              "callout",
+              "marquee",
+              "divider",
+              "spacer",
+              "pressKit",
+              "merch",
+              "featuredBeats",
+              "beatCatalog",
+              "licenseTiers",
+              "licenseComparison",
+            ]),
             eyebrow: z.string().optional(),
             title: z.string().optional(),
             body: z.string().optional(),
             imageUrl: z.string().optional(),
+            videoUrl: z.string().optional(),
             ctaLabel: z.string().optional(),
             ctaHref: z.string().optional(),
+            secondaryCtaLabel: z.string().optional(),
+            secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
+            items: z
+              .array(
+                z.object({
+                  id: z.string(),
+                  title: z.string(),
+                  body: z.string().optional(),
+                  imageUrl: z.string().optional(),
+                  href: z.string().optional(),
+                  label: z.string().optional(),
+                }),
+              )
+              .max(24)
+              .optional(),
+            layout: z
+              .object({
+                width: z.enum(["narrow", "standard", "wide", "full"]).optional(),
+                spacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
+                alignment: z.enum(["left", "center", "right"]).optional(),
+                surface: z.enum(["transparent", "ink", "mesh", "accent", "bordered"]).optional(),
+                columns: z
+                  .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+                  .optional(),
+                mediaPosition: z.enum(["none", "left", "right", "background", "top"]).optional(),
+                mediaFit: z.enum(["cover", "contain"]).optional(),
+                mediaAspect: z.enum(["auto", "square", "wide", "portrait", "cinema"]).optional(),
+                imageOverlay: z.enum(["none", "soft", "strong"]).optional(),
+                borderRadius: z.enum(["none", "soft", "rounded"]).optional(),
+                emphasis: z.enum(["standard", "accent", "muted"]).optional(),
+              })
+              .optional(),
           }),
         ),
       }),
@@ -122,11 +269,26 @@ export function adminRoutes(app: Hono) {
   app.post(
     "/admin/upload/presign",
     requireAdmin,
-    zValidator(
-      "json",
-      z.object({ filename: z.string(), contentType: z.string(), folder: z.string().optional() }),
-    ),
+    zValidator("json", uploadPresignSchema),
     async (c) => {
+      const { filename, contentType, folder, size } = c.req.valid("json");
+      if (folder === PAGE_BUILDER_IMAGE_FOLDER) {
+        if (!PAGE_BUILDER_IMAGE_TYPES.has(contentType.toLowerCase())) {
+          return c.json(
+            {
+              error: "unsupported_image_type",
+              message: "Use a JPG, PNG, WebP, GIF, or AVIF image.",
+            },
+            415,
+          );
+        }
+        if (!size || size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
+          return c.json(
+            { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+            413,
+          );
+        }
+      }
       if (!S3_CONFIGURED) {
         return c.json(
           {
@@ -137,7 +299,6 @@ export function adminRoutes(app: Hono) {
           503,
         );
       }
-      const { filename, contentType, folder } = c.req.valid("json");
       const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
       const key = `${folder || "uploads"}/${Date.now()}-${randomUUID()}-${safe}`;
       const url = await getSignedUrl(
@@ -205,35 +366,30 @@ export function adminRoutes(app: Hono) {
     return c.json({ id, slug }, 200);
   });
 
-  app.put(
-    "/admin/beats/:id",
-    requireAdmin,
-    zValidator("json", beatInputSchema.partial()),
-    async (c) => {
-      const id = c.req.param("id");
-      if (!id) return c.json({ error: "invalid_beat_id" }, 400);
-      const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
-      if (rows.length === 0) return c.json({ error: "Not found" }, 404);
-      const input = c.req.valid("json");
-      const patch: Record<string, unknown> = {};
-      if (input.title !== undefined) patch.title = input.title;
-      if (input.bpm !== undefined) patch.bpm = input.bpm;
-      if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
-      if (input.genre !== undefined) patch.genre = input.genre;
-      if (input.mood !== undefined) patch.mood = input.mood;
-      if (input.tags !== undefined) patch.tags = input.tags;
-      if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
-      if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
-      if (input.fileUrls !== undefined)
-        patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
-      if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
-      if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
-      if (input.featured !== undefined) patch.featured = input.featured;
-      if (input.published !== undefined) patch.published = input.published;
-      await db.update(beats).set(patch).where(eq(beats.id, id));
-      return c.json({ ok: true }, 200);
-    },
-  );
+  app.put("/admin/beats/:id", requireAdmin, zValidator("json", beatUpdateSchema), async (c) => {
+    const id = c.req.param("id");
+    if (!id) return c.json({ error: "invalid_beat_id" }, 400);
+    const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
+    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
+    const input = c.req.valid("json");
+    const patch: Record<string, unknown> = {};
+    if (input.title !== undefined) patch.title = input.title;
+    if (input.bpm !== undefined) patch.bpm = input.bpm;
+    if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
+    if (input.genre !== undefined) patch.genre = input.genre;
+    if (input.mood !== undefined) patch.mood = input.mood;
+    if (input.tags !== undefined) patch.tags = input.tags;
+    if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
+    if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
+    if (input.fileUrls !== undefined)
+      patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
+    if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
+    if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
+    if (input.featured !== undefined) patch.featured = input.featured;
+    if (input.published !== undefined) patch.published = input.published;
+    await db.update(beats).set(patch).where(eq(beats.id, id));
+    return c.json({ ok: true }, 200);
+  });
 
   app.delete("/admin/beats/:id", requireAdmin, async (c) => {
     const id = c.req.param("id");
@@ -271,7 +427,7 @@ export function adminRoutes(app: Hono) {
 
   app.get("/admin/settings", requireAdmin, async (c) => {
     const s = await loadSettings();
-    const preview = (await publicSettings(s)).brand;
+    const preview = await publicSettings(s);
     return c.json({ settings: s, preview }, 200);
   });
 
@@ -282,6 +438,9 @@ export function adminRoutes(app: Hono) {
       theme: { ...current.theme, ...input.theme },
       fontId: input.fontId ?? current.fontId,
       brand: { ...current.brand, ...input.brand },
+      header: { ...current.header, ...input.header },
+      footer: { ...current.footer, ...input.footer },
+      socials: input.socials ?? current.socials,
       pages: input.pages ?? current.pages,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
     });

@@ -47,12 +47,16 @@ function getStaticFilePath(pathname: string) {
 
 async function getPageMetadata(url: URL) {
   const settings = await loadSettings();
-  const slug = url.pathname.replace(/^\/+|\/+$/g, "");
-  const page = settings.pages.find((candidate) => candidate.slug === slug && candidate.published);
+  const path = url.pathname.replace(/\/+$/, "") || "/";
+  const page = settings.pages.find(
+    (candidate) =>
+      candidate.published &&
+      (candidate.path || (candidate.slug === "home" ? "/" : `/${candidate.slug}`)) === path,
+  );
   const title = page?.seo?.title || (page ? `${page.title} | Vylanous Beats` : "Vylanous Beats");
   const description =
     page?.seo?.description || page?.sections.find((section) => section.body)?.body || "";
-  const canonicalPath = page?.seo?.canonicalPath || (slug ? `/${slug}` : "/");
+  const canonicalPath = page?.seo?.canonicalPath || page?.path || path;
   const canonicalUrl = new URL(canonicalPath, url.origin).toString();
   const imageUrl = new URL(
     page?.seo?.ogImageUrl || settings.brand.fullLogoUrl,

@@ -79,10 +79,10 @@ export const adminApi = {
   getInboxContent: (id: string) => req<{ text: string }>(`/admin/inbox/${id}/content`),
   sendEmailTest: () =>
     req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", { method: "POST" }),
-  presign: (filename: string, contentType: string, folder: string) =>
+  presign: (filename: string, contentType: string, folder: string, size?: number) =>
     req<{ url: string; key: string }>("/admin/upload/presign", {
       method: "POST",
-      body: JSON.stringify({ filename, contentType, folder }),
+      body: JSON.stringify({ filename, contentType, folder, size }),
     }),
 };
 
@@ -91,9 +91,9 @@ export const adminApi = {
  * `preview.*` are signed/displayable urls for admin thumbnails only — never save these back. */
 export async function getAdminSettings(): Promise<{
   settings: SiteSettings;
-  preview: SiteSettings["brand"];
+  preview: SiteSettings;
 }> {
-  return req<{ settings: SiteSettings; preview: SiteSettings["brand"] }>("/admin/settings");
+  return req<{ settings: SiteSettings; preview: SiteSettings }>("/admin/settings");
 }
 
 /** Persist a partial patch of the site customization settings (merged server-side). */
@@ -117,12 +117,20 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
     file.name,
     file.type || "application/octet-stream",
     folder,
+    file.size,
   );
-  const put = await fetch(url, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": file.type || "application/octet-stream" },
-  });
+  let put: Response;
+  try {
+    put = await fetch(url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+    });
+  } catch {
+    throw new Error(
+      "The upload could not reach object storage. Confirm the R2 bucket CORS policy allows this site origin and the Content-Type header.",
+    );
+  }
   if (!put.ok) {
     let detail = "";
     try {

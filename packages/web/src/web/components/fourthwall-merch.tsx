@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Loader2, ShoppingBag } from "lucide-react";
 
@@ -73,29 +74,13 @@ export function FourthwallMerch({
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {data.results.map((product) => {
         const variant = product.variants[0];
-        const image = product.images[0]?.transformedUrl || product.images[0]?.url;
         const soldOut = product.state.type === "SOLD_OUT" || !variant;
         return (
           <article
             key={product.id}
             className="group overflow-hidden rounded-2xl border border-white/[0.08] bg-vb-ink"
           >
-            <div className="aspect-square bg-white/[0.04] overflow-hidden">
-              {image ? (
-                <img
-                  src={image}
-                  alt={product.name}
-                  loading="lazy"
-                  decoding="async"
-                  sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : (
-                <div className="h-full grid place-items-center text-vb-silver/30">
-                  <ShoppingBag size={28} />
-                </div>
-              )}
-            </div>
+            <ProductImageGallery name={product.name} images={product.images} />
             <div className="p-5">
               <h3 className="font-sub text-xl uppercase tracking-wide text-vb-silver-bright">
                 {product.name}
@@ -127,6 +112,77 @@ export function FourthwallMerch({
           </article>
         );
       })}
+    </div>
+  );
+}
+
+function ProductImageGallery({
+  name,
+  images,
+}: {
+  name: string;
+  images: FourthwallProduct["images"];
+}) {
+  const galleryImages = images
+    .map((image) => image.transformedUrl || image.url)
+    .filter((url, index, urls) => Boolean(url) && urls.indexOf(url) === index);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeImage = galleryImages[Math.min(activeIndex, Math.max(galleryImages.length - 1, 0))];
+
+  if (!activeImage) {
+    return (
+      <div className="grid aspect-square place-items-center bg-white/[0.04] text-vb-silver/30">
+        <ShoppingBag size={28} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white/[0.04] p-2">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-vb-black/30">
+        <img
+          src={activeImage}
+          alt={`${name} — view ${activeIndex + 1} of ${galleryImages.length}`}
+          loading="lazy"
+          decoding="async"
+          sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        {galleryImages.length > 1 && (
+          <span className="absolute bottom-2 right-2 rounded-full bg-vb-black/75 px-2.5 py-1 font-sub text-xs tracking-wide text-vb-silver-bright">
+            {activeIndex + 1} / {galleryImages.length}
+          </span>
+        )}
+      </div>
+      {galleryImages.length > 1 && (
+        <div
+          className="mt-2 flex gap-2 overflow-x-auto pb-0.5"
+          aria-label={`${name} image gallery`}
+        >
+          {galleryImages.map((image, index) => (
+            <button
+              key={image}
+              type="button"
+              aria-label={`Show ${name} photo ${index + 1} of ${galleryImages.length}`}
+              aria-current={index === activeIndex ? "true" : undefined}
+              onClick={() => setActiveIndex(index)}
+              className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vb-purple-bright ${
+                index === activeIndex
+                  ? "border-vb-purple-bright ring-1 ring-vb-purple-bright"
+                  : "border-white/10 hover:border-white/45"
+              }`}
+            >
+              <img
+                src={image}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

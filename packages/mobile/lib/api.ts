@@ -2,20 +2,35 @@ import Constants from "expo-constants";
 import type { Beat, LicenseTierId } from "./models";
 
 const configuredApiUrl =
-  Constants.expoConfig?.extra?.apiUrl ?? process.env.EXPO_PUBLIC_API_URL ?? "https://www.vylanous.com";
+  Constants.expoConfig?.extra?.apiUrl ??
+  process.env.EXPO_PUBLIC_API_URL ??
+  "https://www.vylanous.com";
 
 export const API_BASE_URL = configuredApiUrl.replace(/\/$/, "");
+let customerToken: string | null = null;
+
+export function setCustomerToken(token: string | null) {
+  customerToken = token;
+}
+
+export function getCustomerToken() {
+  return customerToken;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       Accept: "application/json",
+      ...(customerToken ? { Authorization: `Bearer ${customerToken}` } : {}),
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },
   });
-  const payload = (await response.json().catch(() => ({}))) as T & { error?: string; message?: string };
+  const payload = (await response.json().catch(() => ({}))) as T & {
+    error?: string;
+    message?: string;
+  };
   if (!response.ok) {
     throw new Error(payload.error || payload.message || "Something went wrong. Please try again.");
   }
@@ -54,10 +69,10 @@ export async function trackPlay(beatId: string): Promise<void> {
   await request<{ ok: true }>(`/api/beats/${encodeURIComponent(beatId)}/play`, { method: "POST" });
 }
 
-export async function fulfillFreeLicense(input: { beatId: string; email: string; name?: string }): Promise<{ orderId: string }> {
+export async function fulfillFreeLicense(input: { beatId: string }): Promise<{ orderId: string }> {
   return request<{ orderId: string }>("/api/checkout", {
     method: "POST",
-    body: JSON.stringify({ email: input.email, name: input.name ?? "", items: [{ beatId: input.beatId, tier: "free" }] }),
+    body: JSON.stringify({ items: [{ beatId: input.beatId, tier: "free" }] }),
   });
 }
 
@@ -69,8 +84,6 @@ export interface MobileFulfillmentRequest {
   productId: string;
   beatId: string;
   tier: LicenseTierId;
-  email: string;
-  name?: string;
 }
 
 export interface MobileFulfillmentResponse {
@@ -88,4 +101,83 @@ export async function fulfillMobilePurchase(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export interface CustomerProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  marketingOptIn: boolean;
+  createdAt?: string;
+}
+
+export interface CustomerEntitlement {
+  id: string;
+  orderId: string;
+  beatId: string;
+  beatTitle: string;
+  licenseTier: LicenseTierId;
+  licenseName: string;
+  createdAt: string;
+  downloadUrl: string;
+}
+
+export interface CustomerDashboard {
+  customer: CustomerProfile;
+  insights: { paidOrders: number; licensesOwned: number; totalSpentCents: number };
+  orders: {
+    id: string;
+    status: string;
+    totalCents: number;
+    currency: string;
+    createdAt: string;
+    paidAt: string | null;
+  }[];
+  entitlements: CustomerEntitlement[];
+}
+
+type CustomerSessionResponse = {
+  customer: CustomerProfile;
+  session: { token: string; expiresAt: string };
+};
+
+export function customerLogin(input: { email: string; password: string }) {
+  return request<CustomerSessionResponse>("/api/customer/login", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function customerRegister(input: {
+  email: string;
+  password: string;
+  displayName?: string;
+  marketingOptIn?: boolean;
+}) {
+  return request<CustomerSessionResponse>("/api/customer/register", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function customerLogout() {
+  return request<{ ok: true }>("/api/customer/logout", { method: "POST" });
+}
+
+export function customerDashboard() {
+  return request<CustomerDashboard>("/api/customer/dashboard");
+}
+
+export function updateCustomerPreferences(input: {
+  displayName?: string;
+  marketingOptIn?: boolean;
+}) {
+  return request<{ customer: CustomerProfile }>("/api/customer/preferences", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function entitlementDownload(id: string) {
+  return request<{ url: string }>(`/api/customer/entitlements/${encodeURIComponent(id)}/download`);
 }

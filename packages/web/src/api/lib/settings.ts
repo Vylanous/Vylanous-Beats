@@ -51,5 +51,27 @@ export async function publicSettings(s: SiteSettings) {
       fullLogoUrl: await signBrandUrl(s.brand.fullLogoUrl),
       faviconUrl: await signBrandUrl(s.brand.faviconUrl),
     },
+    pages: await Promise.all(
+      s.pages.map(async (page) => ({
+        ...page,
+        seo: page.seo
+          ? { ...page.seo, ogImageUrl: await signBrandUrl(page.seo.ogImageUrl || "") }
+          : page.seo,
+        sections: await Promise.all(
+          page.sections.map(async (section) => ({
+            ...section,
+            imageUrl: await signBrandUrl(section.imageUrl || ""),
+            items: section.items
+              ? await Promise.all(
+                  section.items.map(async (item) => ({
+                    ...item,
+                    imageUrl: await signBrandUrl(item.imageUrl || ""),
+                  })),
+                )
+              : section.items,
+          })),
+        ),
+      })),
+    ),
   };
 }
