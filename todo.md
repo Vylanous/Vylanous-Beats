@@ -212,11 +212,39 @@
 - [ ] Validate local and production-facing website flows.
 - [ ] Report running status and any remaining manual action.
 
+## Production Deployment Repair
+
+- [x] Audit merged-main deployment configuration, CI workflows, and production service routing.
+- [x] Identify and repair the concrete deployment or environment propagation blocker.
+- [ ] Prepare the production release through the configured workflow without destructive changes.
+- [ ] Verify live verification, R2 configuration, homepage, API health, and upload authorization.
+- [ ] Report completed repairs and any remaining user-controlled production action.
+
+## Post-Merge Production Verification
+
+- [ ] Confirm PR #37 merge and identify the resulting production deployment.
+- [ ] Check live API, verification route, and storage configuration behavior.
+- [ ] Report whether production is updated and identify any remaining deployment action.
+
+## Production R2 Storage Configuration
+
+- [x] Map application R2 variables, storage helpers, deployment manifests, and current configuration.
+- [x] Determine the required R2 bucket, endpoint, public URL, and CORS values.
+- [x] Add or request production environment settings through the secure configuration path.
+- [x] Validate storage configuration, upload signing, CORS, and production-facing routes.
+- [ ] Report configured values, remaining secret requirements, and next deployment action.
+
+## Environment Variable Verification
+
+- [x] Inspect local and deployment configuration for required email and production variable names.
+- [x] Check configured environment availability without exposing secret values.
+- [ ] Report loaded, missing, and production-confirmation-required variables.
+
 ## Release Review and Checkpoint
 
-- [ ] Review all pending verification, newsletter, mobile, builder, and deployment changes.
-- [ ] Resolve release blockers and confirm the production-ready file set.
-- [ ] Create a release checkpoint and commit the reviewed changes.
+- [x] Review all pending verification, newsletter, mobile, builder, and deployment changes.
+- [x] Resolve release blockers and confirm the production-ready file set.
+- [x] Create a release checkpoint and commit the reviewed changes.
 - [ ] Prepare the configured merge or Publish workflow without auto-publishing.
 - [ ] Report the checkpoint, commit, and final user-controlled release action.
 
