@@ -6,6 +6,7 @@ import {
   customerLogout,
   customerRegister,
   getCustomerToken,
+  resendCustomerVerification,
   setCustomerToken,
   type CustomerProfile,
   type CustomerDashboard,
@@ -26,6 +27,7 @@ type CustomerContextValue = {
     marketingOptIn?: boolean;
   }) => Promise<void>;
   signOut: () => Promise<void>;
+  resendVerification: () => Promise<void>;
 };
 
 const CustomerContext = createContext<CustomerContextValue | null>(null);
@@ -88,6 +90,10 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     [saveSession],
   );
 
+  const resendVerification = useCallback(async () => {
+    if (customer) await resendCustomerVerification(customer.email);
+  }, [customer]);
+
   const signOut = useCallback(async () => {
     try {
       if (getCustomerToken()) await customerLogout();
@@ -99,8 +105,17 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ready, customer, dashboard, refreshDashboard, signIn, signUp, signOut }),
-    [ready, customer, dashboard, refreshDashboard, signIn, signUp, signOut],
+    () => ({
+      ready,
+      customer,
+      dashboard,
+      refreshDashboard,
+      signIn,
+      signUp,
+      signOut,
+      resendVerification,
+    }),
+    [ready, customer, dashboard, refreshDashboard, signIn, signUp, signOut, resendVerification],
   );
   return <CustomerContext.Provider value={value}>{children}</CustomerContext.Provider>;
 }

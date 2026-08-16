@@ -13,7 +13,7 @@ import {
 } from "../lib/mobile-store-verifier";
 import { parseFileUrls, rid } from "../lib/util";
 import { TIER_BY_ID } from "../../shared/licenses";
-import { currentCustomer, requireCustomer } from "../lib/customer-auth";
+import { currentCustomer, requireVerifiedCustomer } from "../lib/customer-auth";
 import { activateOrderEntitlements } from "../lib/customer-portal";
 
 const purchaseSchema = z.object({
@@ -40,7 +40,7 @@ type FulfillmentResult = {
 export function mobilePurchaseRoutes(app: Hono) {
   app.post(
     "/mobile/purchases/verify-and-fulfill",
-    requireCustomer,
+    requireVerifiedCustomer,
     zValidator("json", purchaseSchema),
     async (c) => {
       const body = c.req.valid("json");

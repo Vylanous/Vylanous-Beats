@@ -19,11 +19,18 @@ process.env.APP_URL = "";
 // assert the checkout behavior without depending on Resend.
 globalThis.fetch = (async () => new Response(null, { status: 202 })) as typeof fetch;
 
-const [{ default: app }, { db }, { beats }, { orders, orderItems }] = await Promise.all([
+const [
+  { default: app },
+  { db },
+  { beats },
+  { orders, orderItems },
+  { createCustomerVerificationToken },
+] = await Promise.all([
   import("../index"),
   import("../database"),
   import("../database/schema"),
   import("../database/schema"),
+  import("../lib/customer-auth"),
 ]);
 
 async function seedBeat(overrides: Record<string, unknown> = {}) {
@@ -60,7 +67,17 @@ async function checkout(email: string, items: { beatId: string; tier: string }[]
     body: JSON.stringify({ email, password: "customer-test-password", displayName: "Test User" }),
   });
   expect(registration.status).toBe(201);
-  const account = (await registration.json()) as { session: { token: string } };
+  const account = (await registration.json()) as {
+    customer: { id: string };
+    session: { token: string };
+  };
+  const verification = await createCustomerVerificationToken(account.customer.id);
+  const verified = await app.request("/api/customer/verify-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: verification.token }),
+  });
+  expect(verified.status).toBe(200);
   return app.request("/api/checkout", {
     method: "POST",
     headers: {

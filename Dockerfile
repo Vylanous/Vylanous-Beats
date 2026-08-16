@@ -1,5 +1,5 @@
 # ── Stage 1: Build ──────────────────────────────────────────────────
-FROM oven/bun:1.1-alpine AS builder
+FROM oven/bun:1.3.14-alpine AS builder
 
 WORKDIR /app
 
@@ -18,13 +18,14 @@ WORKDIR /app/packages/web
 RUN bun run build
 
 # ── Stage 2: Production runtime ─────────────────────────────────────
-FROM oven/bun:1.1-alpine AS runner
+FROM oven/bun:1.3.14-alpine AS runner
 
 WORKDIR /app
 
 # Copy everything needed for runtime
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/web/package.json ./packages/web/package.json
+COPY --from=builder /app/packages/web/drizzle.config.ts ./packages/web/drizzle.config.ts
 COPY --from=builder /app/packages/web/src ./packages/web/src
 COPY --from=builder /app/packages/web/dist ./packages/web/dist
 COPY --from=builder /app/packages/web/public ./packages/web/public
@@ -36,4 +37,4 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["bun", "src/server.ts"]
+CMD ["bun", "run", "start"]

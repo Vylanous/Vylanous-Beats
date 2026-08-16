@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Download, Mail, Music2, ShoppingBag } from "lucide-react";
 import { Layout } from "../components/layout";
@@ -7,7 +8,11 @@ import { formatCad } from "../../shared/licenses";
 
 export default function DashboardPage() {
   const [, navigate] = useLocation();
-  const { ready, customer, dashboard, updatePreferences, signOut } = useCustomer();
+  const { ready, customer, dashboard, updatePreferences, resendVerification, signOut } =
+    useCustomer();
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
   useEffect(() => {
     if (ready && !customer) navigate("/login");
   }, [customer, navigate, ready]);
@@ -39,6 +44,44 @@ export default function DashboardPage() {
             Sign out
           </button>
         </div>
+        {!customer.emailVerified && (
+          <section className="mt-8 flex flex-col gap-4 rounded-2xl border border-vb-purple/40 bg-vb-purple/[.08] p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-sub text-xs uppercase tracking-[.2em] text-vb-purple-bright">
+                Email verification required
+              </p>
+              <p className="mt-2 max-w-2xl font-body text-sm leading-6 text-vb-silver/70">
+                Verify {customer.email} to unlock the complete catalog, checkout, and secure license
+                downloads.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={verificationStatus === "sending"}
+              onClick={async () => {
+                setVerificationStatus("sending");
+                try {
+                  await resendVerification();
+                  setVerificationStatus("sent");
+                } catch {
+                  setVerificationStatus("error");
+                }
+              }}
+              className="shrink-0 rounded-lg bg-vb-purple px-4 py-3 font-sub text-xs uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:cursor-wait disabled:opacity-60"
+            >
+              {verificationStatus === "sending"
+                ? "Sending…"
+                : verificationStatus === "sent"
+                  ? "Email sent"
+                  : "Resend email"}
+            </button>
+            {verificationStatus === "error" && (
+              <p className="font-body text-xs text-red-300">
+                Unable to resend right now. Try again shortly.
+              </p>
+            )}
+          </section>
+        )}
         <section className="mt-10 grid gap-4 sm:grid-cols-3">
           <Stat
             icon={<Music2 size={18} />}

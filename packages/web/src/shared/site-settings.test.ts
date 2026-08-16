@@ -28,5 +28,52 @@ describe("Site Builder settings migration", () => {
     ).toBe("transparent");
     expect(settings.header.showCart).toBe(true);
     expect(settings.footer.contactEmail).toBe("support@vylanous.com");
+    expect(settings.builder).toEqual({ drafts: [], templates: [], versions: [] });
+  });
+
+  test("adds newsletter popup defaults to legacy settings", () => {
+    const settings = mergeSettings({});
+
+    expect(settings.newsletterPopup.enabled).toBe(true);
+    expect(settings.newsletterPopup.delayMs).toBe(4500);
+    expect(settings.newsletterPopup.consentText).toContain("email");
+  });
+
+  test("preserves customized newsletter popup settings", () => {
+    const settings = mergeSettings({
+      newsletterPopup: {
+        enabled: false,
+        delayMs: 1200,
+        title: "Private drops",
+        consentText: "Keep me posted.",
+      },
+    });
+
+    expect(settings.newsletterPopup.enabled).toBe(false);
+    expect(settings.newsletterPopup.delayMs).toBe(1200);
+    expect(settings.newsletterPopup.title).toBe("Private drops");
+    expect(settings.newsletterPopup.consentText).toBe("Keep me posted.");
+    expect(settings.newsletterPopup.buttonLabel).toBe("Join the list");
+  });
+
+  test("preserves private builder metadata when it is present", () => {
+    const settings = mergeSettings({
+      builder: {
+        drafts: [],
+        templates: [
+          {
+            id: "template_1",
+            name: "Artist launch",
+            createdAt: "2026-08-14T00:00:00.000Z",
+            updatedAt: "2026-08-14T00:00:00.000Z",
+            sections: [{ id: "hero_1", type: "hero", title: "Launch" }],
+          },
+        ],
+        versions: [],
+      },
+    });
+
+    expect(settings.builder.templates[0]?.name).toBe("Artist launch");
+    expect(settings.builder.templates[0]?.sections[0]?.type).toBe("hero");
   });
 });

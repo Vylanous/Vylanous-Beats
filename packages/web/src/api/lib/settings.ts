@@ -44,8 +44,10 @@ export async function signBrandUrl(value: string): Promise<string> {
 }
 
 export async function publicSettings(s: SiteSettings) {
+  const { builder: _privateBuilder, ...publicSite } = s;
+  void _privateBuilder;
   return {
-    ...s,
+    ...publicSite,
     brand: {
       squareLogoUrl: await signBrandUrl(s.brand.squareLogoUrl),
       fullLogoUrl: await signBrandUrl(s.brand.fullLogoUrl),

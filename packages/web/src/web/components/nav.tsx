@@ -5,6 +5,7 @@ import { ShoppingCart, Menu, X, UserRound, LogOut } from "lucide-react";
 import { useCart } from "../lib/cart";
 import { useSiteSettings } from "../lib/site-settings";
 import { useCustomer } from "../lib/customer";
+import { SocialIcon } from "./social-icon";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -75,7 +76,8 @@ export function Nav() {
                 aria-label={social.label}
                 className="hidden rounded-md px-1.5 py-1 font-sub text-xs uppercase tracking-wide text-vb-silver hover:text-vb-purple-bright xl:inline"
               >
-                {social.label.slice(0, 3)}
+                <SocialIcon platform={social.platform} size={15} />
+                <span className="sr-only">{social.label}</span>
               </a>
             ))}
           {header.ctaLabel && header.ctaHref && (

@@ -108,6 +108,8 @@ export interface CustomerProfile {
   email: string;
   displayName: string;
   marketingOptIn: boolean;
+  emailVerified: boolean;
+  emailVerifiedAt?: string | null;
   createdAt?: string;
 }
 
@@ -157,6 +159,20 @@ export function customerRegister(input: {
   return request<CustomerSessionResponse>("/api/customer/register", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export function resendCustomerVerification(email: string) {
+  return request<{ ok: true; message: string }>("/api/customer/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function verifyCustomerEmail(token: string) {
+  return request<{ ok: true; customer: CustomerProfile }>("/api/customer/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
   });
 }
 

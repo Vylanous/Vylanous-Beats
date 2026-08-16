@@ -7,11 +7,13 @@ import { join } from "node:path";
 const dbDir = mkdtempSync(join(tmpdir(), "vylanous-customer-portal-test-"));
 process.env.DATABASE_URL = `file:${join(dbDir, "test.db")}`;
 
-const [{ default: app }, { db }, { beats }] = await Promise.all([
-  import("../index"),
-  import("../database"),
-  import("../database/schema"),
-]);
+const [{ default: app }, { db }, { beats }, { createCustomerVerificationToken }] =
+  await Promise.all([
+    import("../index"),
+    import("../database"),
+    import("../database/schema"),
+    import("../lib/customer-auth"),
+  ]);
 
 async function seedBeat(featured: boolean) {
   const id = `beat_${randomUUID().slice(0, 8)}`;
@@ -59,7 +61,32 @@ describe("shared customer portal", () => {
       }),
     });
     expect(registration.status).toBe(201);
-    const registered = (await registration.json()) as { session: { token: string } };
+    const registered = (await registration.json()) as {
+      customer: { id: string; emailVerified: boolean };
+      session: { token: string };
+    };
+    expect(registered.customer.emailVerified).toBe(false);
+    const resend = await app.request("/api/customer/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    expect(resend.status).toBe(202);
+    const unverifiedHeaders = { Authorization: `Bearer ${registered.session.token}` };
+    expect((await app.request("/api/beats", { headers: unverifiedHeaders })).status).toBe(403);
+    const verification = await createCustomerVerificationToken(registered.customer.id);
+    const verified = await app.request("/api/customer/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: verification.token }),
+    });
+    expect(verified.status).toBe(200);
+    const replay = await app.request("/api/customer/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: verification.token }),
+    });
+    expect(replay.status).toBe(400);
     const headers = {
       Authorization: `Bearer ${registered.session.token}`,
       "Content-Type": "application/json",
@@ -97,7 +124,17 @@ describe("shared customer portal", () => {
         password: "customer-test-password",
       }),
     });
-    const other = (await second.json()) as { session: { token: string } };
+    const other = (await second.json()) as {
+      customer: { id: string };
+      session: { token: string };
+    };
+    const otherVerification = await createCustomerVerificationToken(other.customer.id);
+    const otherVerified = await app.request("/api/customer/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: otherVerification.token }),
+    });
+    expect(otherVerified.status).toBe(200);
     expect(
       (
         await app.request(`/api/customer/entitlements/${portal.entitlements[0].id}/download`, {

@@ -449,6 +449,10 @@ function FeatureCards({
                 <img
                   src={item.imageUrl}
                   alt=""
+                  width={1200}
+                  height={675}
+                  loading="lazy"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                   className="mt-4 aspect-video w-full rounded-lg object-cover"
                 />
               )}

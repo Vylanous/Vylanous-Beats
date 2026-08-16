@@ -2,21 +2,41 @@
  * Vylanous Site Builder: dark industrial surfaces, chrome display type, and a
  * purple accent. Controls stay dense and purposeful while enabling full-site design.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
+  Copy,
   Eye,
+  Facebook,
+  History,
+  Redo2,
+  Undo2,
+  WandSparkles,
   GripVertical,
+  Instagram,
+  LayoutTemplate,
+  Link2,
   Loader2,
+  Monitor,
+  Music2,
   Plus,
+  PlusCircle,
   Save,
+  Smartphone,
+  Tablet,
   Trash2,
+  Video,
+  Youtube,
+  type LucideIcon,
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
+import { FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
   BuilderPage,
+  BuilderTemplate,
+  BuilderVersion,
   PageSection,
   PageSectionType,
   SectionItem,
@@ -25,6 +45,34 @@ import type {
   SocialLink,
   SocialPlatform,
 } from "../../../shared/site-settings";
+
+const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string; Icon: LucideIcon }[] = [
+  { value: "instagram", label: "Instagram", Icon: Instagram },
+  { value: "tiktok", label: "TikTok", Icon: Video },
+  { value: "youtube", label: "YouTube", Icon: Youtube },
+  { value: "spotify", label: "Spotify", Icon: Music2 },
+  { value: "soundcloud", label: "SoundCloud", Icon: Music2 },
+  { value: "facebook", label: "Facebook", Icon: Facebook },
+  { value: "x", label: "X", Icon: Link2 },
+  { value: "custom", label: "Custom link", Icon: Link2 },
+];
+
+const COLOR_FIELDS: { key: keyof ThemeColors; label: string }[] = [
+  { key: "primary", label: "Primary" },
+  { key: "primaryBright", label: "Primary glow" },
+  { key: "primaryDeep", label: "Primary deep" },
+  { key: "background", label: "Background" },
+  { key: "surface", label: "Surface" },
+  { key: "surfaceHover", label: "Surface hover" },
+  { key: "text", label: "Text" },
+  { key: "muted", label: "Muted text" },
+];
+
+const DEVICE_OPTIONS = [
+  { value: "desktop", label: "Desktop", Icon: Monitor, canvasClass: "w-full" },
+  { value: "tablet", label: "Tablet", Icon: Tablet, canvasClass: "w-[720px] max-w-full" },
+  { value: "mobile", label: "Mobile", Icon: Smartphone, canvasClass: "w-[390px] max-w-full" },
+] as const;
 
 const SECTION_TYPES: { type: PageSectionType; label: string }[] = [
   { type: "hero", label: "Hero" },
@@ -107,6 +155,21 @@ export default function PageBuilderPanel() {
   const [selectedId, setSelectedId] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [focusedSectionId, setFocusedSectionId] = useState("");
+  const [showBlockLibrary, setShowBlockLibrary] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [draftSaveState, setDraftSaveState] = useState<"saved" | "unsaved" | "saving" | "error">(
+    "saved",
+  );
+  const [draggingSectionId, setDraggingSectionId] = useState("");
+  const [dragOverSectionId, setDragOverSectionId] = useState("");
+  const historyRef = useRef<{ past: SiteSettings[]; future: SiteSettings[] }>({
+    past: [],
+    future: [],
+  });
+  const hydratedRef = useRef(false);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     getAdminSettings()
@@ -114,6 +177,9 @@ export default function PageBuilderPanel() {
         setSettings(loaded);
         setPreviews(preview);
         setSelectedId(loaded.pages[0]?.id || "");
+        setFocusedSectionId(loaded.pages[0]?.sections[0]?.id || "");
+        hydratedRef.current = true;
+        setDraftSaveState("saved");
       })
       .catch(() => setNotice("Unable to load site-builder settings."));
   }, []);
@@ -123,8 +189,63 @@ export default function PageBuilderPanel() {
     [selectedId, settings],
   );
 
-  const updateSettings = (patch: Partial<SiteSettings>) =>
-    setSettings((current) => (current ? { ...current, ...patch } : current));
+  useEffect(() => {
+    if (!settings || !page || !hydratedRef.current || draftSaveState !== "unsaved") return;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(async () => {
+      setDraftSaveState("saving");
+      const draft = {
+        id: `draft_${page.id}`,
+        pageId: page.id,
+        updatedAt: new Date().toISOString(),
+        snapshot: page,
+      };
+      try {
+        await saveAdminSettings({
+          builder: {
+            ...settings.builder,
+            drafts: [...settings.builder.drafts.filter((item) => item.pageId !== page.id), draft],
+          },
+        });
+        setDraftSaveState("saved");
+      } catch {
+        setDraftSaveState("error");
+      }
+    }, 900);
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, [draftSaveState, page, settings]);
+
+  const updateSettings = (patch: Partial<SiteSettings>) => {
+    setSettings((current) => {
+      if (!current) return current;
+      historyRef.current.past = [...historyRef.current.past.slice(-29), current];
+      historyRef.current.future = [];
+      return { ...current, ...patch };
+    });
+    setDraftSaveState("unsaved");
+  };
+
+  const undo = () => {
+    setSettings((current) => {
+      const previous = historyRef.current.past.pop();
+      if (!current || !previous) return current;
+      historyRef.current.future.push(current);
+      setDraftSaveState("unsaved");
+      return previous;
+    });
+  };
+
+  const redo = () => {
+    setSettings((current) => {
+      const next = historyRef.current.future.pop();
+      if (!current || !next) return current;
+      historyRef.current.past.push(current);
+      setDraftSaveState("unsaved");
+      return next;
+    });
+  };
 
   const updatePage = (next: BuilderPage) => {
     if (!settings) return;
@@ -133,22 +254,46 @@ export default function PageBuilderPanel() {
     });
   };
 
-  const save = async () => {
+  const save = async (checkpointLabel?: string) => {
     if (!settings) return;
     setSaving(true);
     setNotice("");
     try {
+      const builder = checkpointLabel
+        ? {
+            ...settings.builder,
+            versions: [
+              ...settings.builder.versions.slice(-49),
+              {
+                id: newId("version"),
+                pageId: page?.id || settings.pages[0]?.id || "",
+                label: checkpointLabel,
+                createdAt: new Date().toISOString(),
+                snapshot: page || settings.pages[0],
+              } as BuilderVersion,
+            ],
+          }
+        : settings.builder;
       await saveAdminSettings({
+        theme: settings.theme,
+        fontId: settings.fontId,
+        brand: settings.brand,
         pages: settings.pages,
         fourthwall: settings.fourthwall,
         header: settings.header,
         footer: settings.footer,
         socials: settings.socials,
+        builder,
       });
       const refreshed = await getAdminSettings();
       setSettings(refreshed.settings);
       setPreviews(refreshed.preview);
-      setNotice("Saved. Your live design, navigation, and global chrome update immediately.");
+      setDraftSaveState("saved");
+      setNotice(
+        checkpointLabel
+          ? `Published checkpoint: ${checkpointLabel}`
+          : "Saved. Your live design, navigation, and global chrome update immediately.",
+      );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Could not save site-builder changes.");
     } finally {
@@ -195,7 +340,84 @@ export default function PageBuilderPanel() {
     [sections[index], sections[destination]] = [sections[destination], sections[index]];
     updatePage({ ...page, sections });
   };
+  const reorderSection = (fromId: string, toId: string) => {
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIndex = page.sections.findIndex((section) => section.id === fromId);
+    const toIndex = page.sections.findIndex((section) => section.id === toId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const sections = [...page.sections];
+    const [moved] = sections.splice(fromIndex, 1);
+    sections.splice(toIndex, 0, moved);
+    updatePage({ ...page, sections });
+    setFocusedSectionId(toId);
+    setDraggingSectionId("");
+    setDragOverSectionId("");
+  };
+
+  const duplicateSection = (id: string) => {
+    const original = page.sections.find((section) => section.id === id);
+    if (!original) return;
+    const index = page.sections.findIndex((section) => section.id === id);
+    const duplicate: PageSection = {
+      ...original,
+      id: newId("section"),
+      title: original.title ? `${original.title} copy` : "New section",
+      items: original.items?.map((item) => ({ ...item, id: newId("item") })),
+    };
+    const sections = [...page.sections];
+    sections.splice(index + 1, 0, duplicate);
+    updatePage({ ...page, sections });
+    setFocusedSectionId(duplicate.id);
+  };
+  const createTemplate = () => {
+    const name = window.prompt("Name this reusable section template", `${page.title} blocks`);
+    if (!name?.trim()) return;
+    const template: BuilderTemplate = {
+      id: newId("template"),
+      name: name.trim(),
+      description: `Reusable blocks from ${page.title}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      sections: page.sections,
+    };
+    updateSettings({
+      builder: { ...settings.builder, templates: [...settings.builder.templates, template] },
+    });
+    setNotice(`Template saved: ${template.name}`);
+  };
+
+  const applyTemplate = (template: BuilderTemplate) => {
+    const sections = template.sections.map((section) => ({
+      ...section,
+      id: newId("section"),
+      items: section.items?.map((item) => ({ ...item, id: newId("item") })),
+    }));
+    updatePage({ ...page, sections });
+    setFocusedSectionId(sections[0]?.id || "");
+    setShowTemplateLibrary(false);
+    setNotice(`Template inserted: ${template.name}`);
+  };
+
+  const restoreVersion = (version: BuilderVersion) => {
+    if (
+      !window.confirm(
+        `Restore “${version.label}” to this page? Your current state remains available through undo.`,
+      )
+    )
+      return;
+    updatePage(version.snapshot);
+    setNotice(`Restored checkpoint: ${version.label}`);
+  };
+
   const previewPage = previews?.pages.find((candidate) => candidate.id === page.id);
+  const focusSection = (id: string) => {
+    setFocusedSectionId(id);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(`builder-section-${id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
 
   return (
     <div className="pb-12">
@@ -209,18 +431,234 @@ export default function PageBuilderPanel() {
             from one place.
           </p>
         </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="inline-flex items-center gap-2 rounded-lg bg-vb-purple px-4 py-2.5 font-sub uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
-        >
-          {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-          {saving ? "Saving" : "Save site design"}
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-body text-xs ${draftSaveState === "error" ? "border-red-400/30 text-red-300" : draftSaveState === "saving" ? "border-amber-300/30 text-amber-200" : draftSaveState === "unsaved" ? "border-vb-purple/30 text-vb-purple-bright" : "border-emerald-300/20 text-emerald-200"}`}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+            {draftSaveState === "saving"
+              ? "Autosaving"
+              : draftSaveState === "unsaved"
+                ? "Unsaved changes"
+                : draftSaveState === "error"
+                  ? "Autosave failed"
+                  : "Draft saved"}
+          </div>
+          <button
+            type="button"
+            title="Undo"
+            aria-label="Undo last change"
+            onClick={undo}
+            disabled={!historyRef.current.past.length}
+            className="rounded-lg border border-white/10 p-2.5 text-vb-silver/70 hover:border-vb-purple/50 hover:text-white disabled:opacity-30"
+          >
+            <Undo2 size={16} />
+          </button>
+          <button
+            type="button"
+            title="Redo"
+            aria-label="Redo last change"
+            onClick={redo}
+            disabled={!historyRef.current.future.length}
+            className="rounded-lg border border-white/10 p-2.5 text-vb-silver/70 hover:border-vb-purple/50 hover:text-white disabled:opacity-30"
+          >
+            <Redo2 size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={createTemplate}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2.5 font-sub text-xs uppercase tracking-wide text-vb-silver/75 hover:border-vb-purple/50 hover:text-white"
+          >
+            <WandSparkles size={15} /> Save template
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowTemplateLibrary((open) => !open)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2.5 font-sub text-xs uppercase tracking-wide text-vb-silver/75 hover:border-vb-purple/50 hover:text-white"
+          >
+            <LayoutTemplate size={15} /> Templates
+          </button>
+          <button
+            onClick={save}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-lg bg-vb-purple px-4 py-2.5 font-sub uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
+          >
+            {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+            {saving ? "Saving" : "Save site design"}
+          </button>
+        </div>
       </div>
       {notice && <p className="mb-4 font-body text-sm text-vb-purple-bright">{notice}</p>}
+      {showTemplateLibrary && (
+        <section className="mb-5 rounded-2xl border border-vb-purple/20 bg-vb-purple/[0.06] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-sub text-lg uppercase tracking-wide">Reusable templates</h2>
+              <p className="font-body text-xs text-vb-silver/50">
+                Insert a saved block composition into the current page.
+              </p>
+            </div>
+            <span className="font-mono text-xs text-vb-silver/35">
+              {settings.builder.templates.length} saved
+            </span>
+          </div>
+          {settings.builder.templates.length ? (
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {settings.builder.templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="rounded-xl border border-white/[0.08] bg-vb-black/50 p-3"
+                >
+                  <p className="font-sub text-sm uppercase text-vb-silver-bright">
+                    {template.name}
+                  </p>
+                  <p className="mt-1 font-body text-xs text-vb-silver/45">
+                    {template.sections.length} blocks · {template.description}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => applyTemplate(template)}
+                    className="mt-3 rounded-lg bg-vb-purple/80 px-3 py-2 font-sub text-[10px] uppercase tracking-wide text-white hover:bg-vb-purple-bright"
+                  >
+                    Insert template
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 font-body text-sm text-vb-silver/45">
+              Save your first template from the current page to reuse its composition.
+            </p>
+          )}
+          <div className="mt-5 border-t border-white/[0.08] pt-4">
+            <div className="flex items-center gap-2">
+              <History size={15} className="text-vb-purple-bright" />
+              <span className="font-sub text-xs uppercase tracking-[0.16em] text-vb-silver/55">
+                Version checkpoints
+              </span>
+            </div>
+            {settings.builder.versions.filter((version) => version.pageId === page.id).length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {settings.builder.versions
+                  .filter((version) => version.pageId === page.id)
+                  .slice()
+                  .reverse()
+                  .map((version) => (
+                    <button
+                      type="button"
+                      key={version.id}
+                      onClick={() => restoreVersion(version)}
+                      className="rounded-lg border border-white/[0.08] px-3 py-2 text-left hover:border-vb-purple/50"
+                    >
+                      <span className="block font-body text-xs text-vb-silver-bright">
+                        {version.label}
+                      </span>
+                      <span className="block font-mono text-[10px] text-vb-silver/35">
+                        {new Date(version.createdAt).toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            ) : (
+              <p className="mt-3 font-body text-xs text-vb-silver/40">
+                No checkpoints yet. Save the site design to create the first draft, then publish a
+                named checkpoint from the studio.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section className="mb-5 overflow-hidden rounded-2xl border border-white/[0.1] bg-vb-ink shadow-2xl shadow-black/20">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] bg-vb-black/60 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <LayoutTemplate size={17} className="text-vb-purple-bright" />
+            <div>
+              <p className="font-sub text-sm uppercase tracking-[0.18em] text-vb-silver-bright">
+                Builder studio
+              </p>
+              <p className="font-body text-xs text-vb-silver/45">
+                Compose, preview, and publish every breakpoint from one workspace.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                window.open(page.path || `/${page.slug}`, "_blank", "noopener,noreferrer")
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-silver/75 hover:border-vb-purple/50 hover:text-white"
+            >
+              <Eye size={14} /> Preview live page
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const label = window.prompt(
+                  "Name this publish checkpoint",
+                  `${page.title} checkpoint`,
+                );
+                if (label?.trim()) void save(label.trim());
+              }}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-vb-purple/40 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10 disabled:opacity-60"
+            >
+              <History size={14} /> Checkpoint
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-vb-purple px-3 py-2 font-sub text-xs uppercase tracking-wide text-white hover:bg-vb-purple-bright disabled:opacity-60"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              {saving ? "Saving" : "Save changes"}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] px-4 py-2.5">
+          <div
+            className="flex items-center gap-1 rounded-lg bg-vb-black/70 p-1"
+            aria-label="Preview device"
+          >
+            {DEVICE_OPTIONS.map(({ value, label, Icon }) => (
+              <button
+                type="button"
+                key={value}
+                aria-pressed={device === value}
+                onClick={() => setDevice(value)}
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-sub text-xs uppercase tracking-wide transition ${device === value ? "bg-vb-purple/25 text-vb-purple-bright" : "text-vb-silver/45 hover:text-vb-silver"}`}
+              >
+                <Icon size={14} /> {label}
+              </button>
+            ))}
+          </div>
+          <span className="font-body text-xs text-vb-silver/40">
+            Editing {page.title} · {page.sections.length} blocks ·{" "}
+            {page.published ? "Published" : "Draft"}
+          </span>
+        </div>
+        <BuilderCanvas
+          page={page}
+          device={device}
+          focusedSectionId={focusedSectionId}
+          onFocus={focusSection}
+          onReorder={reorderSection}
+          draggingSectionId={draggingSectionId}
+          dragOverSectionId={dragOverSectionId}
+          onDragStart={setDraggingSectionId}
+          onDragOver={setDragOverSectionId}
+          onDragEnd={() => {
+            if (draggingSectionId && dragOverSectionId)
+              reorderSection(draggingSectionId, dragOverSectionId);
+            else setDraggingSectionId("");
+          }}
+        />
+      </section>
 
       <GlobalChromeEditor settings={settings} onChange={updateSettings} />
+      <StyleStudio settings={settings} onChange={updateSettings} />
 
       <section className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
         <div className="mb-4">
@@ -308,41 +746,53 @@ export default function PageBuilderPanel() {
                   Build the page from reusable content, media, catalog, and layout blocks.
                 </p>
               </div>
-              <select
-                aria-label="Add section type"
-                defaultValue=""
-                onChange={(event) => {
-                  const type = event.target.value as PageSectionType;
-                  if (type) {
-                    updatePage({ ...page, sections: [...page.sections, blankSection(type)] });
-                    event.target.value = "";
-                  }
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBlockLibrary((open) => !open);
                 }}
-                className="rounded-lg border border-white/10 bg-vb-black px-3 py-2 font-body text-sm text-vb-silver-bright"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-vb-purple px-3 py-2 font-sub text-xs uppercase tracking-wide text-white hover:bg-vb-purple-bright"
               >
-                <option value="">Add section…</option>
-                {SECTION_TYPES.map(({ type, label }) => (
-                  <option key={type} value={type}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                <PlusCircle size={15} /> Add block
+              </button>
             </div>
+            {showBlockLibrary && (
+              <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.06] p-3 sm:grid-cols-4">
+                {SECTION_TYPES.map(({ type, label }) => (
+                  <button
+                    type="button"
+                    key={type}
+                    onClick={() => {
+                      const next = blankSection(type);
+                      updatePage({ ...page, sections: [...page.sections, next] });
+                      setFocusedSectionId(next.id);
+                      setShowBlockLibrary(false);
+                    }}
+                    className="rounded-lg border border-white/[0.08] bg-vb-black/50 px-2.5 py-2.5 text-left font-body text-xs text-vb-silver/70 transition hover:border-vb-purple/50 hover:text-vb-purple-bright"
+                  >
+                    <span className="block font-sub uppercase tracking-wide">{label}</span>
+                    <span className="mt-0.5 block text-[10px] text-vb-silver/35">Add block</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="space-y-4">
               {page.sections.map((section, index) => (
-                <SectionEditor
-                  key={section.id}
-                  section={section}
-                  preview={previewPage?.sections.find((candidate) => candidate.id === section.id)}
-                  onChange={(patch) => updateSection(section.id, patch)}
-                  onDelete={() =>
-                    updatePage({
-                      ...page,
-                      sections: page.sections.filter((candidate) => candidate.id !== section.id),
-                    })
-                  }
-                  onMove={(direction) => moveSection(index, direction)}
-                />
+                <div id={`builder-section-${section.id}`} key={section.id}>
+                  <SectionEditor
+                    section={section}
+                    preview={previewPage?.sections.find((candidate) => candidate.id === section.id)}
+                    onChange={(patch) => updateSection(section.id, patch)}
+                    onDuplicate={() => duplicateSection(section.id)}
+                    onDelete={() =>
+                      updatePage({
+                        ...page,
+                        sections: page.sections.filter((candidate) => candidate.id !== section.id),
+                      })
+                    }
+                    onMove={(direction) => moveSection(index, direction)}
+                  />
+                </div>
               ))}
             </div>
           </section>
@@ -351,6 +801,259 @@ export default function PageBuilderPanel() {
         </div>
       </div>
     </div>
+  );
+}
+
+function BuilderCanvas({
+  page,
+  device,
+  focusedSectionId,
+  onFocus,
+  onReorder,
+  draggingSectionId,
+  dragOverSectionId,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+}: {
+  page: BuilderPage;
+  device: "desktop" | "tablet" | "mobile";
+  focusedSectionId: string;
+  onFocus: (id: string) => void;
+  onReorder: (fromId: string, toId: string) => void;
+  draggingSectionId: string;
+  dragOverSectionId: string;
+  onDragStart: (id: string) => void;
+  onDragOver: (id: string) => void;
+  onDragEnd: () => void;
+}) {
+  const deviceOption =
+    DEVICE_OPTIONS.find((option) => option.value === device) || DEVICE_OPTIONS[0];
+  return (
+    <div className="grid gap-4 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.14),transparent_38%),#0b0b0f] p-4 sm:grid-cols-[13rem_minmax(0,1fr)] sm:p-6">
+      <aside className="rounded-xl border border-white/[0.08] bg-vb-black/60 p-3">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="font-sub text-[10px] uppercase tracking-[0.18em] text-vb-silver/50">
+            Page outline
+          </span>
+          <span className="font-body text-[10px] text-vb-silver/30">{page.sections.length}</span>
+        </div>
+        <div className="space-y-1">
+          {page.sections.map((section, index) => {
+            const label =
+              SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label ||
+              section.type;
+            return (
+              <button
+                type="button"
+                draggable
+                key={section.id}
+                onClick={() => onFocus(section.id)}
+                onDragStart={() => onDragStart(section.id)}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  onDragOver(section.id);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  if (draggingSectionId) onReorder(draggingSectionId, section.id);
+                }}
+                onPointerDown={() => onDragStart(section.id)}
+                onPointerEnter={() => {
+                  if (draggingSectionId && draggingSectionId !== section.id) onDragOver(section.id);
+                }}
+                onPointerUp={() => {
+                  if (draggingSectionId) onReorder(draggingSectionId, section.id);
+                }}
+                onDragEnd={onDragEnd}
+                className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${dragOverSectionId === section.id ? "border-vb-purple-bright bg-vb-purple/15" : "border-transparent"} ${focusedSectionId === section.id ? "bg-vb-purple/20 text-vb-purple-bright" : "text-vb-silver/50 hover:bg-white/[0.05] hover:text-vb-silver"}`}
+              >
+                <span className="font-mono text-[10px] text-vb-silver/30">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="min-w-0 truncate font-body text-xs">{section.title || label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+      <div className="overflow-x-auto">
+        <div className={`mx-auto transition-[width] duration-200 ${deviceOption.canvasClass}`}>
+          <div className="overflow-hidden rounded-[1.25rem] border border-white/15 bg-vb-black shadow-2xl shadow-black/40">
+            <div className="flex items-center gap-2 border-b border-white/10 bg-white/[0.04] px-4 py-2">
+              <span className="h-2 w-2 rounded-full bg-red-400/80" />
+              <span className="h-2 w-2 rounded-full bg-amber-300/80" />
+              <span className="h-2 w-2 rounded-full bg-emerald-300/80" />
+              <span className="ml-2 truncate font-body text-[10px] text-vb-silver/35">
+                {page.path || `/${page.slug}`}
+              </span>
+            </div>
+            <div className="space-y-2 bg-vb-black/80 p-2">
+              {page.sections.map((section, index) => {
+                const sectionLabel =
+                  SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label ||
+                  section.type;
+                const hasMedia = Boolean(
+                  section.imageUrl || section.items?.some((item) => item.imageUrl),
+                );
+                return (
+                  <button
+                    type="button"
+                    key={section.id}
+                    onClick={() => onFocus(section.id)}
+                    className={`group relative block w-full overflow-hidden rounded-xl border text-left transition ${focusedSectionId === section.id ? "border-vb-purple-bright bg-vb-purple/[0.12] shadow-lg shadow-vb-purple/10" : "border-white/[0.08] bg-white/[0.025] hover:border-vb-purple/50"}`}
+                  >
+                    <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-2">
+                      <span className="flex items-center gap-2 font-sub text-[10px] uppercase tracking-[0.16em] text-vb-purple-bright">
+                        <GripVertical size={13} className="text-vb-silver/30" />{" "}
+                        {String(index + 1).padStart(2, "0")} · {sectionLabel}
+                      </span>
+                      <span className="font-body text-[10px] text-vb-silver/35">Click to edit</span>
+                    </div>
+                    <div
+                      className={`min-h-20 p-4 ${section.type === "hero" ? "bg-gradient-to-br from-vb-purple/20 via-vb-black to-vb-black" : ""}`}
+                    >
+                      {section.eyebrow && (
+                        <p className="font-sub text-[9px] uppercase tracking-[0.25em] text-vb-purple-bright">
+                          {section.eyebrow}
+                        </p>
+                      )}
+                      {section.title && (
+                        <h3 className="mt-1 font-display text-xl uppercase leading-none text-chrome sm:text-2xl">
+                          {section.title}
+                        </h3>
+                      )}
+                      {section.body && (
+                        <p className="mt-2 line-clamp-2 max-w-2xl font-body text-xs leading-relaxed text-vb-silver/55">
+                          {section.body}
+                        </p>
+                      )}
+                      {hasMedia && (
+                        <div
+                          className="mt-3 h-12 rounded-lg border border-dashed border-vb-purple/30 bg-vb-purple/[0.08]"
+                          aria-label="Media preview"
+                        />
+                      )}
+                      {!section.title && !section.body && !hasMedia && (
+                        <p className="font-body text-xs text-vb-silver/35">
+                          Empty block — add content in the inspector below.
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StyleStudio({
+  settings,
+  onChange,
+}: {
+  settings: SiteSettings;
+  onChange: (patch: Partial<SiteSettings>) => void;
+}) {
+  const setColor = (key: keyof ThemeColors, value: string) =>
+    onChange({ theme: { ...settings.theme, [key]: value } });
+  return (
+    <section className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-sub text-xl uppercase tracking-wide">Style studio</h2>
+          <p className="mt-1 font-body text-sm text-vb-silver/50">
+            Reskin the entire site with visual presets, color tokens, and type systems.
+          </p>
+        </div>
+        <div className="rounded-lg border border-white/10 px-3 py-2 font-body text-xs text-vb-silver/45">
+          Global styles
+        </div>
+      </div>
+      <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+        <div className="rounded-xl border border-white/[0.07] bg-vb-black/40 p-4">
+          <p className="mb-3 font-sub text-xs uppercase tracking-[0.18em] text-vb-silver/50">
+            Color tokens
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {COLOR_FIELDS.map(({ key, label }) => (
+              <label
+                key={key}
+                className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-2"
+              >
+                <span className="mb-1 block truncate font-body text-[10px] text-vb-silver/45">
+                  {label}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <input
+                    type="color"
+                    aria-label={`${label} color`}
+                    value={settings.theme[key]}
+                    onChange={(event) => setColor(key, event.target.value)}
+                    className="h-7 w-7 shrink-0 cursor-pointer rounded border border-white/10 bg-transparent"
+                  />
+                  <input
+                    aria-label={`${label} hex value`}
+                    value={settings.theme[key]}
+                    onChange={(event) => setColor(key, event.target.value)}
+                    className="min-w-0 w-full bg-transparent font-mono text-[10px] text-vb-silver/65 outline-none"
+                  />
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/[0.07] bg-vb-black/40 p-4">
+          <p className="mb-3 font-sub text-xs uppercase tracking-[0.18em] text-vb-silver/50">
+            Typography presets
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {FONT_PAIRS.map((pair) => (
+              <button
+                type="button"
+                key={pair.id}
+                aria-pressed={settings.fontId === pair.id}
+                onClick={() => onChange({ fontId: pair.id })}
+                className={`rounded-lg border px-3 py-2 text-left transition ${settings.fontId === pair.id ? "border-vb-purple-bright bg-vb-purple/15" : "border-white/[0.07] hover:border-vb-purple/40"}`}
+              >
+                <span className="block font-body text-xs text-vb-silver-bright">{pair.label}</span>
+                <span className="mt-0.5 block font-mono text-[10px] text-vb-silver/40">
+                  {pair.display.split(",")[0].replace(/'/g, "")} +{" "}
+                  {pair.body.split(",")[0].replace(/'/g, "")}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div
+        className="mt-4 overflow-hidden rounded-xl border border-white/[0.07] p-5"
+        style={{ background: settings.theme.background }}
+      >
+        <p
+          className="font-display text-3xl uppercase leading-none"
+          style={{ color: settings.theme.text }}
+        >
+          Vylanous / Your new direction
+        </p>
+        <p
+          className="mt-2 font-sub text-xs uppercase tracking-[0.25em]"
+          style={{ color: settings.theme.primaryBright }}
+        >
+          Global preview · responsive by default
+        </p>
+        <button
+          type="button"
+          className="mt-4 rounded-lg px-4 py-2 font-sub text-xs uppercase tracking-wider text-white"
+          style={{ background: settings.theme.primary }}
+        >
+          Primary action
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -365,6 +1068,8 @@ function GlobalChromeEditor({
     onChange({ header: { ...settings.header, ...patch } });
   const updateFooter = (patch: Partial<SiteSettings["footer"]>) =>
     onChange({ footer: { ...settings.footer, ...patch } });
+  const updatePopup = (patch: Partial<SiteSettings["newsletterPopup"]>) =>
+    onChange({ newsletterPopup: { ...settings.newsletterPopup, ...patch } });
   const updateSocial = (id: string, patch: Partial<SocialLink>) =>
     onChange({
       socials: settings.socials.map((social) =>
@@ -459,6 +1164,83 @@ function GlobalChromeEditor({
         />
       </section>
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 xl:col-span-2">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-sub text-xl uppercase tracking-wide">Newsletter popup</h2>
+            <p className="mt-1 max-w-2xl font-body text-sm text-vb-silver/50">
+              Invite visitors to join the fan list with a branded popup. Existing subscribers are
+              stored in the admin Fan List.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Toggle
+              label="Enable popup"
+              checked={settings.newsletterPopup.enabled}
+              onChange={(enabled) => updatePopup({ enabled })}
+            />
+            <Toggle
+              label="Show once per session"
+              checked={settings.newsletterPopup.showOnce}
+              onChange={(showOnce) => updatePopup({ showOnce })}
+            />
+            <Toggle
+              label="Home page only"
+              checked={settings.newsletterPopup.homeOnly}
+              onChange={(homeOnly) => updatePopup({ homeOnly })}
+            />
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Field
+            label="Popup title"
+            value={settings.newsletterPopup.title}
+            onChange={(title) => updatePopup({ title })}
+          />
+          <Field
+            label="Email placeholder"
+            value={settings.newsletterPopup.placeholder}
+            onChange={(placeholder) => updatePopup({ placeholder })}
+          />
+          <Field
+            label="Button label"
+            value={settings.newsletterPopup.buttonLabel}
+            onChange={(buttonLabel) => updatePopup({ buttonLabel })}
+          />
+          <Field
+            label="Dismiss label"
+            value={settings.newsletterPopup.dismissLabel}
+            onChange={(dismissLabel) => updatePopup({ dismissLabel })}
+          />
+          <Field
+            label="Consent checkbox text"
+            value={settings.newsletterPopup.consentText}
+            onChange={(consentText) => updatePopup({ consentText })}
+          />
+          <Field
+            label="Delay before showing (ms)"
+            hint="0 shows immediately; maximum 60000."
+            value={String(settings.newsletterPopup.delayMs)}
+            onChange={(value) => {
+              const delayMs = Math.min(
+                60_000,
+                Math.max(0, Number(value.replace(/[^0-9]/g, "")) || 0),
+              );
+              updatePopup({ delayMs });
+            }}
+          />
+        </div>
+        <Textarea
+          label="Popup message"
+          value={settings.newsletterPopup.body}
+          onChange={(body) => updatePopup({ body })}
+        />
+        <Textarea
+          label="Success message"
+          value={settings.newsletterPopup.successMessage}
+          onChange={(successMessage) => updatePopup({ successMessage })}
+        />
+      </section>
+      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 xl:col-span-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-sub text-xl uppercase tracking-wide">Social links</h2>
@@ -493,21 +1275,34 @@ function GlobalChromeEditor({
               key={social.id}
               className="grid gap-3 rounded-xl border border-white/[0.07] bg-vb-black/40 p-3 md:grid-cols-[9rem_1fr_1.4fr_auto] md:items-end"
             >
-              <SelectField
-                label="Platform"
-                value={social.platform}
-                options={[
-                  "instagram",
-                  "tiktok",
-                  "youtube",
-                  "spotify",
-                  "soundcloud",
-                  "facebook",
-                  "x",
-                  "custom",
-                ]}
-                onChange={(value) => updateSocial(social.id, { platform: value as SocialPlatform })}
-              />
+              <div>
+                <span className="mb-1.5 block font-body text-xs uppercase tracking-wider text-vb-silver/50">
+                  Platform icon
+                </span>
+                <div
+                  className="grid grid-cols-4 gap-1.5"
+                  role="radiogroup"
+                  aria-label="Social platform"
+                >
+                  {SOCIAL_PLATFORMS.map(({ value, label: platformLabel, Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={social.platform === value}
+                      aria-label={platformLabel}
+                      title={platformLabel}
+                      onClick={() => updateSocial(social.id, { platform: value })}
+                      className={`grid h-9 place-items-center rounded-md border transition ${
+                        social.platform === value
+                          ? "border-vb-purple-bright bg-vb-purple/20 text-vb-purple-bright"
+                          : "border-white/10 text-vb-silver/45 hover:border-white/25 hover:text-vb-silver"
+                      }`}
+                    >
+                      <Icon size={16} />
+                    </button>
+                  ))}
+                </div>
+              </div>
               <Field
                 label="Label"
                 value={social.label}
@@ -656,12 +1451,14 @@ function SectionEditor({
   preview,
   onChange,
   onDelete,
+  onDuplicate,
   onMove,
 }: {
   section: PageSection;
   preview?: PageSection;
   onChange: (patch: Partial<PageSection>) => void;
   onDelete: () => void;
+  onDuplicate: () => void;
   onMove: (direction: -1 | 1) => void;
 }) {
   const layout = { ...DEFAULT_LAYOUT, ...section.layout };
@@ -703,6 +1500,13 @@ function SectionEditor({
             className="rounded p-1.5 text-vb-silver/60 hover:bg-white/[0.06] hover:text-white"
           >
             <ChevronDown size={16} />
+          </button>
+          <button
+            aria-label="Duplicate section"
+            onClick={onDuplicate}
+            className="rounded p-1.5 text-vb-silver/60 hover:bg-vb-purple/10 hover:text-vb-purple-bright"
+          >
+            <Copy size={16} />
           </button>
           <button
             aria-label="Delete section"
@@ -764,7 +1568,7 @@ function SectionEditor({
                     label={section.type === "video" ? "Poster image" : "Section image"}
                     value={section.imageUrl || ""}
                     previewUrl={preview?.imageUrl}
-                    hint="Upload a JPG, PNG, WebP, GIF, or AVIF image up to 10 MB."
+                    hint="Recommended 1200 × 675 px (16:9). JPG, PNG, WebP, GIF, or AVIF up to 10 MB."
                     onChange={(value) => onChange({ imageUrl: value })}
                   />
                   {section.type === "video" && (
@@ -881,13 +1685,6 @@ function ItemsEditor({
   label: string;
   onChange: (items: SectionItem[]) => void;
 }) {
-  const text = items
-    .map((item) =>
-      [item.title, item.body || "", item.imageUrl || "", item.label || "", item.href || ""].join(
-        " | ",
-      ),
-    )
-    .join("\n");
   return (
     <div className="mt-3">
       <div className="mb-2 flex items-center justify-between gap-3">
@@ -920,9 +1717,56 @@ function ItemsEditor({
                   <Trash2 size={14} />
                 </button>
               </div>
+              <Field
+                label="Title"
+                value={item.title}
+                onChange={(title) =>
+                  onChange(
+                    items.map((candidate) =>
+                      candidate.id === item.id ? { ...candidate, title } : candidate,
+                    ),
+                  )
+                }
+              />
+              <Textarea
+                label="Description"
+                value={item.body || ""}
+                onChange={(body) =>
+                  onChange(
+                    items.map((candidate) =>
+                      candidate.id === item.id ? { ...candidate, body } : candidate,
+                    ),
+                  )
+                }
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field
+                  label="Button label"
+                  value={item.label || ""}
+                  onChange={(labelValue) =>
+                    onChange(
+                      items.map((candidate) =>
+                        candidate.id === item.id ? { ...candidate, label: labelValue } : candidate,
+                      ),
+                    )
+                  }
+                />
+                <Field
+                  label="Link URL"
+                  value={item.href || ""}
+                  placeholder="https://… or /page"
+                  onChange={(href) =>
+                    onChange(
+                      items.map((candidate) =>
+                        candidate.id === item.id ? { ...candidate, href } : candidate,
+                      ),
+                    )
+                  }
+                />
+              </div>
               <FileUpload
                 label={`${label.replace(/s$/, "")} ${index + 1} image`}
-                hint="Upload a JPG, PNG, WebP, GIF, or AVIF image up to 10 MB."
+                hint="Recommended 1200 × 675 px (16:9). JPG, PNG, WebP, GIF, or AVIF up to 10 MB."
                 accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                 folder="site-builder/images"
                 kind="image"
@@ -941,40 +1785,10 @@ function ItemsEditor({
           ))}
         </div>
       )}
-      <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/50">
-        Bulk item editor
-        <textarea
-          aria-label={`${label} bulk editor`}
-          value={text}
-          onChange={(event) =>
-            onChange(
-              event.target.value
-                .split("\n")
-                .filter(Boolean)
-                .map((line, index) => {
-                  const [title = "", body = "", imageUrl = "", labelValue = "", href = ""] = line
-                    .split("|")
-                    .map((value) => value.trim());
-                  return {
-                    id: items[index]?.id || newId("item"),
-                    title,
-                    body,
-                    imageUrl,
-                    label: labelValue,
-                    href,
-                  };
-                }),
-            )
-          }
-          rows={Math.max(3, items.length + 1)}
-          placeholder="Title | description | image URL | button label | link"
-          className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60"
-        />
-        <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
-          One item per line. Use the pipe character to separate title, text, image URL, optional
-          button label, and optional link.
-        </span>
-      </label>
+      <p className="mt-3 font-body text-xs text-vb-silver/40">
+        Edit each card above using labeled fields. Changes preview as you work and save with the
+        site design button.
+      </p>
     </div>
   );
 }
