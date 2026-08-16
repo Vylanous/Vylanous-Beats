@@ -39,4 +39,7 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+# The API database entrypoint awaits idempotent schema bootstrap before serving.
+# Avoid `drizzle-kit push` here: Render is non-interactive and Drizzle can prompt
+# on legacy not-null changes, causing an otherwise healthy container to exit.
+CMD ["bun", "src/server.ts"]
