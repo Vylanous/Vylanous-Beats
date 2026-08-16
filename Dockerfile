@@ -24,6 +24,8 @@ WORKDIR /app
 
 # Copy everything needed for runtime
 COPY --from=builder /app/node_modules ./node_modules
+# Keep workspace-local CLI links in the runtime image because `start` runs Drizzle schema bootstrap.
+COPY --from=builder /app/packages/web/node_modules ./packages/web/node_modules
 COPY --from=builder /app/packages/web/package.json ./packages/web/package.json
 COPY --from=builder /app/packages/web/drizzle.config.ts ./packages/web/drizzle.config.ts
 COPY --from=builder /app/packages/web/src ./packages/web/src
