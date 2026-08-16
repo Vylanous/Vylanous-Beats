@@ -212,11 +212,18 @@
 - [ ] Validate local and production-facing website flows.
 - [ ] Report running status and any remaining manual action.
 
+## Complete PR #38 Production Repair
+
+- [ ] Review PR #38 and confirm the release checks and Dockerfile diff.
+- [ ] Merge PR #38 and monitor the configured production deployment.
+- [ ] Verify live API, homepage, verification route, storage configuration, and upload authorization.
+- [ ] Report the completed production repair and any remaining configuration action.
+
 ## Production Deployment Repair
 
 - [x] Audit merged-main deployment configuration, CI workflows, and production service routing.
 - [x] Identify and repair the concrete deployment or environment propagation blocker.
-- [ ] Prepare the production release through the configured workflow without destructive changes.
+- [x] Prepare the production release through the configured workflow without destructive changes.
 - [ ] Verify live verification, R2 configuration, homepage, API health, and upload authorization.
 - [ ] Report completed repairs and any remaining user-controlled production action.
 
