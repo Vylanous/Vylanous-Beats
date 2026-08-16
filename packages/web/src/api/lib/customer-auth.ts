@@ -2,14 +2,27 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { db } from "../database";
-import { customers, customerSessions, type Customer } from "../database/schema";
+import {
+  customers,
+  customerEmailVerifications,
+  customerSessions,
+  type Customer,
+} from "../database/schema";
 import { rid } from "./util";
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+const VERIFICATION_TTL_MS = 1000 * 60 * 60 * 24;
+const RESEND_COOLDOWN_MS = 1000 * 60;
 
 export type CustomerPublic = Pick<
   Customer,
-  "id" | "email" | "displayName" | "marketingOptIn" | "createdAt"
+  | "id"
+  | "email"
+  | "displayName"
+  | "marketingOptIn"
+  | "emailVerified"
+  | "emailVerifiedAt"
+  | "createdAt"
 >;
 
 export function publicCustomer(customer: Customer): CustomerPublic {
@@ -18,6 +31,8 @@ export function publicCustomer(customer: Customer): CustomerPublic {
     email: customer.email,
     displayName: customer.displayName,
     marketingOptIn: customer.marketingOptIn,
+    emailVerified: customer.emailVerified,
+    emailVerifiedAt: customer.emailVerifiedAt,
     createdAt: customer.createdAt,
   };
 }
@@ -39,6 +54,74 @@ export async function hashCustomerPassword(password: string) {
 
 export async function verifyCustomerPassword(password: string, hash: string) {
   return Bun.password.verify(password, hash);
+}
+
+export async function createCustomerVerificationToken(customerId: string) {
+  const now = new Date().toISOString();
+  await db
+    .update(customerEmailVerifications)
+    .set({ usedAt: now })
+    .where(
+      and(
+        eq(customerEmailVerifications.customerId, customerId),
+        isNull(customerEmailVerifications.usedAt),
+      ),
+    );
+  const rawToken = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MS).toISOString();
+  await db.insert(customerEmailVerifications).values({
+    id: rid("customer_email_verification"),
+    customerId,
+    tokenHash: hashToken(rawToken),
+    expiresAt,
+  });
+  return { token: rawToken, expiresAt };
+}
+
+export async function verificationTokenRecentlySent(customerId: string) {
+  const threshold = new Date(Date.now() - RESEND_COOLDOWN_MS).toISOString();
+  const rows = await db
+    .select({ id: customerEmailVerifications.id })
+    .from(customerEmailVerifications)
+    .where(
+      and(
+        eq(customerEmailVerifications.customerId, customerId),
+        gt(customerEmailVerifications.createdAt, threshold),
+      ),
+    )
+    .limit(1);
+  return Boolean(rows[0]);
+}
+
+export async function verifyCustomerEmailToken(rawToken: string) {
+  const now = new Date().toISOString();
+  const rows = await db
+    .select()
+    .from(customerEmailVerifications)
+    .where(
+      and(
+        eq(customerEmailVerifications.tokenHash, hashToken(rawToken)),
+        isNull(customerEmailVerifications.usedAt),
+        gt(customerEmailVerifications.expiresAt, now),
+      ),
+    )
+    .limit(1);
+  const verification = rows[0];
+  if (!verification) return null;
+  await db
+    .update(customerEmailVerifications)
+    .set({ usedAt: now })
+    .where(eq(customerEmailVerifications.id, verification.id));
+  await db
+    .update(customers)
+    .set({ emailVerified: true, emailVerifiedAt: now, updatedAt: now })
+    .where(eq(customers.id, verification.customerId));
+  const customer = await db
+    .select()
+    .from(customers)
+    .where(eq(customers.id, verification.customerId))
+    .limit(1);
+  return customer[0] || null;
 }
 
 export async function createCustomerSession(customerId: string) {
@@ -88,6 +171,16 @@ export async function revokeCustomerSession(c: Context) {
 export async function requireCustomer(c: Context, next: Next) {
   const customer = await customerFromRequest(c);
   if (!customer) return c.json({ error: "customer_auth_required" }, 401);
+  c.set("customer", customer);
+  await next();
+}
+
+export async function requireVerifiedCustomer(c: Context, next: Next) {
+  const customer = await customerFromRequest(c);
+  if (!customer) return c.json({ error: "customer_auth_required" }, 401);
+  if (!customer.emailVerified) {
+    return c.json({ error: "email_verification_required", email: customer.email }, 403);
+  }
   c.set("customer", customer);
   await next();
 }

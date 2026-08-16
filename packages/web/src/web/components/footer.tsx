@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Mail, Check } from "lucide-react";
 import { useSiteSettings } from "../lib/site-settings";
+import { SocialIcon } from "./social-icon";
 
 export function Footer() {
   const [email, setEmail] = useState("");
@@ -102,9 +103,11 @@ export function Footer() {
                 href={social.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+                className="inline-flex items-center gap-1.5 font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+                aria-label={social.label}
               >
-                {social.label}
+                <SocialIcon platform={social.platform} size={15} />
+                <span>{social.label}</span>
               </a>
             ))}
             <p className="font-sub uppercase tracking-wider">{footer.legalLine}</p>

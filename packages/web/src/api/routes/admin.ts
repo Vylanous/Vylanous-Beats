@@ -122,6 +122,22 @@ const settingsSchema = z.object({
     })
     .partial()
     .optional(),
+  newsletterPopup: z
+    .object({
+      enabled: z.boolean(),
+      delayMs: z.number().int().min(0).max(60_000),
+      showOnce: z.boolean(),
+      homeOnly: z.boolean(),
+      title: z.string().max(120),
+      body: z.string().max(500),
+      placeholder: z.string().max(120),
+      buttonLabel: z.string().max(80),
+      dismissLabel: z.string().max(80),
+      successMessage: z.string().max(240),
+      consentText: z.string().max(240),
+    })
+    .partial()
+    .optional(),
   socials: z
     .array(
       z.object({
@@ -244,6 +260,47 @@ const settingsSchema = z.object({
       shopDomain: z.string(),
       defaultCollection: z.string(),
       currency: z.string().length(3),
+    })
+    .partial()
+    .optional(),
+  builder: z
+    .object({
+      drafts: z
+        .array(
+          z.object({
+            id: z.string(),
+            pageId: z.string(),
+            updatedAt: z.string(),
+            snapshot: z.record(z.string(), z.unknown()),
+          }),
+        )
+        .max(20)
+        .optional(),
+      templates: z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string().min(1).max(80),
+            description: z.string().max(240).optional(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            sections: z.array(z.record(z.string(), z.unknown())).max(24),
+          }),
+        )
+        .max(30)
+        .optional(),
+      versions: z
+        .array(
+          z.object({
+            id: z.string(),
+            pageId: z.string(),
+            label: z.string().min(1).max(100),
+            createdAt: z.string(),
+            snapshot: z.record(z.string(), z.unknown()),
+          }),
+        )
+        .max(50)
+        .optional(),
     })
     .partial()
     .optional(),
@@ -440,9 +497,17 @@ export function adminRoutes(app: Hono) {
       brand: { ...current.brand, ...input.brand },
       header: { ...current.header, ...input.header },
       footer: { ...current.footer, ...input.footer },
+      newsletterPopup: { ...current.newsletterPopup, ...input.newsletterPopup },
       socials: input.socials ?? current.socials,
       pages: input.pages ?? current.pages,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
+      builder: input.builder
+        ? {
+            drafts: input.builder.drafts ?? current.builder.drafts,
+            templates: input.builder.templates ?? current.builder.templates,
+            versions: input.builder.versions ?? current.builder.versions,
+          }
+        : current.builder,
     });
     const json = JSON.stringify(merged);
     const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);

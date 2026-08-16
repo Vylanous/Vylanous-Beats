@@ -141,3 +141,109 @@
 - [x] Trace the failing admin-panel upload request through browser controls, authorization, API validation, and storage.
 - [x] Repair the upload path and present actionable configuration feedback when storage is unavailable.
 - [x] Add regression coverage, validate the repaired workflow, and include it in the PR #27 update.
+
+## Vercel Production Configuration
+
+- [x] Verify that the supplied credential authenticates, then identify that it lacks access to the team-owned deployment project.
+- [ ] Obtain an authorized Vercel credential with access to the team that owns the deployment.
+- [x] Verify the latest supplied Vercel credential against the team-owned project; it still lacks the necessary team-project access.
+- [x] Verify the newly supplied Vercel credential against the team-owned project; it still lacks the necessary team-project access.
+- [x] Retry the Vercel project access and configuration inspection after the user’s environment update.
+- [ ] Inspect the Vercel project deployment, runtime, route, and environment-variable configuration without exposing secrets.
+- [ ] Apply safe configuration fixes that activate the deployed API and do not require unavailable object-storage values.
+- [ ] Verify deployment readiness and report any remaining storage configuration requirements.
+
+## Artwork Image Upload Verification
+
+- [x] Verify artwork upload controls, accepted MIME types, size limits, and presign routing.
+- [ ] Confirm artwork uploads use the production Render storage variables and R2 CORS policy.
+- [ ] Validate one authenticated artwork image upload end to end.
+
+## Render Production Upload Configuration
+
+- [x] Inspect the Render service and current environment-variable configuration without exposing secret values.
+- [x] Confirm the Render API and R2-compatible storage configuration is correct for artwork uploads.
+- [ ] Verify the corrected production deployment and authenticated artwork upload readiness.
+
+## Cloudflare R2 CORS Verification
+
+- [x] Inspect the Cloudflare account and R2 bucket CORS policy without exposing credentials.
+- [x] Correct the R2 CORS policy for the production artwork-upload origins and signed PUT headers if needed.
+- [x] Verify the final CORS policy and authenticated artwork-upload readiness.
+
+## Featured Cards and Page Builder Usability
+
+- [x] Inspect and document the rendered pixel dimensions and aspect ratio for the Instant Delivery, Clear Licensing, and Studio Quality featured cards.
+- [x] Repair the Instant Delivery featured-card image upload path and add targeted validation feedback.
+- [x] Add selectable social-platform icons to each Page Builder social link.
+- [x] Replace pipe-character social-link and related builder controls with visual, labeled controls.
+- [x] Add regression coverage and validate the updated builder and featured-card workflows.
+
+## Full Mobile Website Builder Redesign
+
+- [x] Audit and document mobile-builder patterns for canvas editing, responsive previews, section navigation, styling, reusable blocks, and publishing flows.
+- [x] Design a backward-compatible builder workspace and content model for device-specific settings, global styles, and reusable sections.
+- [x] Implement the mobile-first visual canvas, device previews, section navigator, drag/reorder affordances, and contextual editing controls.
+- [x] Add advanced style presets, typography, spacing, color, background, media, navigation, global header/footer, reusable blocks, and publishing safeguards.
+- [x] Validate the redesigned builder with lint, type checks, tests, and production build; visual capture was blocked because the active preview workspace has no matching Page Builder preview URL.
+
+## Builder Studio History and Publishing
+
+- [x] Audit the existing persistence API and page data model for backward-compatible editor history, drafts, templates, and versions.
+- [x] Implement touch-friendly drag/reorder with keyboard-accessible fallbacks and undo/redo history.
+- [x] Add autosave drafts with clear saved/unsaved/error states.
+- [x] Add reusable saved section templates and insertion controls.
+- [x] Add publish checkpoints and version history with safe restore behavior.
+- [x] Validate the expanded Builder Studio with interaction tests, type checks, lint, build, and isolated tests.
+
+## Repository Health Audit
+
+- [x] Inspect branch/worktree state, recent merge history, and unresolved conflict markers.
+- [x] Run lint, type checks, production builds, isolated tests, dependency audits, and configuration checks across all workspaces.
+- [x] Investigate confirmed failures and high-risk paths in authentication, uploads, payments, customer portal, Builder Studio, and deployment.
+- [x] Apply safe fixes and add regression coverage for confirmed bugs.
+- [x] Re-run the complete validation suite and document prioritized findings.
+
+## Website Run Request
+
+- [ ] Inspect current repository, deployment configuration, and production platform state.
+- [ ] Identify the blocker preventing the website from running.
+- [ ] Repair confirmed startup, routing, build, or deployment issues.
+- [ ] Validate local and production-facing website flows.
+- [ ] Report running status and any remaining manual action.
+
+## Release Review and Checkpoint
+
+- [ ] Review all pending verification, newsletter, mobile, builder, and deployment changes.
+- [ ] Resolve release blockers and confirm the production-ready file set.
+- [ ] Create a release checkpoint and commit the reviewed changes.
+- [ ] Prepare the configured merge or Publish workflow without auto-publishing.
+- [ ] Report the checkpoint, commit, and final user-controlled release action.
+
+## Production Deployment of Email Verification
+
+- [x] Inspect deployment branch, manifests, production service, and required email environment configuration.
+- [ ] Prepare the validated verification release and required production email configuration.
+- [ ] Deploy through the configured production workflow without changing unrelated DNS or data.
+- [ ] Verify the live homepage, API, verification route, and production logs.
+- [ ] Report deployment status and any required user action.
+
+## DNS Repair
+
+- [x] Inspect current apex and www DNS, SSL, Cloudflare, and Render domain configuration.
+- [x] Identify the exact apex-domain routing or certificate misconfiguration.
+- [x] Apply the minimal DNS, SSL, or domain-routing repair.
+- [x] Verify apex, www, API health, and redirect behavior.
+
+## Newsletter Popup and Account Email Verification
+
+- [x] Resume newsletter popup form implementation with public rendering and Builder Studio controls.
+
+- [x] Inspect the existing Builder Studio, global site settings, customer authentication, email delivery, and database models.
+- [x] Define popup customization, consent, deduplication, verification-token, and mailing-list data flows.
+- [x] Add configurable newsletter popup rendering and Builder Studio controls.
+- [x] Add newsletter signup persistence, consent handling, and admin mailing-list visibility/export support.
+- [x] Add account email verification with secure expiring tokens and verified-state enforcement.
+- [x] Share verification state and API behavior across the website and Expo app.
+- [x] Add mobile verification and resend UI states using the shared backend.
+- [x] Add regression tests and validate public signup, account signup, verification, and admin flows.

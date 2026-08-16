@@ -7,6 +7,8 @@ export type CustomerProfile = {
   email: string;
   displayName: string;
   marketingOptIn: boolean;
+  emailVerified: boolean;
+  emailVerifiedAt?: string | null;
   createdAt?: string;
 };
 export type CustomerEntitlement = {
@@ -71,6 +73,7 @@ type ContextValue = {
   signOut: () => Promise<void>;
   refreshDashboard: () => Promise<void>;
   updatePreferences: (input: { displayName?: string; marketingOptIn?: boolean }) => Promise<void>;
+  resendVerification: () => Promise<void>;
 };
 const CustomerContext = createContext<ContextValue | null>(null);
 type SessionResponse = { customer: CustomerProfile; session: { token: string; expiresAt: string } };
@@ -131,6 +134,13 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       ),
     [saveSession],
   );
+  const resendVerification = useCallback(async () => {
+    if (!customer) return;
+    await customerJson("/api/customer/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email: customer.email }),
+    });
+  }, [customer]);
   const signOut = useCallback(async () => {
     try {
       await customerJson("/api/customer/logout", { method: "POST" });
@@ -161,8 +171,19 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshDashboard,
       updatePreferences,
+      resendVerification,
     }),
-    [ready, customer, dashboard, signIn, signUp, signOut, refreshDashboard, updatePreferences],
+    [
+      ready,
+      customer,
+      dashboard,
+      signIn,
+      signUp,
+      signOut,
+      refreshDashboard,
+      updatePreferences,
+      resendVerification,
+    ],
   );
   return <CustomerContext.Provider value={value}>{children}</CustomerContext.Provider>;
 }

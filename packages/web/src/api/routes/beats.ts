@@ -4,7 +4,7 @@ import { db } from "../database";
 import { beats, type Beat } from "../database/schema";
 import { signIfKey } from "../lib/url-sign";
 import type { PublicBeat } from "../../shared/beats";
-import { customerFromRequest, requireCustomer } from "../lib/customer-auth";
+import { customerFromRequest, requireVerifiedCustomer } from "../lib/customer-auth";
 
 async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
   return {
@@ -28,7 +28,7 @@ async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
 
 export function beatsRoutes(app: Hono) {
   // The complete catalog is a customer-account benefit across the web and native app.
-  app.get("/beats", requireCustomer, async (c) => {
+  app.get("/beats", requireVerifiedCustomer, async (c) => {
     const all = await db
       .select()
       .from(beats)
@@ -54,8 +54,12 @@ export function beatsRoutes(app: Hono) {
     const rows = await db.select().from(beats).where(eq(beats.slug, slug)).limit(1);
     const beat = rows[0];
     if (!beat || !beat.published) return c.json({ error: "Not found" }, 404);
-    if (!beat.featured && !(await customerFromRequest(c))) {
-      return c.json({ error: "customer_auth_required" }, 401);
+    if (!beat.featured) {
+      const customer = await customerFromRequest(c);
+      if (!customer) return c.json({ error: "customer_auth_required" }, 401);
+      if (!customer.emailVerified) {
+        return c.json({ error: "email_verification_required", email: customer.email }, 403);
+      }
     }
     c.header(
       "Cache-Control",
@@ -71,8 +75,12 @@ export function beatsRoutes(app: Hono) {
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     const beat = rows[0];
     if (!beat) return c.json({ error: "Not found" }, 404);
-    if (!beat.featured && !(await customerFromRequest(c))) {
-      return c.json({ error: "customer_auth_required" }, 401);
+    if (!beat.featured) {
+      const customer = await customerFromRequest(c);
+      if (!customer) return c.json({ error: "customer_auth_required" }, 401);
+      if (!customer.emailVerified) {
+        return c.json({ error: "email_verification_required", email: customer.email }, 403);
+      }
     }
     await db
       .update(beats)

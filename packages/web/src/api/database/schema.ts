@@ -68,6 +68,8 @@ export const customers = sqliteTable(
     displayName: text("display_name").notNull().default(""),
     passwordHash: text("password_hash").notNull(),
     marketingOptIn: integer("marketing_opt_in", { mode: "boolean" }).notNull().default(false),
+    emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+    emailVerifiedAt: text("email_verified_at"),
     createdAt: text("created_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
@@ -77,6 +79,24 @@ export const customers = sqliteTable(
 );
 
 /** Revocable bearer-token sessions for customers on mobile and web. */
+export const customerEmailVerifications = sqliteTable(
+  "customer_email_verifications",
+  {
+    id: text("id").primaryKey(),
+    customerId: text("customer_id").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    usedAt: text("used_at"),
+  },
+  (t) => [
+    uniqueIndex("customer_email_verifications_token_hash_idx").on(t.tokenHash),
+    index("customer_email_verifications_customer_idx").on(t.customerId),
+  ],
+);
+
 export const customerSessions = sqliteTable(
   "customer_sessions",
   {

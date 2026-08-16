@@ -14,16 +14,20 @@ export function publicRoutes(app: Hono) {
     return c.json({ settings: await publicSettings(s) }, 200);
   });
 
-  app.post("/subscribe", zValidator("json", z.object({ email: z.string().email() })), async (c) => {
-    const { email } = c.req.valid("json");
-    const existing = await db
-      .select()
-      .from(subscribers)
-      .where(eq(subscribers.email, email))
-      .limit(1);
-    if (existing.length === 0) {
-      await db.insert(subscribers).values({ id: rid("sub"), email });
-    }
-    return c.json({ ok: true }, 200);
-  });
+  app.post(
+    "/subscribe",
+    zValidator("json", z.object({ email: z.string().trim().email() })),
+    async (c) => {
+      const email = c.req.valid("json").email.trim().toLowerCase();
+      const existing = await db
+        .select()
+        .from(subscribers)
+        .where(eq(subscribers.email, email))
+        .limit(1);
+      if (existing.length === 0) {
+        await db.insert(subscribers).values({ id: rid("sub"), email });
+      }
+      return c.json({ ok: true }, 200);
+    },
+  );
 }

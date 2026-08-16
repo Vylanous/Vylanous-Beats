@@ -51,10 +51,22 @@ export const SCHEMA_STATEMENTS: string[] = [
     "display_name" text not null default '',
     "password_hash" text not null,
     "marketing_opt_in" integer not null default 0,
+    "email_verified" integer not null default 0,
+    "email_verified_at" text,
     "created_at" text not null default (CURRENT_TIMESTAMP),
     "updated_at" text
   )`,
   `create unique index if not exists "customers_email_idx" on "customers" ("email")`,
+  `create table if not exists "customer_email_verifications" (
+    "id" text primary key not null,
+    "customer_id" text not null,
+    "token_hash" text not null,
+    "expires_at" text not null,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "used_at" text
+  )`,
+  `create unique index if not exists "customer_email_verifications_token_hash_idx" on "customer_email_verifications" ("token_hash")`,
+  `create index if not exists "customer_email_verifications_customer_idx" on "customer_email_verifications" ("customer_id")`,
   `create table if not exists "customer_sessions" (
     "id" text primary key not null,
     "customer_id" text not null,
@@ -152,6 +164,21 @@ export async function ensureSchema(client: Client): Promise<void> {
   for (const statement of SCHEMA_STATEMENTS) {
     await client.execute(statement);
   }
+  // Existing installations predate customer email verification. SQLite has no
+  // portable `ADD COLUMN IF NOT EXISTS`, so an already-applied migration is
+  // deliberately ignored while other schema errors remain fatal.
+  for (const statement of [
+    `alter table "customers" add column "email_verified" integer not null default 0`,
+    `alter table "customers" add column "email_verified_at" text`,
+  ]) {
+    try {
+      await client.execute(statement);
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : "";
+      if (!message.includes("duplicate column")) throw error;
+    }
+  }
+
   // Existing installations predate customer-owned orders. SQLite has no
   // portable `ADD COLUMN IF NOT EXISTS`, so an already-applied migration is
   // deliberately ignored while other schema errors remain fatal.

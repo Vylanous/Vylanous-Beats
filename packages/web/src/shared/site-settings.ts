@@ -156,10 +156,54 @@ export interface FooterSettings {
   legalLine: string;
 }
 
+export interface NewsletterPopupSettings {
+  enabled: boolean;
+  delayMs: number;
+  showOnce: boolean;
+  homeOnly: boolean;
+  title: string;
+  body: string;
+  placeholder: string;
+  buttonLabel: string;
+  dismissLabel: string;
+  successMessage: string;
+  consentText: string;
+}
+
 export interface FourthwallSettings {
   shopDomain: string;
   defaultCollection: string;
   currency: string;
+}
+
+export interface BuilderDraft {
+  id: string;
+  pageId: string;
+  updatedAt: string;
+  snapshot: BuilderPage;
+}
+
+export interface BuilderTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  sections: PageSection[];
+}
+
+export interface BuilderVersion {
+  id: string;
+  pageId: string;
+  label: string;
+  createdAt: string;
+  snapshot: BuilderPage;
+}
+
+export interface BuilderMeta {
+  drafts: BuilderDraft[];
+  templates: BuilderTemplate[];
+  versions: BuilderVersion[];
 }
 
 export interface SiteSettings {
@@ -168,9 +212,11 @@ export interface SiteSettings {
   brand: BrandAssets;
   header: HeaderSettings;
   footer: FooterSettings;
+  newsletterPopup: NewsletterPopupSettings;
   socials: SocialLink[];
   pages: BuilderPage[];
   fourthwall: FourthwallSettings;
+  builder: BuilderMeta;
 }
 
 export const DEFAULT_THEME: ThemeColors = {
@@ -212,6 +258,20 @@ export const DEFAULT_FOOTER: FooterSettings = {
 };
 
 export const DEFAULT_SOCIALS: SocialLink[] = [];
+
+export const DEFAULT_NEWSLETTER_POPUP: NewsletterPopupSettings = {
+  enabled: true,
+  delayMs: 4500,
+  showOnce: true,
+  homeOnly: false,
+  title: "Get the next drop first.",
+  body: "New beats, studio notes, and private releases — straight to your inbox.",
+  placeholder: "your@email.com",
+  buttonLabel: "Join the list",
+  dismissLabel: "Not now",
+  successMessage: "You're on the list. Watch your inbox for the next drop.",
+  consentText: "I agree to receive new drops and updates by email.",
+};
 
 export const DEFAULT_FOURTHWALL: FourthwallSettings = {
   shopDomain: "vylanous-shop.fourthwall.com",
@@ -595,15 +655,23 @@ export const FONT_PAIRS: FontPair[] = [
   },
 ];
 
+export const DEFAULT_BUILDER_META: BuilderMeta = {
+  drafts: [],
+  templates: [],
+  versions: [],
+};
+
 export const DEFAULT_SETTINGS: SiteSettings = {
   theme: DEFAULT_THEME,
   fontId: "graffiti-chrome",
   brand: DEFAULT_BRAND,
   header: DEFAULT_HEADER,
   footer: DEFAULT_FOOTER,
+  newsletterPopup: DEFAULT_NEWSLETTER_POPUP,
   socials: DEFAULT_SOCIALS,
   pages: DEFAULT_PAGES,
   fourthwall: DEFAULT_FOURTHWALL,
+  builder: DEFAULT_BUILDER_META,
 };
 
 export function getFontPair(id: string | undefined): FontPair {
@@ -673,17 +741,29 @@ function mergePages(storedPages: unknown): BuilderPage[] {
 }
 
 /** Merge stored settings over defaults so production data gains new builder controls safely. */
-export function mergeSettings(stored: Partial<SiteSettings> | null | undefined): SiteSettings {
+type StoredSiteSettings = Omit<Partial<SiteSettings>, "newsletterPopup"> & {
+  newsletterPopup?: Partial<NewsletterPopupSettings>;
+};
+
+export function mergeSettings(stored: StoredSiteSettings | null | undefined): SiteSettings {
   return {
     theme: stored?.theme ? { ...DEFAULT_THEME, ...stored.theme } : { ...DEFAULT_THEME },
     fontId: stored?.fontId || DEFAULT_SETTINGS.fontId,
     brand: stored?.brand ? { ...DEFAULT_BRAND, ...stored.brand } : { ...DEFAULT_BRAND },
     header: stored?.header ? { ...DEFAULT_HEADER, ...stored.header } : { ...DEFAULT_HEADER },
     footer: stored?.footer ? { ...DEFAULT_FOOTER, ...stored.footer } : { ...DEFAULT_FOOTER },
+    newsletterPopup: stored?.newsletterPopup
+      ? { ...DEFAULT_NEWSLETTER_POPUP, ...stored.newsletterPopup }
+      : { ...DEFAULT_NEWSLETTER_POPUP },
     socials: Array.isArray(stored?.socials) ? stored.socials : DEFAULT_SOCIALS,
     pages: mergePages(stored?.pages),
     fourthwall: stored?.fourthwall
       ? { ...DEFAULT_FOURTHWALL, ...stored.fourthwall }
       : { ...DEFAULT_FOURTHWALL },
+    builder: {
+      drafts: Array.isArray(stored?.builder?.drafts) ? stored.builder.drafts : [],
+      templates: Array.isArray(stored?.builder?.templates) ? stored.builder.templates : [],
+      versions: Array.isArray(stored?.builder?.versions) ? stored.builder.versions : [],
+    },
   };
 }

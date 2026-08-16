@@ -9,7 +9,7 @@ import { TIER_BY_ID, type LicenseTierId } from "../../shared/licenses";
 import { rid, parseFileUrls, appUrl } from "../lib/util";
 import { stripe } from "../lib/stripe";
 import { sendDeliveryEmail } from "../lib/email";
-import { currentCustomer, requireCustomer } from "../lib/customer-auth";
+import { currentCustomer, requireVerifiedCustomer } from "../lib/customer-auth";
 import { activateOrderEntitlements } from "../lib/customer-portal";
 
 const cartItemSchema = z.object({
@@ -22,7 +22,7 @@ const checkoutSchema = z.object({
 });
 
 export function checkoutRoutes(app: Hono) {
-  app.post("/checkout", requireCustomer, zValidator("json", checkoutSchema), async (c) => {
+  app.post("/checkout", requireVerifiedCustomer, zValidator("json", checkoutSchema), async (c) => {
     const body = c.req.valid("json");
     const customer = await currentCustomer(c);
 
