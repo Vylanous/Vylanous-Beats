@@ -336,3 +336,11 @@
 
 - [x] Remove saved header CTA instances labeled All Beats, not only page-navigation entries.
 - [x] Verify the live Beat Vault’s public featured preview and authenticated full-catalog behavior against the user’s expected catalog visibility.
+
+## Post-Deployment Remaining Issues
+
+- [x] Verify the newly deployed live Beat Vault, navigation, uploads, and browser/runtime behavior.
+- [x] Fix each confirmed remaining issue directly in the GitHub source.
+- [x] Run regression tests, typecheck, lint, production build, and final diff review.
+- [x] Commit and push the verified post-deployment fixes to GitHub.
+- [x] Report live verification status and any required deployment follow-up.
