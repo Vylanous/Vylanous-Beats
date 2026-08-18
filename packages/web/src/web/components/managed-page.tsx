@@ -558,38 +558,14 @@ function FeaturedBeats({
 
 function BeatCatalog() {
   const { ready, customer } = useCustomer();
-  const { data, isLoading } = useQuery({
-    queryKey: ["beats", "all"],
-    enabled: Boolean(customer),
-    queryFn: async () => (await customerFetch("/api/beats")).json(),
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["beats", customer ? "all" : "featured"],
+    enabled: ready,
+    queryFn: async () =>
+      customer
+        ? (await customerFetch("/api/beats")).json()
+        : (await api.beats.featured.$get()).json(),
   });
-  if (!ready)
-    return (
-      <div className="py-20 text-center font-sub uppercase tracking-wide text-vb-purple-bright">
-        Loading catalog access…
-      </div>
-    );
-  if (!customer)
-    return (
-      <div className="rounded-2xl border border-vb-purple/30 bg-vb-ink p-7 sm:p-10">
-        <p className="font-sub text-xs uppercase tracking-[.24em] text-vb-purple-bright">
-          Full catalog access
-        </p>
-        <h2 className="mt-3 font-display text-4xl uppercase text-chrome">
-          Sign in to browse the vault.
-        </h2>
-        <p className="mt-4 max-w-2xl font-body leading-7 text-vb-silver/65">
-          Featured beats remain public. Create a customer account to search every beat, purchase
-          licenses, and keep secure downloads in one shared music vault.
-        </p>
-        <Link
-          to="/login"
-          className="mt-6 inline-flex rounded-xl bg-vb-purple px-5 py-3 font-sub text-sm uppercase tracking-wide text-white hover:bg-vb-purple-bright"
-        >
-          Sign in or create account
-        </Link>
-      </div>
-    );
   const beats = useMemo(() => (data && "beats" in data ? data.beats : []) as Beat[], [data]);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All");
@@ -611,6 +587,50 @@ function BeatCatalog() {
     if (sort === "az") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     return list;
   }, [beats, genre, query, sort]);
+  if (!ready)
+    return (
+      <div className="py-20 text-center font-sub uppercase tracking-wide text-vb-purple-bright">
+        Loading catalog access…
+      </div>
+    );
+  if (!customer)
+    return (
+      <div>
+        <div className="mb-8 rounded-2xl border border-vb-purple/30 bg-vb-ink p-7 sm:p-10">
+          <p className="font-sub text-xs uppercase tracking-[.24em] text-vb-purple-bright">
+            Featured vault preview
+          </p>
+          <h2 className="mt-3 font-display text-4xl uppercase text-chrome">
+            Hear the latest drops.
+          </h2>
+          <p className="mt-4 max-w-2xl font-body leading-7 text-vb-silver/65">
+            Preview featured beats without an account. Sign in to unlock the complete catalog,
+            search every beat, purchase licenses, and keep secure downloads in one shared vault.
+          </p>
+          <Link
+            to="/login"
+            className="mt-6 inline-flex rounded-xl bg-vb-purple px-5 py-3 font-sub text-sm uppercase tracking-wide text-white hover:bg-vb-purple-bright"
+          >
+            Sign in for full access
+          </Link>
+        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="aspect-square animate-pulse rounded-xl bg-vb-ink" />
+            ))}
+          </div>
+        ) : isError || !beats.length ? (
+          <p className="py-12 text-center font-body text-vb-muted">No featured beats are live yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {beats.slice(0, 6).map((beat) => (
+              <BeatCard key={beat.id} beat={beat} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   return (
     <div className="w-full">
       <div className="mb-8 flex flex-col gap-3 md:flex-row">

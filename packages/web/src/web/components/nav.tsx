@@ -17,7 +17,10 @@ export function Nav() {
   const links = useMemo(
     () =>
       [...pages]
-        .filter((page) => page.published && page.showInNav)
+        .filter(
+          (page) =>
+            page.published && page.showInNav && page.navLabel.trim().toLowerCase() !== "all beats",
+        )
         .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000))
         .map((page) => ({ href: page.path || `/${page.slug}`, label: page.navLabel })),
     [pages],
