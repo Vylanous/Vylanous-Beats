@@ -323,5 +323,5 @@
 - [x] Inspect Beat Vault routes, data loading, visibility filters, and navigation configuration.
 - [x] Repair Beat Vault beat loading and remove the All Beats navigation item.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
-- [ ] Commit and push the verified Beat Vault and navigation fixes to GitHub.
-- [ ] Report the pushed revision and deployment handoff.
+- [x] Commit and push the verified Beat Vault and navigation fixes to GitHub.
+- [x] Report the pushed revision and deployment handoff.
