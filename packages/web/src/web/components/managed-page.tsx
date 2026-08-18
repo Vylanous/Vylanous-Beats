@@ -161,17 +161,30 @@ function BuilderSection({
   shopDomain: string;
 }) {
   const layout = { ...DEFAULT_LAYOUT, ...section.layout };
-  if (section.type === "marquee") return <Marquee text={section.title || "VYLANOUS BEATS"} />;
+  const sectionAttributes = {
+    id: section.anchorId || undefined,
+    "aria-label": section.ariaLabel || undefined,
+  };
+  if (section.type === "marquee")
+    return (
+      <div {...sectionAttributes} className={section.customClass || undefined}>
+        <Marquee text={section.title || "VYLANOUS BEATS"} />
+      </div>
+    );
   if (section.type === "divider")
     return (
       <div
-        className={`mx-auto h-px ${WIDTH[layout.width]} bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
+        {...sectionAttributes}
+        className={`${section.customClass || ""} mx-auto h-px ${WIDTH[layout.width]} bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
       />
     );
   if (section.type === "spacer")
-    return <div aria-hidden="true" className={SPACING[layout.spacing]} />;
+    return <div {...sectionAttributes} aria-hidden="true" className={`${section.customClass || ""} ${SPACING[layout.spacing]}`} />;
   return (
-    <section className={SURFACE[layout.surface]}>
+    <section
+      {...sectionAttributes}
+      className={`${section.customClass || ""} ${SURFACE[layout.surface]}`}
+    >
       <div
         className={`relative mx-auto flex ${WIDTH[layout.width]} ${SPACING[layout.spacing]} flex-col px-5 sm:px-8 ${ALIGNMENT[layout.alignment]}`}
       >

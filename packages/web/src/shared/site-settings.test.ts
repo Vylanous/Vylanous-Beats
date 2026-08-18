@@ -56,6 +56,37 @@ describe("Site Builder settings migration", () => {
     expect(settings.newsletterPopup.buttonLabel).toBe("Join the list");
   });
 
+  test("preserves advanced section metadata through settings migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_custom",
+          slug: "custom",
+          title: "Custom",
+          navLabel: "Custom",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "section_custom",
+              type: "text",
+              title: "Custom section",
+              anchorId: "custom-copy",
+              customClass: "artist-intro",
+              ariaLabel: "Artist introduction",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_custom")?.sections[0]).toMatchObject({
+      anchorId: "custom-copy",
+      customClass: "artist-intro",
+      ariaLabel: "Artist introduction",
+    });
+  });
+
   test("preserves private builder metadata when it is present", () => {
     const settings = mergeSettings({
       builder: {

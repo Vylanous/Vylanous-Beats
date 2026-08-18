@@ -1476,6 +1476,9 @@ function SectionEditor({
     "licenseTiers",
     "featuredBeats",
   ].includes(section.type);
+  const [activeTab, setActiveTab] = useState<"content" | "style" | "advanced">("content");
+  const sectionLabel =
+    SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label || section.type;
   return (
     <article className="rounded-xl border border-white/[0.08] bg-vb-black/50 p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -1517,6 +1520,22 @@ function SectionEditor({
           </button>
         </div>
       </div>
+      <div className="mb-4 grid grid-cols-3 rounded-xl border border-white/[0.08] bg-vb-black/60 p-1" role="tablist" aria-label={`${sectionLabel} settings`}>
+        {(["content", "style", "advanced"] as const).map((tab) => (
+          <button
+            type="button"
+            key={tab}
+            role="tab"
+            aria-selected={activeTab === tab}
+            onClick={() => setActiveTab(tab)}
+            className={`rounded-lg px-3 py-2 font-sub text-[11px] uppercase tracking-[0.16em] transition ${activeTab === tab ? "bg-vb-purple/25 text-vb-purple-bright" : "text-vb-silver/45 hover:text-vb-silver"}`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      {activeTab === "content" && (
+        <div role="tabpanel" className="space-y-3">
       {section.type === "spacer" ? (
         <p className="font-body text-sm text-vb-silver/50">
           A breathing-space block. Use “Section spacing” below to set its height.
@@ -1630,7 +1649,23 @@ function SectionEditor({
           )}
         </>
       )}
-      <LayoutControls layout={layout} onChange={updateLayout} />
+        </div>
+      )}
+      {activeTab === "style" && (
+        <div role="tabpanel">
+          <LayoutControls layout={layout} onChange={updateLayout} />
+        </div>
+      )}
+      {activeTab === "advanced" && (
+        <div role="tabpanel" className="space-y-3">
+          <div className="rounded-lg border border-vb-purple/20 bg-vb-purple/[0.06] px-3 py-2 font-body text-xs text-vb-silver/55">
+            Advanced hooks are optional. Use them for deep links, custom CSS hooks, and accessible section labels.
+          </div>
+          <Field label="Anchor ID" value={section.anchorId || ""} placeholder="e.g. licensing" hint="Letters, numbers, hyphens, and underscores only." onChange={(value) => onChange({ anchorId: value || undefined })} />
+          <Field label="Custom CSS class" value={section.customClass || ""} placeholder="e.g. artist-intro" hint="Add a class supported by your site stylesheet." onChange={(value) => onChange({ customClass: value || undefined })} />
+          <Field label="Accessibility label" value={section.ariaLabel || ""} placeholder={`${sectionLabel} section`} hint="Adds an accessible label to the section landmark." onChange={(value) => onChange({ ariaLabel: value || undefined })} />
+        </div>
+      )}
     </article>
   );
 }

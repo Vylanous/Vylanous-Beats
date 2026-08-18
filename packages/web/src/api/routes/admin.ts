@@ -220,6 +220,9 @@ const settingsSchema = z.object({
             secondaryCtaLabel: z.string().optional(),
             secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
+            anchorId: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/).max(80).optional(),
+            customClass: z.string().max(120).optional(),
+            ariaLabel: z.string().max(120).optional(),
             items: z
               .array(
                 z.object({

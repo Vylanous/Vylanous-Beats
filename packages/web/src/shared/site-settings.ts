@@ -83,6 +83,12 @@ export interface PageSection {
   secondaryCtaLabel?: string;
   secondaryCtaHref?: string;
   collection?: string;
+  /** Optional in-page anchor used by navigation links and deep links. */
+  anchorId?: string;
+  /** Optional admin-only CSS hook for advanced layouts. */
+  customClass?: string;
+  /** Optional accessible label for the rendered section landmark. */
+  ariaLabel?: string;
   items?: SectionItem[];
   layout?: SectionLayout;
 }

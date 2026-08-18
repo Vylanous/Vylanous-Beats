@@ -282,3 +282,20 @@
 - [x] Share verification state and API behavior across the website and Expo app.
 - [x] Add mobile verification and resend UI states using the shared backend.
 - [x] Add regression tests and validate public signup, account signup, verification, and admin flows.
+
+## Direct GitHub Builder Studio Implementation
+
+- [ ] Inspect the GitHub repository’s current Builder Studio model, admin editor, and live renderer.
+- [ ] Add the Content, Style, and Advanced section inspector tabs directly to the GitHub source.
+- [ ] Add backward-compatible anchor IDs, custom CSS hooks, and accessibility labels to section data, validation, and rendering.
+- [ ] Run the repository typecheck, tests, lint, and production build.
+- [ ] Commit and push the validated Builder Studio changes to the GitHub repository.
+- [ ] Report the pushed revision and deployment handoff.
+
+## Final Direct GitHub Review
+
+- [x] Review the existing GitHub worktree and compare it against the intended Builder Studio implementation.
+- [x] Finish and correct the Builder Studio implementation in the GitHub repository.
+- [x] Run the complete repository validation suite and inspect the final diff for regressions.
+- [ ] Commit and push the validated implementation to GitHub.
+- [ ] Report the pushed revision and deployment handoff.
