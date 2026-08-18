@@ -309,3 +309,11 @@
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
 - [x] Commit and push the verified upload and metadata fixes to GitHub.
 - [x] Report the pushed revision and deployment handoff.
+
+## Circular JSON Frontend Error Repair
+
+- [x] Inspect JSON serialization, API request helpers, upload handlers, and Builder Studio event handlers.
+- [x] Identify and repair any path passing a DOM or React event into JSON.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
+- [ ] Commit and push the verified circular JSON repair to GitHub.
+- [ ] Report the pushed revision and deployment handoff.

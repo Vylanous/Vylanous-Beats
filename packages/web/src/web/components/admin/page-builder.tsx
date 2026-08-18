@@ -608,7 +608,7 @@ export default function PageBuilderPanel() {
             </button>
             <button
               type="button"
-              onClick={save}
+              onClick={() => void save()}
               disabled={saving}
               className="inline-flex items-center gap-1.5 rounded-lg bg-vb-purple px-3 py-2 font-sub text-xs uppercase tracking-wide text-white hover:bg-vb-purple-bright disabled:opacity-60"
             >
