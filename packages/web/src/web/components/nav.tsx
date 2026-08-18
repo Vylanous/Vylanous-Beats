@@ -83,9 +83,11 @@ export function Nav() {
                 <span className="sr-only">{social.label}</span>
               </a>
             ))}
-          {header.ctaLabel && header.ctaHref && (
-            <HeaderAction href={header.ctaHref} label={header.ctaLabel} />
-          )}
+          {header.ctaLabel &&
+            header.ctaHref &&
+            header.ctaLabel.trim().toLowerCase() !== "all beats" && (
+              <HeaderAction href={header.ctaHref} label={header.ctaLabel} />
+            )}
           {customer ? (
             <>
               <Link
@@ -145,9 +147,11 @@ export function Nav() {
                 {link.label}
               </Link>
             ))}
-            {header.ctaLabel && header.ctaHref && (
-              <HeaderAction href={header.ctaHref} label={header.ctaLabel} mobile />
-            )}
+            {header.ctaLabel &&
+              header.ctaHref &&
+              header.ctaLabel.trim().toLowerCase() !== "all beats" && (
+                <HeaderAction href={header.ctaHref} label={header.ctaLabel} mobile />
+              )}
             {customer ? (
               <>
                 <Link

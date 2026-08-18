@@ -325,3 +325,14 @@
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
 - [x] Commit and push the verified Beat Vault and navigation fixes to GitHub.
 - [x] Report the pushed revision and deployment handoff.
+
+## Beat Vault Root-Cause Diagnosis
+
+- [x] Verify the live deployment revision, Beat Vault saved page settings, beat database records, and public API response.
+- [x] Repair the confirmed root cause across data, page configuration, API, or rendering.
+- [x] Add regression coverage and run the complete validation and final diff review.
+- [ ] Commit and push the verified Beat Vault repair to GitHub.
+- [ ] Report the exact deployment requirement and verification result.
+
+- [x] Remove saved header CTA instances labeled All Beats, not only page-navigation entries.
+- [x] Verify the live Beat Vault’s public featured preview and authenticated full-catalog behavior against the user’s expected catalog visibility.
