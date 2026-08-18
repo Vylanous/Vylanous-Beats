@@ -311,8 +311,67 @@ const settingsSchema = z.object({
 
 function normalizeFileUrls(files: Record<string, string> | undefined): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(files || {})) out[k] = normalizeKey(v);
+  for (const [k, v] of Object.entries(files || {})) {
+    const normalized = normalizeKey(v);
+    if (normalized) out[k.trim().toLowerCase()] = normalized;
+  }
   return out;
+}
+
+function normalizeText(value: string | null | undefined, fallback = ""): string {
+  return (value || "").trim() || fallback;
+}
+
+function normalizeTags(value: string | null | undefined): string {
+  return [...new Set((value || "").split(",").map((tag) => tag.trim()).filter(Boolean))].join(", ");
+}
+
+function normalizeBpm(value: number | null | undefined): number {
+  const bpm = Number.isFinite(value) ? Math.round(value as number) : 0;
+  return Math.min(400, Math.max(0, bpm));
+}
+
+function normalizePrice(value: number | null | undefined): number {
+  const cents = Number.isFinite(value) ? Math.round(value as number) : 2400;
+  return Math.max(0, cents);
+}
+
+function parseStoredFileUrls(raw: string | null | undefined): Record<string, string> {
+  try {
+    const parsed = JSON.parse(raw || "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function normalizeBeatMetadata(input: {
+  title?: string | null;
+  bpm?: number | null;
+  musicalKey?: string | null;
+  genre?: string | null;
+  mood?: string | null;
+  tags?: string | null;
+  artworkUrl?: string | null;
+  audioUrl?: string | null;
+  fileUrls?: Record<string, string> | null;
+  priceFrom?: number | null;
+}) {
+  return {
+    title: normalizeText(input.title),
+    bpm: normalizeBpm(input.bpm),
+    musicalKey: normalizeText(input.musicalKey),
+    genre: normalizeText(input.genre, "Hip-Hop"),
+    mood: normalizeText(input.mood),
+    tags: normalizeTags(input.tags),
+    artworkUrl: normalizeKey(input.artworkUrl),
+    audioUrl: normalizeKey(input.audioUrl),
+    fileUrls: normalizeFileUrls(input.fileUrls || {}),
+    priceFrom: normalizePrice(input.priceFrom),
+  };
 }
 
 export function adminRoutes(app: Hono) {
@@ -373,13 +432,32 @@ export function adminRoutes(app: Hono) {
   app.get("/admin/beats", requireAdmin, async (c) => {
     const all = await db.select().from(beats).orderBy(desc(beats.createdAt));
     const withUrls = await Promise.all(
-      all.map(async (b) => ({
-        ...b,
-        // NOTE: never overwrite the raw keys here — the edit form saves these
-        // values straight back, and persisting a presigned url corrupts the row.
-        artworkSignedUrl: await signIfKey(b.artworkUrl),
-        audioSignedUrl: await signIfKey(b.audioUrl),
-      })),
+      all.map(async (b) => {
+        const metadata = normalizeBeatMetadata({ ...b, fileUrls: parseStoredFileUrls(b.fileUrls) });
+        const fileUrls = JSON.stringify(metadata.fileUrls);
+        const needsRepair =
+          b.title !== metadata.title ||
+          b.bpm !== metadata.bpm ||
+          b.musicalKey !== metadata.musicalKey ||
+          b.genre !== metadata.genre ||
+          b.mood !== metadata.mood ||
+          b.tags !== metadata.tags ||
+          b.artworkUrl !== metadata.artworkUrl ||
+          b.audioUrl !== metadata.audioUrl ||
+          b.fileUrls !== fileUrls ||
+          b.priceFrom !== metadata.priceFrom;
+        if (needsRepair) {
+          await db.update(beats).set({ ...metadata, fileUrls }).where(eq(beats.id, b.id));
+        }
+        return {
+          ...b,
+          ...metadata,
+          fileUrls,
+          // Keep raw storage keys in edit fields; signed URLs are display-only.
+          artworkSignedUrl: await signIfKey(metadata.artworkUrl),
+          audioSignedUrl: await signIfKey(metadata.audioUrl),
+        };
+      }),
     );
     return c.json({ beats: withUrls }, 200);
   });
@@ -390,12 +468,28 @@ export function adminRoutes(app: Hono) {
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
+    const metadata = normalizeBeatMetadata({ ...b, fileUrls: parseStoredFileUrls(b.fileUrls) });
+    const fileUrls = JSON.stringify(metadata.fileUrls);
+    const needsRepair =
+      b.title !== metadata.title ||
+      b.bpm !== metadata.bpm ||
+      b.musicalKey !== metadata.musicalKey ||
+      b.genre !== metadata.genre ||
+      b.mood !== metadata.mood ||
+      b.tags !== metadata.tags ||
+      b.artworkUrl !== metadata.artworkUrl ||
+      b.audioUrl !== metadata.audioUrl ||
+      b.fileUrls !== fileUrls ||
+      b.priceFrom !== metadata.priceFrom;
+    if (needsRepair) await db.update(beats).set({ ...metadata, fileUrls }).where(eq(beats.id, id));
     return c.json(
       {
         beat: {
           ...b,
-          artworkSignedUrl: await signIfKey(b.artworkUrl),
-          audioSignedUrl: await signIfKey(b.audioUrl),
+          ...metadata,
+          fileUrls,
+          artworkSignedUrl: await signIfKey(metadata.artworkUrl),
+          audioSignedUrl: await signIfKey(metadata.audioUrl),
         },
       },
       200,
@@ -404,21 +498,15 @@ export function adminRoutes(app: Hono) {
 
   app.post("/admin/beats", requireAdmin, zValidator("json", beatInputSchema), async (c) => {
     const input = c.req.valid("json");
+    const metadata = normalizeBeatMetadata(input);
+    if (!metadata.title) return c.json({ error: "title_required", message: "Give the beat a title." }, 400);
     const id = rid("beat");
-    const slug = makeSlug(input.title, id);
+    const slug = makeSlug(metadata.title, id);
     await db.insert(beats).values({
       id,
-      title: input.title,
+      ...metadata,
+      fileUrls: JSON.stringify(metadata.fileUrls),
       slug,
-      bpm: input.bpm,
-      musicalKey: input.musicalKey,
-      genre: input.genre || "Hip-Hop",
-      mood: input.mood,
-      tags: input.tags,
-      artworkUrl: normalizeKey(input.artworkUrl),
-      audioUrl: normalizeKey(input.audioUrl),
-      fileUrls: JSON.stringify(normalizeFileUrls(input.fileUrls)),
-      priceFrom: input.priceFrom ?? 2400,
       soldExclusive: input.soldExclusive ?? false,
       featured: input.featured ?? false,
       published: input.published ?? true,
@@ -433,17 +521,20 @@ export function adminRoutes(app: Hono) {
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const input = c.req.valid("json");
     const patch: Record<string, unknown> = {};
-    if (input.title !== undefined) patch.title = input.title;
-    if (input.bpm !== undefined) patch.bpm = input.bpm;
-    if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
-    if (input.genre !== undefined) patch.genre = input.genre;
-    if (input.mood !== undefined) patch.mood = input.mood;
-    if (input.tags !== undefined) patch.tags = input.tags;
-    if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
-    if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
-    if (input.fileUrls !== undefined)
-      patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
-    if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
+    const metadata = normalizeBeatMetadata(input);
+    if (input.title !== undefined) {
+      if (!metadata.title) return c.json({ error: "title_required", message: "Give the beat a title." }, 400);
+      patch.title = metadata.title;
+    }
+    if (input.bpm !== undefined) patch.bpm = metadata.bpm;
+    if (input.musicalKey !== undefined) patch.musicalKey = metadata.musicalKey;
+    if (input.genre !== undefined) patch.genre = metadata.genre;
+    if (input.mood !== undefined) patch.mood = metadata.mood;
+    if (input.tags !== undefined) patch.tags = metadata.tags;
+    if (input.artworkUrl !== undefined) patch.artworkUrl = metadata.artworkUrl;
+    if (input.audioUrl !== undefined) patch.audioUrl = metadata.audioUrl;
+    if (input.fileUrls !== undefined) patch.fileUrls = JSON.stringify(metadata.fileUrls);
+    if (input.priceFrom !== undefined) patch.priceFrom = metadata.priceFrom;
     if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
     if (input.featured !== undefined) patch.featured = input.featured;
     if (input.published !== undefined) patch.published = input.published;

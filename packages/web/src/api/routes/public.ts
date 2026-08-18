@@ -10,7 +10,9 @@ import { rid } from "../lib/util";
 export function publicRoutes(app: Hono) {
   app.get("/settings", async (c) => {
     const s = await loadSettings();
-    c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
+    // Builder media and layout edits must be visible immediately after save;
+    // caching this response can otherwise keep an older card image live for minutes.
+    c.header("Cache-Control", "no-store");
     return c.json({ settings: await publicSettings(s) }, 200);
   });
 

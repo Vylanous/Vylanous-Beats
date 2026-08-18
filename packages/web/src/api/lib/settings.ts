@@ -33,14 +33,10 @@ export async function loadSettings(): Promise<SiteSettings> {
 }
 
 export async function signBrandUrl(value: string): Promise<string> {
-  if (
-    !value ||
-    value.startsWith("/") ||
-    value.startsWith("http://") ||
-    value.startsWith("https://")
-  )
-    return value;
-  return signIfKey(value);
+  // signIfKey handles raw keys, public paths, external URLs, and previously
+  // persisted signed storage URLs. This keeps Builder Studio media durable even
+  // when an older admin session saved a presigned URL instead of its object key.
+  return signIfKey(value || "");
 }
 
 export async function publicSettings(s: SiteSettings) {

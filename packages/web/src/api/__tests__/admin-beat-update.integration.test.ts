@@ -69,6 +69,46 @@ describe("admin beat updates", () => {
     expect(saved.fileUrls).toBe(beat.fileUrls);
   });
 
+  test("admin beat catalog repairs inconsistent metadata and storage keys", async () => {
+    const id = `beat_${randomUUID().slice(0, 8)}`;
+    await db.insert(beats).values({
+      id,
+      title: "  Metadata Test  ",
+      slug: `metadata-test-${randomUUID().slice(0, 6)}`,
+      bpm: 999,
+      musicalKey: " F#m ",
+      genre: "  ",
+      mood: " Dark ",
+      tags: "trap, trap, 808 ",
+      artworkUrl: "/artwork/metadata.png?stale=1",
+      audioUrl: "https://cdn.example.com/preview.mp3",
+      fileUrls: JSON.stringify({ MP3: "/downloads/metadata.mp3?stale=1", empty: "" }),
+      priceFrom: -10,
+      soldExclusive: false,
+      featured: false,
+      published: true,
+    });
+
+    const response = await app.request("/api/admin/beats", {
+      headers: { Authorization: `Bearer ${makeAdminToken()}` },
+    });
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as { beats: Array<Record<string, unknown>> };
+    const returned = payload.beats.find((beat) => beat.id === id);
+    expect(returned).toMatchObject({
+      title: "Metadata Test",
+      bpm: 400,
+      musicalKey: "F#m",
+      genre: "Hip-Hop",
+      mood: "Dark",
+      tags: "trap, 808",
+      artworkUrl: "artwork/metadata.png",
+      audioUrl: "https://cdn.example.com/preview.mp3",
+      fileUrls: JSON.stringify({ mp3: "downloads/metadata.mp3" }),
+      priceFrom: 0,
+    });
+  });
+
   test("Page Builder image uploads reject unsupported formats and oversized files", async () => {
     const headers = {
       Authorization: `Bearer ${makeAdminToken()}`,

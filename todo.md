@@ -297,5 +297,15 @@
 - [x] Review the existing GitHub worktree and compare it against the intended Builder Studio implementation.
 - [x] Finish and correct the Builder Studio implementation in the GitHub repository.
 - [x] Run the complete repository validation suite and inspect the final diff for regressions.
-- [ ] Commit and push the validated implementation to GitHub.
+- [x] Commit and push the validated implementation to GitHub.
+- [x] Report the pushed revision and deployment handoff.
+
+## Builder Upload and Beat Metadata Repair
+
+- [x] Inspect the Clear Licensing image upload path, storage keys, signed URLs, and live section rendering.
+- [x] Repair Builder Studio image upload persistence and rendering for Clear Licensing and other image-backed sections.
+- [x] Audit beat metadata fields, upload form payloads, validation, persistence, and public/admin display.
+- [x] Repair existing beat metadata safely and enforce correct metadata on future uploads.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
+- [ ] Commit and push the verified upload and metadata fixes to GitHub.
 - [ ] Report the pushed revision and deployment handoff.
