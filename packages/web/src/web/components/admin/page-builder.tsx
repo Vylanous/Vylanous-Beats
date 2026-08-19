@@ -34,6 +34,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
+import { parseInlineText } from "../../lib/inline-text";
 import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
@@ -991,7 +992,7 @@ function BuilderCanvas({
                       )}
                       {section.body && (
                         <p className="mt-2 line-clamp-2 max-w-2xl font-body text-xs leading-relaxed text-vb-silver/55">
-                          {section.body}
+                          <FormattedText value={section.body} formatted={section.bodyFormat === "inline"} />
                         </p>
                       )}
                       {hasMedia && (
@@ -2728,8 +2729,24 @@ function RichTextArea({
       </div>
       <textarea ref={inputRef} id="builder-rich-text-content" aria-label={label} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} rows={5} className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60" />
       <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">Select words in your copy, then use the controls above. Bold, italic, and underline work across published Builder pages{formatted ? "." : " once applied."}</p>
+      <div aria-live="polite" aria-label="Live formatted text preview" className="mt-3 rounded-lg border border-vb-purple/25 bg-vb-purple/[0.07] p-3">
+        <p className="font-sub text-[10px] uppercase tracking-[0.18em] text-vb-purple-bright">Live preview</p>
+        <p className="mt-1 whitespace-pre-wrap font-body text-sm leading-relaxed text-vb-silver-bright">
+          {value ? <FormattedText value={value} formatted={formatted} /> : <span className="text-vb-silver/40">Formatted copy will appear here as you type.</span>}
+        </p>
+      </div>
     </div>
   );
+}
+
+function FormattedText({ value, formatted }: { value: string; formatted: boolean }) {
+  if (!formatted) return value;
+  return parseInlineText(value).map((token, index) => {
+    if (token.style === "bold") return <strong key={index}>{token.text}</strong>;
+    if (token.style === "italic") return <em key={index}>{token.text}</em>;
+    if (token.style === "underline") return <u key={index}>{token.text}</u>;
+    return <span key={index}>{token.text}</span>;
+  });
 }
 function SelectField({
   label,

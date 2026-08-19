@@ -541,6 +541,15 @@ User request: allow individual parts of the text body entered for Page Sections 
 
 User report: the Blog page nested within the Artist page is not routing properly.
 
+## Builder Rich-Text Live Preview Repair
+
+- [x] Inspect the current formatted text editor, preview rendering path, and parser behavior. The responsive Builder canvas displayed raw formatting markers, and the editor provided no formatted text preview while typing.
+- [x] Add an accessible live Bold, Italic, and Underline preview that updates while content is typed. The same safe formatting now renders in both the editor preview and device canvas.
+- [x] Add regression coverage and run relevant tests, typecheck, lint, production build, and final diff review. The existing parser regression coverage plus the full isolated suite, typecheck, lint, and production build pass.
+- [x] Commit and push the verified live-preview repair directly to GitHub main.
+
+User report: Bold, Italic, and Underline controls do not show a live preview while text is being entered in the Page Builder.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.
