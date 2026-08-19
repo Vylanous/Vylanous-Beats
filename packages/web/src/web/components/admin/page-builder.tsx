@@ -479,7 +479,7 @@ export default function PageBuilderPanel() {
             <LayoutTemplate size={15} /> Templates
           </button>
           <button
-            onClick={save}
+            onClick={() => void save()}
             disabled={saving}
             className="inline-flex items-center gap-2 rounded-lg bg-vb-purple px-4 py-2.5 font-sub uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
           >
@@ -1356,6 +1356,8 @@ function PagePropertiesEditor({
     onChange({ ...page, [field]: value });
   const updateLayout = (patch: NonNullable<BuilderPage["layout"]>) =>
     onChange({ ...page, layout: { ...page.layout, ...patch } });
+  const updateSeo = (patch: NonNullable<BuilderPage["seo"]>) =>
+    onChange({ ...page, seo: { ...page.seo, ...patch } });
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -1390,6 +1392,20 @@ function PagePropertiesEditor({
           label="Navigation label"
           value={page.navLabel}
           onChange={(value) => setField("navLabel", value)}
+        />
+        <Field
+          label="SEO title"
+          value={page.seo?.title || ""}
+          hint="The title shown in browser tabs and social previews. Keep it under 70 characters."
+          placeholder={`${page.title} | Vylanous Beats`}
+          onChange={(value) => updateSeo({ title: value })}
+        />
+        <Textarea
+          label="SEO description"
+          value={page.seo?.description || ""}
+          hint="A concise search and social summary. Keep it under 200 characters."
+          placeholder="Describe what visitors will find on this page."
+          onChange={(value) => updateSeo({ description: value })}
         />
         <Field
           label={page.isSystem ? "Live path" : "URL path"}

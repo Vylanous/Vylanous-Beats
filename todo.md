@@ -371,3 +371,11 @@
 
 - [x] Verify every Beat Vault artwork URL and image element loads from the deployed storage path.
 - [x] Repair artwork URL normalization, signing, fallback rendering, or card image behavior as needed.
+
+## Builder Studio Upload, Save, and Page Metadata Repair
+
+- [x] Audit all Builder Studio upload handlers, storage URL normalization, Save Changes mutation, settings persistence, and live rendering.
+- [x] Fix Clear Licensing and shared Builder Studio upload/save persistence paths.
+- [x] Add editable page titles and descriptions with backward-compatible metadata rendering.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
+- [ ] Commit and push the verified Builder Studio repair to GitHub.
