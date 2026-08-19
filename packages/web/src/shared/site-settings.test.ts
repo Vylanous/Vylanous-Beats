@@ -131,6 +131,46 @@ describe("Site Builder settings migration", () => {
     });
   });
 
+  test("preserves parent-child page navigation settings through migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_artist",
+          slug: "artist",
+          path: "/artist",
+          title: "Artist",
+          navLabel: "Artist",
+          published: true,
+          showInNav: true,
+          showChildNavigation: true,
+          sections: [],
+        },
+        {
+          id: "page_artist_blog",
+          slug: "blog",
+          path: "/artist/blog",
+          parentPageId: "page_artist",
+          title: "Artist Blog",
+          navLabel: "Blog",
+          published: true,
+          showInNav: false,
+          showInFooter: false,
+          sections: [],
+        },
+      ],
+    });
+
+    const artist = settings.pages.find((page) => page.id === "page_artist");
+    const blog = settings.pages.find((page) => page.id === "page_artist_blog");
+    expect(artist?.showChildNavigation).toBe(true);
+    expect(blog).toMatchObject({
+      parentPageId: "page_artist",
+      path: "/artist/blog",
+      showInNav: false,
+      showInFooter: false,
+    });
+  });
+
   test("preserves Press Kit platform and audience analytics through settings migration", () => {
     const settings = mergeSettings({
       pages: [

@@ -166,11 +166,13 @@ const settingsSchema = z.object({
         id: z.string(),
         slug: z.string().regex(/^[a-z0-9-]+$/),
         path: z.string().startsWith("/").max(200).optional(),
+        parentPageId: z.string().max(120).optional(),
         title: z.string(),
         navLabel: z.string(),
         published: z.boolean(),
         showInNav: z.boolean(),
         showInFooter: z.boolean().optional(),
+        showChildNavigation: z.boolean().optional(),
         navOrder: z.number().int().min(0).max(10000).optional(),
         isSystem: z.boolean().optional(),
         layout: z

@@ -459,6 +459,17 @@ User request: make the Page Sections Style tab much easier to use; add a true ma
 - [x] Trace the Save Site Settings client error handler, request payload, and server validation response.
 - [x] Fix the underlying save failure and replace object-stringified errors with actionable messages.
 - [x] Add regression coverage and validate save behavior, typecheck, lint, build, and diff checks.
-- [ ] Commit and push the Save Site Settings repair directly to GitHub main.
+- [x] Commit and push the Save Site Settings repair directly to GitHub main.
 
 User report: saving Site Settings displays `[object Object]` instead of a useful error message.
+
+## Hierarchical Page Navigation
+
+- [x] Audit page hierarchy, routing, Builder settings, and global header/footer navigation.
+- [x] Add backward-compatible parent-page and local sub-navigation settings with server validation.
+- [x] Add intuitive parent-page, global visibility, and local sub-navigation controls to the Page Builder.
+- [x] Render nested URLs and responsive local sub-navigation while excluding hidden child pages from global header/footer links.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and diff checks.
+- [ ] Commit and push the hierarchical sub-navigation feature directly to GitHub main.
+
+User request: support child pages such as `/artist/blog`, allow pages to be hidden from the global header/footer, and optionally show child-page links as a local sub-navigation menu on their parent section.

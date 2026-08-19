@@ -178,11 +178,15 @@ export interface BuilderPage {
   id: string;
   slug: string;
   path?: string;
+  /** Optional parent Builder page; enables nested paths and local sub-navigation. */
+  parentPageId?: string;
   title: string;
   navLabel: string;
   published: boolean;
   showInNav: boolean;
   showInFooter?: boolean;
+  /** Controls whether this page presents links to its published child pages. */
+  showChildNavigation?: boolean;
   navOrder?: number;
   isSystem?: boolean;
   sections: PageSection[];

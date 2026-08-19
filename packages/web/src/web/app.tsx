@@ -49,7 +49,7 @@ function App() {
           <Route path="/dashboard" component={DashboardPage} />
           <Route path="/verify-email" component={VerifyEmailPage} />
           <Route path="/admin" component={AdminPage} />
-          <Route path="/:slug" component={BuilderPage} />
+          <Route path="/:rest*" component={BuilderPage} />
           <Route>
             <div className="min-h-screen grid place-items-center bg-vb-black">
               <div className="text-center">

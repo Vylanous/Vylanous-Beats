@@ -174,6 +174,14 @@ export function ManagedPage({ path }: { path: string }) {
   );
   usePageMetadata(page);
   if (!page) return <UnavailablePage />;
+  const parentPage = page.parentPageId
+    ? pages.find((candidate) => candidate.id === page.parentPageId && candidate.published)
+    : undefined;
+  const navigationRoot = parentPage || page;
+  const childPages = pages
+    .filter((candidate) => candidate.parentPageId === navigationRoot.id && candidate.published)
+    .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000));
+  const showLocalNavigation = Boolean(navigationRoot.showChildNavigation && childPages.length);
   return (
     <Layout
       showHeader={page.layout?.showHeader !== false}
@@ -181,6 +189,9 @@ export function ManagedPage({ path }: { path: string }) {
       pageBackground={page.layout?.background}
       pageStyle={page.layout}
     >
+      {showLocalNavigation && (
+        <LocalSubNavigation root={navigationRoot} current={page} childPages={childPages} />
+      )}
       {page.sections.map((section) => (
         <BuilderSection
           key={section.id}
@@ -190,6 +201,41 @@ export function ManagedPage({ path }: { path: string }) {
         />
       ))}
     </Layout>
+  );
+}
+
+function LocalSubNavigation({
+  root,
+  current,
+  childPages,
+}: {
+  root: BuilderPage;
+  current: BuilderPage;
+  childPages: BuilderPage[];
+}) {
+  const links = [root, ...childPages];
+  return (
+    <nav
+      aria-label={`${root.navLabel} sub-navigation`}
+      className="border-b border-vb-purple/20 bg-vb-black/70 backdrop-blur-sm"
+    >
+      <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 sm:px-8 no-scrollbar">
+        {links.map((link) => {
+          const href = link.path || `/${link.slug}`;
+          const active = link.id === current.id;
+          return (
+            <Link
+              key={link.id}
+              to={href}
+              aria-current={active ? "page" : undefined}
+              className={`shrink-0 rounded-full border px-4 py-2 font-sub text-xs uppercase tracking-[0.16em] transition ${active ? "border-vb-purple/70 bg-vb-purple/20 text-vb-purple-bright" : "border-white/[0.08] text-vb-silver/65 hover:border-vb-purple/40 hover:text-vb-silver-bright"}`}
+            >
+              {link.navLabel}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 

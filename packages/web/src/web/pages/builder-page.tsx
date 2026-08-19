@@ -3,6 +3,6 @@ import { useRoute } from "wouter";
 import { ManagedPage } from "../components/managed-page";
 
 export default function BuilderPage() {
-  const [, params] = useRoute("/:slug");
-  return <ManagedPage path={`/${params?.slug || ""}`} />;
+  const [, params] = useRoute("/:rest*");
+  return <ManagedPage path={`/${params?.rest || ""}`} />;
 }

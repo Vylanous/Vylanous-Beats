@@ -163,6 +163,7 @@ function blankPage(): BuilderPage {
     published: false,
     showInNav: false,
     showInFooter: false,
+    showChildNavigation: false,
     navOrder: 1000,
     layout: { showHeader: true, showFooter: true, background: "default" },
     seo: { canonicalPath: `/${slug}` },
@@ -762,7 +763,7 @@ export default function PageBuilderPanel() {
         </aside>
 
         <div className="space-y-5">
-          <PagePropertiesEditor page={page} onChange={updatePage} />
+          <PagePropertiesEditor page={page} pages={settings.pages} onChange={updatePage} />
           <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -1378,9 +1379,11 @@ function GlobalChromeEditor({
 
 function PagePropertiesEditor({
   page,
+  pages,
   onChange,
 }: {
   page: BuilderPage;
+  pages: BuilderPage[];
   onChange: (page: BuilderPage) => void;
 }) {
   const setField = <K extends keyof BuilderPage>(field: K, value: BuilderPage[K]) =>
@@ -1389,6 +1392,14 @@ function PagePropertiesEditor({
     onChange({ ...page, layout: { ...page.layout, ...patch } });
   const updateSeo = (patch: NonNullable<BuilderPage["seo"]>) =>
     onChange({ ...page, seo: { ...page.seo, ...patch } });
+  const eligibleParents = pages.filter(
+    (candidate) => candidate.id !== page.id && candidate.parentPageId !== page.id,
+  );
+  const parent = pages.find((candidate) => candidate.id === page.parentPageId);
+  const childPages = pages.filter((candidate) => candidate.parentPageId === page.id);
+  const leafSlug = (page.path || page.slug).split("/").filter(Boolean).pop() || page.slug;
+  const nestedPath = (parentPage: BuilderPage, leaf: string) =>
+    `${(parentPage.path || `/${parentPage.slug}`).replace(/\/+$/, "")}/${leaf.replace(/[^a-z0-9-]/gi, "-").toLowerCase()}`;
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -1457,6 +1468,33 @@ function PagePropertiesEditor({
             });
           }}
         />
+        <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
+          Parent page
+          <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
+            Choose a parent to create a child route and local sub-navigation relationship.
+          </span>
+          <select
+            aria-label="Parent page"
+            value={page.parentPageId || "none"}
+            onChange={(event) => {
+              const nextParent = pages.find((candidate) => candidate.id === event.target.value);
+              onChange({
+                ...page,
+                parentPageId: nextParent?.id || undefined,
+                path: nextParent ? nestedPath(nextParent, leafSlug) : `/${leafSlug}`,
+                slug: leafSlug,
+              });
+            }}
+            className="mt-2 w-full rounded-lg border border-white/10 bg-vb-black/50 px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright"
+          >
+            <option value="none">No parent — top-level page</option>
+            {eligibleParents.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.title} · {candidate.path || `/${candidate.slug}`}
+              </option>
+            ))}
+          </select>
+        </label>
         <SelectField
           label="Page background"
           value={page.layout?.background || "default"}
@@ -1469,14 +1507,19 @@ function PagePropertiesEditor({
           onChange={(checked) => setField("published", checked)}
         />
         <Toggle
-          label="Show in header navigation"
+          label="Show in main header navigation"
           checked={page.showInNav}
           onChange={(checked) => setField("showInNav", checked)}
         />
         <Toggle
-          label="Show in footer navigation"
+          label="Show in main footer navigation"
           checked={Boolean(page.showInFooter)}
           onChange={(checked) => setField("showInFooter", checked)}
+        />
+        <Toggle
+          label="Show child-page sub-navigation"
+          checked={Boolean(page.showChildNavigation)}
+          onChange={(checked) => setField("showChildNavigation", checked)}
         />
         <Toggle
           label="Show global header"
@@ -1488,6 +1531,13 @@ function PagePropertiesEditor({
           checked={page.layout?.showFooter !== false}
           onChange={(checked) => updateLayout({ showFooter: checked })}
         />
+      </div>
+      <div className="mt-4 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-3 font-body text-xs leading-relaxed text-vb-silver/55">
+        {parent
+          ? `This is a child page of ${parent.title}. Its local path is ${page.path || `/${page.slug}`}. Keep the two main navigation toggles off to hide it from global header and footer links.`
+          : childPages.length
+            ? `${childPages.length} child ${childPages.length === 1 ? "page is" : "pages are"} connected here. Turn on “Show child-page sub-navigation” to display a local menu on this page and its children.`
+            : "Create child pages by selecting this page as their Parent page. Their URL will automatically nest beneath this page."}
       </div>
     </section>
   );
