@@ -499,6 +499,19 @@ Additional request: add a safe Page Builder page-deletion option, protect core s
 
 User request: review the entire Vylanous Beats repository for code errors, likely future failures, bugs, clutter, and customer/admin journey risks; repair verified issues while reporting any external operational dependencies honestly.
 
+## Artist Page Builder Route Repair
+
+- [x] Inspect saved Artist page settings, path normalization, router matching, public settings, and deployed route behavior.
+- [x] Repair `/artist` routing without disrupting existing top-level or nested Builder pages.
+- [x] Add regression coverage and validate direct, nested, and fallback Builder page routing.
+- [ ] Commit and push the Artist page-route repair directly to GitHub main.
+
+User report: `vylanous.com/artist` does not open the Page Builder page created for the Artist landing page.
+
+Live finding: `/api/settings` returns a published `page_artist` at `/artist` with the intended Artist sections, but the live `/artist` client renders the managed home content. The router wildcard currently resolves an empty path parameter, causing the managed renderer to fall back to `/`.
+
+Expanded requirement: ensure every designated published Page Builder page, including top-level and nested paths, routes to its saved managed content while protected system routes retain their intended application screens.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.

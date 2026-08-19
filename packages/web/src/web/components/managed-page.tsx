@@ -11,6 +11,7 @@ import { BeatCard } from "./beat-card";
 import { FourthwallMerch } from "./fourthwall-merch";
 import { Marquee } from "./marquee";
 import { api } from "../lib/api";
+import { builderPagePath, normalizeManagedPath } from "../lib/page-routes";
 import { useSiteSettings } from "../lib/site-settings";
 import { customerFetch, useCustomer } from "../lib/customer";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
@@ -154,8 +155,9 @@ function usePageMetadata(page: BuilderPage | undefined) {
 
 export function ManagedPage({ path }: { path: string }) {
   const { pages, fourthwall } = useSiteSettings();
+  const managedPath = normalizeManagedPath(path);
   const page = pages.find(
-    (candidate) => (candidate.path || `/${candidate.slug}`) === path && candidate.published,
+    (candidate) => builderPagePath(candidate) === managedPath && candidate.published,
   );
   usePageMetadata(page);
   if (!page) return <UnavailablePage />;
@@ -206,7 +208,7 @@ function LocalSubNavigation({
     >
       <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 sm:px-8 no-scrollbar">
         {links.map((link) => {
-          const href = link.path || `/${link.slug}`;
+          const href = builderPagePath(link);
           const active = link.id === current.id;
           return (
             <Link
