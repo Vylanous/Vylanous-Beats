@@ -504,7 +504,7 @@ User request: review the entire Vylanous Beats repository for code errors, likel
 - [x] Inspect saved Artist page settings, path normalization, router matching, public settings, and deployed route behavior.
 - [x] Repair `/artist` routing without disrupting existing top-level or nested Builder pages.
 - [x] Add regression coverage and validate direct, nested, and fallback Builder page routing.
-- [ ] Commit and push the Artist page-route repair directly to GitHub main.
+- [x] Commit and push the Artist page-route repair directly to GitHub main.
 
 User report: `vylanous.com/artist` does not open the Page Builder page created for the Artist landing page.
 
