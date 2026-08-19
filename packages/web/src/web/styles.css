@@ -519,3 +519,64 @@ main {
 @media (max-width: 640px) {
   .page-background-fit-contain .page-background-media { background-size: cover; }
 }
+
+/* Fully isolated Builder pages opt out of the storefront purple aesthetic. */
+.page-style.page-theme-isolated main {
+  color: var(--page-text, inherit);
+}
+.page-style.page-theme-isolated main [class*="text-vb-silver"],
+.page-style.page-theme-isolated main [class*="text-vb-chrome"] {
+  color: var(--page-muted, var(--page-text, inherit)) !important;
+}
+.page-style.page-theme-isolated main .text-purple-glow,
+.page-style.page-theme-isolated main .text-vb-purple-bright,
+.page-style.page-theme-isolated main .text-vb-purple,
+.page-style.page-theme-isolated main .text-vb-purple-deep {
+  color: var(--page-primary, var(--page-text, inherit)) !important;
+  text-shadow: none !important;
+}
+.page-style.page-theme-isolated main .bg-vb-purple,
+.page-style.page-theme-isolated main .bg-vb-purple\/10,
+.page-style.page-theme-isolated main .bg-vb-purple\/20,
+.page-style.page-theme-isolated main .bg-vb-purple\/30 {
+  background-color: color-mix(in srgb, var(--page-primary, var(--page-surface, #171717)) 18%, transparent) !important;
+}
+.page-style.page-theme-isolated main .border-vb-purple,
+.page-style.page-theme-isolated main .border-vb-purple\/20,
+.page-style.page-theme-isolated main .border-vb-purple\/30,
+.page-style.page-theme-isolated main .border-vb-purple\/35 {
+  border-color: color-mix(in srgb, var(--page-border, var(--page-primary, #777)) 65%, transparent) !important;
+}
+.page-style.page-theme-isolated main [class*="bg-vb-ink"],
+.page-style.page-theme-isolated main [class*="bg-vb-black"],
+.page-style.page-theme-isolated main [class*="bg-white/"] {
+  background-color: var(--page-surface, transparent) !important;
+}
+.page-style.page-theme-isolated .page-background-treatment {
+  --page-primary: var(--page-primary, transparent);
+}
+.page-style.page-theme-isolated .page-treatment-spotlight .page-background-treatment {
+  background: radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--page-primary, transparent) 24%, transparent), transparent 48%);
+}
+
+/* Page-level isolation also covers shared chrome when a page opts out of the storefront theme. */
+.page-style.page-theme-isolated [class*="text-purple"],
+.page-style.page-theme-isolated [class*="text-vb-purple"] {
+  color: var(--page-primary, var(--page-text, inherit)) !important;
+}
+.page-style.page-theme-isolated [class*="bg-vb-purple"] {
+  background-color: var(--page-primary, var(--page-surface, transparent)) !important;
+}
+.page-style.page-theme-isolated [class*="border-vb-purple"] {
+  border-color: color-mix(in srgb, var(--page-border, var(--page-primary, #777)) 65%, transparent) !important;
+}
+.page-style.page-theme-isolated [class*="text-vb-silver"] {
+  color: var(--page-muted, var(--page-text, inherit)) !important;
+}
+.page-style.page-theme-isolated [class*="bg-vb-ink"],
+.page-style.page-theme-isolated [class*="bg-vb-black"] {
+  background-color: var(--page-surface, transparent) !important;
+}
+.page-style.page-theme-isolated [class*="border-white"] {
+  border-color: color-mix(in srgb, var(--page-border, #777) 45%, transparent) !important;
+}

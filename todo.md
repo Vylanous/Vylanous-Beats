@@ -625,3 +625,13 @@ User report: the EPK page does not delete correctly from the Page Builder after 
 - [x] Validate checkout before order creation, reject duplicate/unpublished cart items, and prevent orphan pending orders when Stripe is unavailable or session creation fails.
 - [x] Restrict credentialed API CORS to configured public origins and add safe runtime readiness reporting without leaking secrets.
 - [x] Update high-risk direct web dependencies identified by the package audit where compatible and covered by validation.
+
+## Artist Page Color Isolation and Deletion Repair
+
+- [x] Audit page-level color inheritance, the Color Mood control, and the complete page-deletion persistence flow. The server Save Site Settings merge was dropping deletedPageIds, and page CSS had purple fallbacks.
+- [x] Remove Color Mood and add full page-specific color overrides without inherited purple accents or shared storefront aesthetics. Isolated pages now expose primary, background, text, muted, surface, border, eyebrow, and link colors.
+- [x] Repair deletion persistence so deleted Builder pages remain removed after Save Site Settings and reload. The API now preserves deletedPageIds during its merge before writing settings.
+- [x] Add regression coverage and run tests, typecheck, lint, production build, and final diff review. Full isolated suite: 42 passing; typecheck, lint, and production build pass.
+- [x] Commit and push the verified page customization and deletion repair directly to GitHub main.
+
+User report: the Artist page must not inherit purple or other shared accents; Color Mood is unwanted; and page deletion remains unfixed.

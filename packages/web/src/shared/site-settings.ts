@@ -274,8 +274,14 @@ export interface PageLayout {
   showHeader?: boolean;
   showFooter?: boolean;
   background?: "default" | "mesh" | "ink";
+  /** When false, this page opts out of the shared storefront color aesthetic. */
+  inheritTheme?: boolean;
   primaryColor?: string;
   backgroundColor?: string;
+  textColor?: string;
+  mutedColor?: string;
+  surfaceColor?: string;
+  borderColor?: string;
   /** Stored Builder image key or approved external URL used behind the whole page. */
   backgroundImage?: string;
   backgroundImageFit?: "cover" | "contain" | "tile";
@@ -541,8 +547,13 @@ function makePage(
       showHeader: true,
       showFooter: true,
       background: "default",
+      inheritTheme: true,
       primaryColor: "",
       backgroundColor: "",
+      textColor: "",
+      mutedColor: "",
+      surfaceColor: "",
+      borderColor: "",
       backgroundImage: "",
       backgroundImageFit: "cover",
       backgroundImagePosition: "center",
@@ -769,6 +780,19 @@ export const DEFAULT_PAGES: BuilderPage[] = [
       description: "Discover Vylanous: artist, producer, and the sound behind Vylanous Beats.",
       canonicalPath: "/artist",
     },
+    layout: {
+      inheritTheme: false,
+      background: "ink",
+      primaryColor: "#D2B48C",
+      backgroundColor: "#0C0C0D",
+      textColor: "#F4F0E8",
+      mutedColor: "#B5AEA3",
+      surfaceColor: "#171717",
+      borderColor: "#4A453E",
+      eyebrowColor: "#E7E0D5",
+      linkColor: "#D2B48C",
+      pageTreatment: "none",
+    },
     sections: [
       makeSection("artist_hero", "hero", {
         eyebrow: "The Artist",
@@ -776,7 +800,7 @@ export const DEFAULT_PAGES: BuilderPage[] = [
         body: "A hip-hop artist and producer building a sound that lands hard and stays melodic.",
         ctaLabel: "Listen to beats",
         ctaHref: "/beats",
-        layout: { surface: "mesh", spacing: "cinematic" },
+        layout: { surface: "ink", spacing: "cinematic" },
       }),
       makeSection("artist_story", "text", {
         title: "Built for the loudest rooms",

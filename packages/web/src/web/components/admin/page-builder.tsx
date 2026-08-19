@@ -2334,14 +2334,21 @@ function StyleWorkspace({
           Start with the page colors, then refine this section’s layout. Every control below updates the live preview as you work.
         </p>
       </div>
-      <StyleGroup title="Page colors" description="These colors control the page itself—not just one section.">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <ColorControl label="Main brand color" value={page.primaryColor || "#7C2FCB"} onChange={(value) => onPageLayoutChange({ primaryColor: value })} hint="Buttons, active states, highlights, and linked chrome." />
-          <ColorControl label="Page background" value={page.backgroundColor || "#0B0A0F"} onChange={(value) => onPageLayoutChange({ backgroundColor: value })} hint="The actual page canvas behind your sections." />
-          <ColorControl label="Eyebrow text color" value={page.eyebrowColor || page.primaryColor || "#B56CFF"} onChange={(value) => onPageLayoutChange({ eyebrowColor: value })} hint="Small uppercase labels above headlines." />
-          <ColorControl label="Link and hover color" value={page.linkColor || page.primaryColor || "#B56CFF"} onChange={(value) => onPageLayoutChange({ linkColor: value })} hint="Links, social actions, and hover emphasis." />
+      <StyleGroup title="Page colors" description="Every field below belongs to this page. Turn off shared theme inheritance to remove storefront accents completely.">
+        <div className="mb-3 grid gap-2 sm:grid-cols-2">
+          <ToggleCard label="Use shared storefront theme" description="Turn off to isolate this page from the global purple palette and chrome accents." checked={page.inheritTheme !== false} onChange={(checked) => onPageLayoutChange({ inheritTheme: checked })} />
         </div>
-        <button type="button" onClick={() => onPageLayoutChange({ primaryColor: "", backgroundColor: "", eyebrowColor: "", linkColor: "" })} className="mt-3 font-sub text-[11px] uppercase tracking-wide text-vb-muted hover:text-vb-purple-bright">Reset page colors</button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ColorControl label="Primary / action color" value={page.primaryColor || (page.inheritTheme === false ? "#D2B48C" : "#7C2FCB")} onChange={(value) => onPageLayoutChange({ primaryColor: value })} hint="Buttons, active states, highlights, and linked chrome." />
+          <ColorControl label="Page background" value={page.backgroundColor || "#0B0A0F"} onChange={(value) => onPageLayoutChange({ backgroundColor: value })} hint="The actual page canvas behind your sections." />
+          <ColorControl label="Main text color" value={page.textColor || "#F4F0E8"} onChange={(value) => onPageLayoutChange({ textColor: value })} hint="Headlines and primary page copy." />
+          <ColorControl label="Muted text color" value={page.mutedColor || "#B5AEA3"} onChange={(value) => onPageLayoutChange({ mutedColor: value })} hint="Descriptions, metadata, and secondary copy." />
+          <ColorControl label="Surface color" value={page.surfaceColor || "#171717"} onChange={(value) => onPageLayoutChange({ surfaceColor: value })} hint="Cards, panels, and section surfaces." />
+          <ColorControl label="Border color" value={page.borderColor || "#4A453E"} onChange={(value) => onPageLayoutChange({ borderColor: value })} hint="Dividers, outlines, and section borders." />
+          <ColorControl label="Eyebrow text color" value={page.eyebrowColor || page.primaryColor || "#D2B48C"} onChange={(value) => onPageLayoutChange({ eyebrowColor: value })} hint="Small uppercase labels above headlines." />
+          <ColorControl label="Link and hover color" value={page.linkColor || page.primaryColor || "#D2B48C"} onChange={(value) => onPageLayoutChange({ linkColor: value })} hint="Links, social actions, and hover emphasis." />
+        </div>
+        <button type="button" onClick={() => onPageLayoutChange({ inheritTheme: true, primaryColor: "", backgroundColor: "", textColor: "", mutedColor: "", surfaceColor: "", borderColor: "", eyebrowColor: "", linkColor: "" })} className="mt-3 font-sub text-[11px] uppercase tracking-wide text-vb-muted hover:text-vb-purple-bright">Reset page colors</button>
       </StyleGroup>
       <StyleGroup title="Page background image" description="Upload a full-page image, then tune how it sits behind your page content.">
         <ImageAssetField
@@ -2381,16 +2388,15 @@ function StyleWorkspace({
       </StyleGroup>
       <StyleGroup title="Section appearance" description="Choose separate heading and body fonts, direct text sizes, color treatment, and alignment.">
         <div className="grid gap-3 sm:grid-cols-2">
-          <SelectField label="Color mood" value={layout.palette} options={["brand", "mono", "electric", "sunset", "forest"]} onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })} />
           <FontLibraryPicker label="Heading font" value={layout.fontFamily} onChange={(fontFamily) => onChange({ fontFamily })} />
           <FontLibraryPicker label="Body font" value={layout.bodyFontFamily} onChange={(bodyFontFamily) => onChange({ bodyFontFamily })} />
           <SelectField label="Eyebrow text size" value={layout.eyebrowSize} options={["12px", "14px", "16px", "18px", "20px"]} onChange={(value) => onChange({ eyebrowSize: value as Required<SectionLayout>["eyebrowSize"] })} />
           <SelectField label="Heading text size" value={layout.headingSize} options={["32px", "40px", "48px", "56px", "64px", "72px", "88px", "104px"]} onChange={(value) => onChange({ headingSize: value as Required<SectionLayout>["headingSize"] })} />
           <SelectField label="Body text size" value={layout.bodySize} options={["14px", "16px", "18px", "20px", "22px", "24px"]} onChange={(value) => onChange({ bodySize: value as Required<SectionLayout>["bodySize"] })} />
-          <SelectField label="Section background" value={layout.surface} options={["transparent", "ink", "mesh", "accent", "bordered"]} onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })} />
+          <SelectField label="Section background" value={layout.surface} options={["transparent", "ink", "mesh", "bordered"]} onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })} />
           <SelectField label="Text alignment" value={layout.alignment} options={["left", "center", "right"]} onChange={(value) => onChange({ alignment: value as Required<SectionLayout>["alignment"] })} />
         </div>
-        <ColorControl label="Section accent override" value={layout.customColor || page.primaryColor || "#7C2FCB"} onChange={(value) => onChange({ customColor: value })} hint="Optional: use this only when this section needs a different accent." />
+        <ColorControl label="Section accent override" value={layout.customColor || page.primaryColor || (page.inheritTheme === false ? "#D2B48C" : "#7C2FCB")} onChange={(value) => onChange({ customColor: value })} hint="Optional: use this only when this section needs a different accent." />
       </StyleGroup>
       <StyleGroup title="Spacing and finish" description="Control how much room the section gets and how polished its container feels.">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -2402,7 +2408,7 @@ function StyleWorkspace({
           <SelectField label="Glow motion" value={layout.glowAnimation} options={["none", "move", "pulse", "slowFlash"]} onChange={(value) => onChange({ glowAnimation: value as Required<SectionLayout>["glowAnimation"] })} />
           <SelectField label="Corner style" value={layout.borderRadius} options={["none", "soft", "rounded"]} onChange={(value) => onChange({ borderRadius: value as Required<SectionLayout>["borderRadius"] })} />
         </div>
-        <ColorControl label="Glow color" value={layout.glowColor || layout.customColor || page.primaryColor || "#7C2FCB"} onChange={(glowColor) => onChange({ glowColor })} hint="Used by glow shadows, neon borders, and animated glow treatments." />
+        <ColorControl label="Glow color" value={layout.glowColor || layout.customColor || page.primaryColor || (page.inheritTheme === false ? "#D2B48C" : "#7C2FCB")} onChange={(glowColor) => onChange({ glowColor })} hint="Used by glow shadows, neon borders, and animated glow treatments." />
         <p className="mt-2 font-body text-xs text-vb-silver/40">Choose “Thin” for a refined one-pixel line. “Slow Flash” creates a low-frequency promotional glow; “Move” travels around neon and gradient borders.</p>
       </StyleGroup>
       <details className="rounded-xl border border-white/[0.08] bg-vb-black/30 p-4">
@@ -2499,12 +2505,6 @@ function LayoutControls({
       </summary>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SelectField
-          label="Color palette"
-          value={layout.palette}
-          options={["brand", "mono", "electric", "sunset", "forest"]}
-          onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })}
-        />
-        <SelectField
           label="Font family"
           value={layout.fontFamily}
           options={BUILDER_FONT_OPTIONS.map((font) => font.id)}
@@ -2521,7 +2521,7 @@ function LayoutControls({
               id="builder-custom-accent-color"
               type="color"
               aria-label="Choose custom accent color"
-              value={layout.customColor || "#7c2fcb"}
+              value={layout.customColor || "#D2B48C"}
               onChange={(event) => onChange({ customColor: event.currentTarget.value.toUpperCase() })}
               className="h-10 w-12 cursor-pointer rounded-md border border-white/15 bg-transparent p-1"
             />
@@ -2530,7 +2530,7 @@ function LayoutControls({
               type="text"
               aria-label="Custom accent color hex value"
               value={layout.customColor}
-              placeholder="#7C2FCB"
+              placeholder="#D2B48C"
               maxLength={7}
               onChange={(event) => {
                 const value = event.currentTarget.value.toUpperCase();

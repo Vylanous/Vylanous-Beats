@@ -36,6 +36,10 @@ export function Layout({
   const pageVars = {
     ...(pageStyle?.primaryColor ? { "--page-primary": pageStyle.primaryColor } : {}),
     ...(pageStyle?.backgroundColor ? { "--page-background": pageStyle.backgroundColor } : {}),
+    ...(pageStyle?.textColor ? { "--page-text": pageStyle.textColor } : {}),
+    ...(pageStyle?.mutedColor ? { "--page-muted": pageStyle.mutedColor } : {}),
+    ...(pageStyle?.surfaceColor ? { "--page-surface": pageStyle.surfaceColor } : {}),
+    ...(pageStyle?.borderColor ? { "--page-border": pageStyle.borderColor } : {}),
     ...(pageStyle?.backgroundImage
       ? {
           "--page-background-image": `url("${pageStyle.backgroundImage.replace(/"/g, "%22")}")`,
@@ -60,7 +64,7 @@ export function Layout({
   return (
     <div
       style={pageVars}
-      className={`page-style grain-fixed min-h-screen flex flex-col ${background} ${chromeClasses} page-background-fit-${pageStyle?.backgroundImageFit || "cover"} page-background-position-${pageStyle?.backgroundImagePosition || "center"} page-treatment-${pageStyle?.pageTreatment || "none"}`}
+      className={`page-style ${pageStyle?.inheritTheme === false ? "page-theme-isolated" : ""} grain-fixed min-h-screen flex flex-col ${background} ${chromeClasses} page-background-fit-${pageStyle?.backgroundImageFit || "cover"} page-background-position-${pageStyle?.backgroundImagePosition || "center"} page-treatment-${pageStyle?.pageTreatment || "none"}`}
     >
       {(pageStyle?.backgroundImage || pageStyle?.pageTreatment !== "none") && (
         <>

@@ -195,8 +195,13 @@ const settingsSchema = z.object({
             showHeader: z.boolean().optional(),
             showFooter: z.boolean().optional(),
             background: z.enum(["default", "mesh", "ink"]).optional(),
+            inheritTheme: z.boolean().optional(),
             primaryColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
             backgroundColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            textColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            mutedColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            surfaceColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            borderColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
             backgroundImage: z.string().max(2000).optional(),
             backgroundImageFit: z.enum(["cover", "contain", "tile"]).optional(),
             backgroundImagePosition: z
@@ -753,8 +758,16 @@ export function adminRoutes(app: Hono) {
       header: { ...current.header, ...input.header },
       footer: { ...current.footer, ...input.footer },
       newsletterPopup: { ...current.newsletterPopup, ...input.newsletterPopup },
+      announcementBanner: input.announcementBanner
+        ? {
+            ...current.announcementBanner,
+            ...input.announcementBanner,
+            pageIds: input.announcementBanner.pageIds ?? current.announcementBanner.pageIds,
+          }
+        : current.announcementBanner,
       socials: input.socials ?? current.socials,
       pages: input.pages ?? current.pages,
+      deletedPageIds: input.deletedPageIds ?? current.deletedPageIds,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
       builder: input.builder
         ? {
