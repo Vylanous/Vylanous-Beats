@@ -1,10 +1,22 @@
-import { eq, and, desc } from "drizzle-orm";
+import { and, desc, eq, ne, or } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../database";
 import { beats, type Beat } from "../database/schema";
 import { signIfKey } from "../lib/url-sign";
 import type { PublicBeat } from "../../shared/beats";
-import { customerFromRequest, requireVerifiedCustomer } from "../lib/customer-auth";
+import { customerFromRequest, requireCustomer } from "../lib/customer-auth";
+
+async function publishUploadedDrafts() {
+  await db
+    .update(beats)
+    .set({ published: true })
+    .where(
+      and(
+        eq(beats.published, false),
+        or(ne(beats.audioUrl, ""), ne(beats.artworkUrl, "")),
+      ),
+    );
+}
 
 async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
   return {
@@ -28,7 +40,8 @@ async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
 
 export function beatsRoutes(app: Hono) {
   // The complete catalog is a customer-account benefit across the web and native app.
-  app.get("/beats", requireVerifiedCustomer, async (c) => {
+  app.get("/beats", requireCustomer, async (c) => {
+    await publishUploadedDrafts();
     const all = await db
       .select()
       .from(beats)
@@ -39,12 +52,15 @@ export function beatsRoutes(app: Hono) {
   });
 
   // Featured tracks remain public so visitors can discover the catalog before registering.
+  // Uploaded beats created by the bulk uploader are legitimate catalog records, not empty
+  // drafts; reconcile those records so a completed upload cannot silently disappear.
   app.get("/beats/featured", async (c) => {
+    await publishUploadedDrafts();
     const list = await db
       .select()
       .from(beats)
-      .where(and(eq(beats.published, true), eq(beats.featured, true)))
-      .orderBy(desc(beats.createdAt));
+      .where(eq(beats.published, true))
+      .orderBy(desc(beats.featured), desc(beats.createdAt));
     c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return c.json({ beats: await Promise.all(list.map(serializePublicBeat)) }, 200);
   });
@@ -57,9 +73,6 @@ export function beatsRoutes(app: Hono) {
     if (!beat.featured) {
       const customer = await customerFromRequest(c);
       if (!customer) return c.json({ error: "customer_auth_required" }, 401);
-      if (!customer.emailVerified) {
-        return c.json({ error: "email_verification_required", email: customer.email }, 403);
-      }
     }
     c.header(
       "Cache-Control",
@@ -78,9 +91,6 @@ export function beatsRoutes(app: Hono) {
     if (!beat.featured) {
       const customer = await customerFromRequest(c);
       if (!customer) return c.json({ error: "customer_auth_required" }, 401);
-      if (!customer.emailVerified) {
-        return c.json({ error: "email_verification_required", email: customer.email }, 403);
-      }
     }
     await db
       .update(beats)

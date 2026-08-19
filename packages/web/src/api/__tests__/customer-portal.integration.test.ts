@@ -42,7 +42,7 @@ describe("shared customer portal", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
-  test("keeps featured discovery public while requiring an account for the catalog, checkout, entitlements, and downloads", async () => {
+  test("allows account holders to browse while requiring verification for checkout and downloads", async () => {
     const featured = await seedBeat(true);
     const privateBeat = await seedBeat(false);
     expect((await app.request("/api/beats/featured")).status).toBe(200);
@@ -73,7 +73,14 @@ describe("shared customer portal", () => {
     });
     expect(resend.status).toBe(202);
     const unverifiedHeaders = { Authorization: `Bearer ${registered.session.token}` };
-    expect((await app.request("/api/beats", { headers: unverifiedHeaders })).status).toBe(403);
+    expect((await app.request("/api/beats", { headers: unverifiedHeaders })).status).toBe(200);
+    expect((await app.request(`/api/beats/${privateBeat.slug}`, { headers: unverifiedHeaders })).status).toBe(200);
+    const unverifiedCheckout = await app.request("/api/checkout", {
+      method: "POST",
+      headers: { ...unverifiedHeaders, "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [{ beatId: privateBeat.id, tier: "free" }] }),
+    });
+    expect(unverifiedCheckout.status).toBe(403);
     const verification = await createCustomerVerificationToken(registered.customer.id);
     const verified = await app.request("/api/customer/verify-email", {
       method: "POST",
@@ -81,6 +88,13 @@ describe("shared customer portal", () => {
       body: JSON.stringify({ token: verification.token }),
     });
     expect(verified.status).toBe(200);
+    const browserVerification = await createCustomerVerificationToken(registered.customer.id);
+    const browserRedirect = await app.request(
+      `/api/customer/verify-email?token=${encodeURIComponent(browserVerification.token)}`,
+      { redirect: "manual" },
+    );
+    expect(browserRedirect.status).toBe(302);
+    expect(browserRedirect.headers.get("location")).toContain("/verify-email?status=success");
     const replay = await app.request("/api/customer/verify-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

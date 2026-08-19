@@ -344,3 +344,30 @@
 - [x] Run regression tests, typecheck, lint, production build, and final diff review.
 - [x] Commit and push the verified post-deployment fixes to GitHub.
 - [x] Report live verification status and any required deployment follow-up.
+
+## Beat Vault Missing User Beats Diagnosis
+
+- [ ] Verify the live Beat Vault output, public API response, database beat records, and visibility fields.
+- [ ] Fix the confirmed data, visibility, API, page configuration, or rendering cause directly in GitHub.
+- [ ] Run regression tests, typecheck, lint, production build, and final diff review.
+- [ ] Commit and push the verified Beat Vault repair to GitHub.
+- [ ] Report the exact deployment verification result.
+
+## Email Verification Redirect Repair
+
+- [ ] Inspect verification email generation, callback route, frontend routes, and existing tests.
+- [ ] Implement a secure verification completion page and redirect flow with success and failure states.
+- [ ] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
+- [ ] Commit and push the verified email-verification redirect repair to GitHub.
+- [ ] Report the deployment and verification behavior.
+
+## Customer Catalog Access Update
+
+- [x] Redirect GET email verification links back to the website with success or failure status.
+- [x] Allow authenticated customer accounts to browse the full published beat catalog without email verification.
+- [x] Keep email verification required for purchasing, checkout, entitlements, and downloads.
+- [x] Add regression coverage and run full repository validation.
+- [ ] Commit and push the verified access-control update to GitHub.
+
+- [x] Verify every Beat Vault artwork URL and image element loads from the deployed storage path.
+- [x] Repair artwork URL normalization, signing, fallback rendering, or card image behavior as needed.

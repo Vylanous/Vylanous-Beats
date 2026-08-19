@@ -4,6 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { db } from "../database";
 import { customers, subscribers } from "../database/schema";
+import { appUrl } from "../lib/util";
 import {
   createCustomerSession,
   createCustomerVerificationToken,
@@ -144,11 +145,20 @@ export function customerPortalRoutes(app: Hono) {
   });
 
   app.get("/customer/verify-email", async (c) => {
+    const base = appUrl() || "https://www.vylanous.com";
+    const resultUrl = new URL("/verify-email", base);
     const parsed = verificationTokenSchema.safeParse({ token: c.req.query("token") });
-    if (!parsed.success) return c.json({ error: "invalid_or_expired_verification_token" }, 400);
+    if (!parsed.success) {
+      resultUrl.searchParams.set("status", "invalid_or_expired");
+      return c.redirect(resultUrl.toString(), 302);
+    }
     const customer = await verifyCustomerEmailToken(parsed.data.token);
-    if (!customer) return c.json({ error: "invalid_or_expired_verification_token" }, 400);
-    return c.json({ ok: true, customer: publicCustomer(customer) }, 200);
+    if (!customer) {
+      resultUrl.searchParams.set("status", "invalid_or_expired");
+      return c.redirect(resultUrl.toString(), 302);
+    }
+    resultUrl.searchParams.set("status", "success");
+    return c.redirect(resultUrl.toString(), 302);
   });
 
   app.post("/customer/login", zValidator("json", loginSchema), async (c) => {
