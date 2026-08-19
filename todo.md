@@ -409,4 +409,4 @@
 - [x] Add backward-compatible custom color and font fields with server validation.
 - [x] Build hex and color-picker controls, expanded font selection, and live section styling.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
-- [ ] Commit and push the verified custom color and font expansion to GitHub.
+- [x] Commit and push the verified custom color and font expansion to GitHub.
