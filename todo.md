@@ -367,7 +367,7 @@
 - [x] Allow authenticated customer accounts to browse the full published beat catalog without email verification.
 - [x] Keep email verification required for purchasing, checkout, entitlements, and downloads.
 - [x] Add regression coverage and run full repository validation.
-- [ ] Commit and push the verified access-control update to GitHub.
+- [x] Commit and push the verified access-control update to GitHub.
 
 - [x] Verify every Beat Vault artwork URL and image element loads from the deployed storage path.
 - [x] Repair artwork URL normalization, signing, fallback rendering, or card image behavior as needed.
