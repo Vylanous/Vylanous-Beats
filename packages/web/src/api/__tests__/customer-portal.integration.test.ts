@@ -45,7 +45,11 @@ describe("shared customer portal", () => {
   test("allows account holders to browse while requiring verification for checkout and downloads", async () => {
     const featured = await seedBeat(true);
     const privateBeat = await seedBeat(false);
-    expect((await app.request("/api/beats/featured")).status).toBe(200);
+    const publicFeatured = await app.request("/api/beats/featured");
+    expect(publicFeatured.status).toBe(200);
+    const featuredPayload = (await publicFeatured.json()) as { beats: { id: string }[] };
+    expect(featuredPayload.beats.map((beat) => beat.id)).toContain(featured.id);
+    expect(featuredPayload.beats.map((beat) => beat.id)).not.toContain(privateBeat.id);
     expect((await app.request("/api/beats")).status).toBe(401);
     expect((await app.request(`/api/beats/${privateBeat.slug}`)).status).toBe(401);
     expect((await app.request(`/api/beats/${featured.slug}`)).status).toBe(200);
@@ -118,10 +122,11 @@ describe("shared customer portal", () => {
     expect(dashboard.status).toBe(200);
     const portal = (await dashboard.json()) as {
       insights: { licensesOwned: number };
-      entitlements: { id: string }[];
+      entitlements: { id: string; downloadUrl?: string }[];
     };
     expect(portal.insights.licensesOwned).toBe(1);
     expect(portal.entitlements).toHaveLength(1);
+    expect(portal.entitlements[0].downloadUrl).toBeUndefined();
     expect(
       (
         await app.request(`/api/customer/entitlements/${portal.entitlements[0].id}/download`, {

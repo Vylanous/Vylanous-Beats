@@ -34,7 +34,7 @@ export function ordersRoutes(app: Hono) {
             if (it.licenseTier === "exclusive") {
               await db
                 .update(beats)
-                .set({ soldExclusive: true, published: false })
+                .set({ soldExclusive: true, published: false, featured: false })
                 .where(eq(beats.id, it.beatId));
             }
           }

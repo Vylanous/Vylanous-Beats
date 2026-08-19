@@ -57,12 +57,7 @@ export async function customerEntitlementsFor(customerId: string) {
       ),
     )
     .orderBy(desc(customerEntitlements.createdAt));
-  return Promise.all(
-    rows.map(async (row) => ({
-      ...row,
-      downloadUrl: await signIfKey(row.fileUrl),
-    })),
-  );
+  return rows.map(({ fileUrl: _fileUrl, ...entitlement }) => entitlement);
 }
 
 export async function customerDashboard(customer: Customer) {

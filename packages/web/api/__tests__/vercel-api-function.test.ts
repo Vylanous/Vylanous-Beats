@@ -16,6 +16,14 @@ describe("Vercel API function", () => {
     const response = await handler(new Request("http://localhost/api/health"));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ status: "ok" });
+    expect(await response.json()).toMatchObject({
+      status: "ok",
+      checks: {
+        appUrlConfigured: expect.any(Boolean),
+        emailConfigured: expect.any(Boolean),
+        paymentsConfigured: expect.any(Boolean),
+        storageConfigured: expect.any(Boolean),
+      },
+    });
   });
 });

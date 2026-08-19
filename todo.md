@@ -486,3 +486,25 @@ User request: support child pages such as `/artist/blog`, allow pages to be hidd
 User request: replace abstract typography labels such as Brand, Editorial, and Mono with 50 practical font options, including Anton, Barlow Condensed, and Arial Narrow; retain every color customization option; remove unnecessary controls; and make the Builder layout clean and organized.
 
 Additional request: add a safe Page Builder page-deletion option, protect core system pages, and handle child pages clearly when their parent is deleted.
+
+## Repository-Wide Production Readiness Audit
+
+- [x] Inventory repository structure, scripts, dependencies, environment handling, existing test coverage, and current Git status.
+- [x] Audit customer storefront, catalog, checkout, entitlement, download, authentication, and content rendering flows.
+- [x] Audit admin customization, page builder, uploads, settings persistence, routing, navigation, and error handling.
+- [x] Audit API validation, storage, email, configuration, dependencies, and production build tooling.
+- [x] Implement verified fixes with targeted regression coverage.
+- [x] Run full relevant tests, typecheck, lint, production build, route checks, and final diff/conflict review.
+- [ ] Commit and push the verified production-readiness repairs directly to GitHub main.
+
+User request: review the entire Vylanous Beats repository for code errors, likely future failures, bugs, clutter, and customer/admin journey risks; repair verified issues while reporting any external operational dependencies honestly.
+
+### Verified audit findings to repair
+
+- [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.
+- [x] Remove signed download URLs from unverified customer dashboard responses while retaining verified download access.
+- [x] Ensure delivery emails always use a valid public-site URL fallback.
+- [x] Keep mobile exclusive-purchase fulfillment consistent with web fulfillment by removing the beat from public sale.
+- [x] Validate checkout before order creation, reject duplicate/unpublished cart items, and prevent orphan pending orders when Stripe is unavailable or session creation fails.
+- [x] Restrict credentialed API CORS to configured public origins and add safe runtime readiness reporting without leaking secrets.
+- [x] Update high-risk direct web dependencies identified by the package audit where compatible and covered by validation.

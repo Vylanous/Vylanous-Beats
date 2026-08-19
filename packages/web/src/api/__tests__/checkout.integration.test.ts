@@ -118,4 +118,28 @@ describe("checkout", () => {
     const res = await checkout("buyer@example.com", [{ beatId: beat.id, tier: "exclusive" }]);
     expect(res.status).toBe(409);
   });
+
+  test("unpublished and duplicate cart items are rejected before order creation", async () => {
+    const unpublished = await seedBeat({ published: false });
+    const unavailable = await checkout("unpublished@example.com", [
+      { beatId: unpublished.id, tier: "free" },
+    ]);
+    expect(unavailable.status).toBe(409);
+
+    const beat = await seedBeat();
+    const duplicate = await checkout("duplicate@example.com", [
+      { beatId: beat.id, tier: "free" },
+      { beatId: beat.id, tier: "free" },
+    ]);
+    expect(duplicate.status).toBe(400);
+  });
+
+  test("paid checkout fails cleanly before creating an order when Stripe is unavailable", async () => {
+    const beat = await seedBeat();
+    const before = await db.select().from(orders);
+    const response = await checkout("stripe-missing@example.com", [{ beatId: beat.id, tier: "mp3" }]);
+    expect(response.status).toBe(503);
+    const after = await db.select().from(orders);
+    expect(after).toHaveLength(before.length);
+  });
 });

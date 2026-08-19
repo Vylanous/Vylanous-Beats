@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Download, Mail, Music2, ShoppingBag } from "lucide-react";
 import { Layout } from "../components/layout";
-import { useCustomer } from "../lib/customer";
+import { customerFetch, useCustomer } from "../lib/customer";
 import { formatCad } from "../../shared/licenses";
 
 export default function DashboardPage() {
@@ -13,6 +13,29 @@ export default function DashboardPage() {
   const [verificationStatus, setVerificationStatus] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
+  const [downloadError, setDownloadError] = useState("");
+  const [downloadingId, setDownloadingId] = useState("");
+  const downloadEntitlement = async (entitlementId: string) => {
+    setDownloadError("");
+    setDownloadingId(entitlementId);
+    try {
+      const response = await customerFetch(`/api/customer/entitlements/${entitlementId}/download`);
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        setDownloadError(
+          payload.error === "email_verification_required"
+            ? "Verify your email before downloading your licensed files."
+            : "Your download could not be prepared. Please try again.",
+        );
+        return;
+      }
+      window.location.assign(payload.url);
+    } catch {
+      setDownloadError("Your download could not be prepared. Please check your connection and try again.");
+    } finally {
+      setDownloadingId("");
+    }
+  };
   useEffect(() => {
     if (ready && !customer) navigate("/login");
   }, [customer, navigate, ready]);
@@ -116,6 +139,11 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="mt-6 space-y-3">
+              {downloadError && (
+                <p className="rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 font-body text-sm text-amber-300">
+                  {downloadError}
+                </p>
+              )}
               {dashboard.entitlements.length ? (
                 dashboard.entitlements.map((entitlement) => (
                   <div
@@ -130,12 +158,15 @@ export default function DashboardPage() {
                         {entitlement.licenseName}
                       </p>
                     </div>
-                    <a
-                      href={entitlement.downloadUrl}
+                    <button
+                      type="button"
+                      disabled={downloadingId === entitlement.id || !customer.emailVerified}
+                      onClick={() => downloadEntitlement(entitlement.id)}
                       className="inline-flex items-center gap-2 rounded-lg border border-vb-purple/50 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10"
                     >
-                      <Download size={14} /> Download
-                    </a>
+                      <Download size={14} />
+                      {downloadingId === entitlement.id ? "Preparing…" : "Download"}
+                    </button>
                   </div>
                 ))
               ) : (

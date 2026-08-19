@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "bun:test";
 import { formatAdminError } from "./admin";
 
 describe("admin error formatting", () => {

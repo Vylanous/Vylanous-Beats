@@ -199,7 +199,10 @@ export function mobilePurchaseRoutes(app: Hono) {
           });
 
           if (expectedTier === "exclusive") {
-            await tx.update(beats).set({ soldExclusive: true }).where(eq(beats.id, beat.id));
+            await tx
+              .update(beats)
+              .set({ soldExclusive: true, published: false, featured: false })
+              .where(eq(beats.id, beat.id));
           }
 
           return { orderId, downloadToken, tier: expectedTier, replay: false };

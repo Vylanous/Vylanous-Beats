@@ -33,7 +33,7 @@ export async function sendCustomerVerificationEmail(email: string, token: string
 }
 
 export async function sendDeliveryEmail(email: string, orderId: string, token: string) {
-  const base = appUrl();
+  const base = appUrl() || "https://www.vylanous.com";
   const link = `${base}/success?order=${orderId}&token=${token}`;
   const { apiKey, from } = emailConfig();
   const res = await fetch("https://api.resend.com/emails", {
