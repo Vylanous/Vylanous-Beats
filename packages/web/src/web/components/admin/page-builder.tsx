@@ -31,7 +31,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
-import { FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
+import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
   BuilderPage,
@@ -123,13 +123,12 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   borderRadius: "rounded",
   emphasis: "standard",
   palette: "brand",
-  typography: "brand",
   headingScale: "standard",
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
   customColor: "",
-  fontFamily: "brand",
+  fontFamily: "anton",
 };
 
 function newId(prefix: string) {
@@ -278,6 +277,32 @@ export default function PageBuilderPanel() {
     updateSettings({
       pages: settings.pages.map((candidate) => (candidate.id === next.id ? next : candidate)),
     });
+  };
+
+  const deletePage = (target: BuilderPage) => {
+    if (!settings || target.isSystem) {
+      setNotice("Core pages stay protected and cannot be deleted.");
+      return;
+    }
+    const children = settings.pages.filter((candidate) => candidate.parentPageId === target.id);
+    const childMessage = children.length
+      ? ` ${children.length} child ${children.length === 1 ? "page will" : "pages will"} remain published as standalone pages at their current URLs.`
+      : "";
+    if (!window.confirm(`Delete “${target.title}”? This cannot be undone.${childMessage}`)) return;
+    const remainingPages = settings.pages
+      .filter((candidate) => candidate.id !== target.id)
+      .map((candidate) =>
+        candidate.parentPageId === target.id ? { ...candidate, parentPageId: undefined } : candidate,
+      );
+    const nextPage = remainingPages.find((candidate) => !candidate.isSystem) || remainingPages[0];
+    updateSettings({ pages: remainingPages });
+    setSelectedId(nextPage?.id || "");
+    setFocusedSectionId(nextPage?.sections[0]?.id || "");
+    setNotice(
+      children.length
+        ? `Deleted ${target.title}. Its child pages are now standalone; review their parent and path settings.`
+        : `Deleted ${target.title}.`,
+    );
   };
 
   const save = async (checkpointLabel?: string) => {
@@ -763,7 +788,12 @@ export default function PageBuilderPanel() {
         </aside>
 
         <div className="space-y-5">
-          <PagePropertiesEditor page={page} pages={settings.pages} onChange={updatePage} />
+          <PagePropertiesEditor
+            page={page}
+            pages={settings.pages}
+            onChange={updatePage}
+            onDelete={() => deletePage(page)}
+          />
           <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -1381,10 +1411,12 @@ function PagePropertiesEditor({
   page,
   pages,
   onChange,
+  onDelete,
 }: {
   page: BuilderPage;
   pages: BuilderPage[];
   onChange: (page: BuilderPage) => void;
+  onDelete: () => void;
 }) {
   const setField = <K extends keyof BuilderPage>(field: K, value: BuilderPage[K]) =>
     onChange({ ...page, [field]: value });
@@ -1413,16 +1445,27 @@ function PagePropertiesEditor({
               : "Set the URL, page chrome, and visibility before publishing."}
           </p>
         </div>
-        {page.published && (
-          <a
-            href={page.path || `/${page.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 font-sub text-sm uppercase tracking-wide text-vb-purple-bright hover:text-white"
-          >
-            Preview live page <Eye size={15} />
-          </a>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {page.published && (
+            <a
+              href={page.path || `/${page.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 font-sub text-sm uppercase tracking-wide text-vb-purple-bright hover:text-white"
+            >
+              Preview live page <Eye size={15} />
+            </a>
+          )}
+          {!page.isSystem && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/30 px-3 py-2 font-sub text-xs uppercase tracking-wide text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
+            >
+              <Trash2 size={14} /> Delete page
+            </button>
+          )}
+        </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
@@ -2206,11 +2249,10 @@ function StyleWorkspace({
           <ToggleCard label="Footer" description="Footer links and signup accents" checked={Boolean(page.chrome?.footer)} onChange={(checked) => onPageLayoutChange({ chrome: { ...page.chrome, footer: checked } })} />
         </div>
       </StyleGroup>
-      <StyleGroup title="Section personality" description="These choices affect the section currently selected above.">
+      <StyleGroup title="Section appearance" description="Choose this section’s color treatment, real font, headline size, and alignment.">
         <div className="grid gap-3 sm:grid-cols-2">
           <SelectField label="Color mood" value={layout.palette} options={["brand", "mono", "electric", "sunset", "forest"]} onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })} />
-          <SelectField label="Text personality" value={layout.typography} options={["brand", "editorial", "mono", "condensed"]} onChange={(value) => onChange({ typography: value as Required<SectionLayout>["typography"] })} />
-          <SelectField label="Font family" value={layout.fontFamily} options={["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]} onChange={(value) => onChange({ fontFamily: value as Required<SectionLayout>["fontFamily"] })} />
+          <FontLibraryPicker value={layout.fontFamily} onChange={(fontFamily) => onChange({ fontFamily })} />
           <SelectField label="Headline scale" value={layout.headingScale} options={["compact", "standard", "display", "hero"]} onChange={(value) => onChange({ headingScale: value as Required<SectionLayout>["headingScale"] })} />
           <SelectField label="Section background" value={layout.surface} options={["transparent", "ink", "mesh", "accent", "bordered"]} onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })} />
           <SelectField label="Text alignment" value={layout.alignment} options={["left", "center", "right"]} onChange={(value) => onChange({ alignment: value as Required<SectionLayout>["alignment"] })} />
@@ -2228,7 +2270,7 @@ function StyleWorkspace({
         </div>
       </StyleGroup>
       <details className="rounded-xl border border-white/[0.08] bg-vb-black/30 p-4">
-        <summary className="cursor-pointer font-sub text-xs uppercase tracking-[0.16em] text-vb-silver/60 hover:text-vb-purple-bright">Media and grid options</summary>
+        <summary className="cursor-pointer font-sub text-xs uppercase tracking-[0.16em] text-vb-silver/60 hover:text-vb-purple-bright">Optional media and grid controls</summary>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <SelectField label="Column count" value={String(layout.columns)} options={["1", "2", "3", "4"]} onChange={(value) => onChange({ columns: Number(value) as 1 | 2 | 3 | 4 })} />
           <SelectField label="Media placement" value={layout.mediaPosition} options={["none", "left", "right", "background", "top"]} onChange={(value) => onChange({ mediaPosition: value as Required<SectionLayout>["mediaPosition"] })} />
@@ -2246,6 +2288,37 @@ function StyleGroup({ title, description, children }: { title: string; descripti
 
 function ColorControl({ label, value, hint, onChange }: { label: string; value: string; hint: string; onChange: (value: string) => void }) {
   return <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">{label}<span className="mt-1 block normal-case tracking-normal text-vb-silver/35">{hint}</span><div className="mt-2 flex items-center gap-2"><input type="color" aria-label={`${label} color picker`} value={/^#[0-9A-Fa-f]{6}$/.test(value) ? value : "#7C2FCB"} onChange={(event) => onChange(event.currentTarget.value.toUpperCase())} className="h-10 w-12 cursor-pointer rounded-md border border-white/15 bg-transparent p-1" /><input type="text" aria-label={`${label} hex value`} value={value} maxLength={7} onChange={(event) => { const next = event.currentTarget.value.toUpperCase(); if (next === "" || /^#[0-9A-F]{0,6}$/.test(next)) onChange(next); }} className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-vb-black/50 px-3 font-mono text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright" /></div></label>;
+}
+
+function FontLibraryPicker({
+  value,
+  onChange,
+}: {
+  value: Required<SectionLayout>["fontFamily"];
+  onChange: (value: Required<SectionLayout>["fontFamily"]) => void;
+}) {
+  const selected = BUILDER_FONT_OPTIONS.find((font) => font.id === value) || BUILDER_FONT_OPTIONS[0];
+  return (
+    <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
+      Font family
+      <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
+        Choose from 50 practical display, sans, serif, and mono fonts.
+      </span>
+      <select
+        aria-label="Font family"
+        value={selected.id}
+        onChange={(event) => onChange(event.target.value as Required<SectionLayout>["fontFamily"])}
+        style={{ fontFamily: selected.family }}
+        className="mt-2 w-full rounded-lg border border-white/10 bg-vb-black/50 px-3 py-2.5 text-base normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright"
+      >
+        {BUILDER_FONT_OPTIONS.map((font) => (
+          <option key={font.id} value={font.id} style={{ fontFamily: font.family }}>
+            {font.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 }
 
 function ToggleCard({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
@@ -2274,17 +2347,9 @@ function LayoutControls({
           onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })}
         />
         <SelectField
-          label="Typography preset"
-          value={layout.typography}
-          options={["brand", "editorial", "mono", "condensed"]}
-          onChange={(value) =>
-            onChange({ typography: value as Required<SectionLayout>["typography"] })
-          }
-        />
-        <SelectField
           label="Font family"
           value={layout.fontFamily}
-          options={["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]}
+          options={BUILDER_FONT_OPTIONS.map((font) => font.id)}
           onChange={(value) =>
             onChange({ fontFamily: value as Required<SectionLayout>["fontFamily"] })
           }

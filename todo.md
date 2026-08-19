@@ -473,3 +473,16 @@ User report: saving Site Settings displays `[object Object]` instead of a useful
 - [x] Commit and push the hierarchical sub-navigation feature directly to GitHub main.
 
 User request: support child pages such as `/artist/blog`, allow pages to be hidden from the global header/footer, and optionally show child-page links as a local sub-navigation menu on their parent section.
+
+## Page Builder Workflow Cleanup and Font Library
+
+- [x] Audit the Builder workspace, style controls, typography model, available fonts, and redundant options.
+- [x] Add a curated 50-font library and migrate saved font selections with backward compatibility.
+- [x] Reorganize the Builder controls into a workflow-first layout and remove redundant typography options.
+- [x] Apply selected fonts reliably in public rendering while preserving existing page and section color controls.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and visual review.
+- [ ] Commit and push the Builder cleanup and font library directly to GitHub main.
+
+User request: replace abstract typography labels such as Brand, Editorial, and Mono with 50 practical font options, including Anton, Barlow Condensed, and Arial Narrow; retain every color customization option; remove unnecessary controls; and make the Builder layout clean and organized.
+
+Additional request: add a safe Page Builder page-deletion option, protect core system pages, and handle child pages clearly when their parent is deleted.

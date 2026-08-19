@@ -47,6 +47,83 @@ export type PageSectionType =
   | "licenseTiers"
   | "licenseComparison";
 
+export const BUILDER_FONT_OPTIONS = [
+  { id: "anton", label: "Anton", family: "Anton, sans-serif", googleFamily: "Anton" },
+  { id: "archivo-black", label: "Archivo Black", family: "'Archivo Black', sans-serif", googleFamily: "Archivo Black" },
+  { id: "barlow", label: "Barlow", family: "Barlow, sans-serif", googleFamily: "Barlow" },
+  { id: "barlow-condensed", label: "Barlow Condensed", family: "'Barlow Condensed', sans-serif", googleFamily: "Barlow Condensed" },
+  { id: "bebas-neue", label: "Bebas Neue", family: "'Bebas Neue', sans-serif", googleFamily: "Bebas Neue" },
+  { id: "big-shoulders", label: "Big Shoulders Display", family: "'Big Shoulders Display', sans-serif", googleFamily: "Big Shoulders Display" },
+  { id: "black-ops-one", label: "Black Ops One", family: "'Black Ops One', sans-serif", googleFamily: "Black Ops One" },
+  { id: "bodoni-moda", label: "Bodoni Moda", family: "'Bodoni Moda', serif", googleFamily: "Bodoni Moda" },
+  { id: "cormorant-garamond", label: "Cormorant Garamond", family: "'Cormorant Garamond', serif", googleFamily: "Cormorant Garamond" },
+  { id: "dela-gothic-one", label: "Dela Gothic One", family: "'Dela Gothic One', sans-serif", googleFamily: "Dela Gothic One" },
+  { id: "dm-sans", label: "DM Sans", family: "'DM Sans', sans-serif", googleFamily: "DM Sans" },
+  { id: "dm-serif-display", label: "DM Serif Display", family: "'DM Serif Display', serif", googleFamily: "DM Serif Display" },
+  { id: "dosis", label: "Dosis", family: "Dosis, sans-serif", googleFamily: "Dosis" },
+  { id: "exo-2", label: "Exo 2", family: "'Exo 2', sans-serif", googleFamily: "Exo 2" },
+  { id: "fjalla-one", label: "Fjalla One", family: "'Fjalla One', sans-serif", googleFamily: "Fjalla One" },
+  { id: "futura", label: "Futura", family: "Futura, 'Trebuchet MS', sans-serif" },
+  { id: "ibm-plex-mono", label: "IBM Plex Mono", family: "'IBM Plex Mono', monospace", googleFamily: "IBM Plex Mono" },
+  { id: "ibm-plex-sans", label: "IBM Plex Sans", family: "'IBM Plex Sans', sans-serif", googleFamily: "IBM Plex Sans" },
+  { id: "inter", label: "Inter", family: "Inter, sans-serif", googleFamily: "Inter" },
+  { id: "jost", label: "Jost", family: "Jost, sans-serif", googleFamily: "Jost" },
+  { id: "josefin-sans", label: "Josefin Sans", family: "'Josefin Sans', sans-serif", googleFamily: "Josefin Sans" },
+  { id: "karla", label: "Karla", family: "Karla, sans-serif", googleFamily: "Karla" },
+  { id: "league-gothic", label: "League Gothic", family: "'League Gothic', sans-serif", googleFamily: "League Gothic" },
+  { id: "libre-baskerville", label: "Libre Baskerville", family: "'Libre Baskerville', serif", googleFamily: "Libre Baskerville" },
+  { id: "manrope", label: "Manrope", family: "Manrope, sans-serif", googleFamily: "Manrope" },
+  { id: "montserrat", label: "Montserrat", family: "Montserrat, sans-serif", googleFamily: "Montserrat" },
+  { id: "noto-sans", label: "Noto Sans", family: "'Noto Sans', sans-serif", googleFamily: "Noto Sans" },
+  { id: "nunito-sans", label: "Nunito Sans", family: "'Nunito Sans', sans-serif", googleFamily: "Nunito Sans" },
+  { id: "oswald", label: "Oswald", family: "Oswald, sans-serif", googleFamily: "Oswald" },
+  { id: "outfit", label: "Outfit", family: "Outfit, sans-serif", googleFamily: "Outfit" },
+  { id: "playfair-display", label: "Playfair Display", family: "'Playfair Display', serif", googleFamily: "Playfair Display" },
+  { id: "plus-jakarta-sans", label: "Plus Jakarta Sans", family: "'Plus Jakarta Sans', sans-serif", googleFamily: "Plus Jakarta Sans" },
+  { id: "poppins", label: "Poppins", family: "Poppins, sans-serif", googleFamily: "Poppins" },
+  { id: "press-start-2p", label: "Press Start 2P", family: "'Press Start 2P', monospace", googleFamily: "Press Start 2P" },
+  { id: "rajdhani", label: "Rajdhani", family: "Rajdhani, sans-serif", googleFamily: "Rajdhani" },
+  { id: "raleway", label: "Raleway", family: "Raleway, sans-serif", googleFamily: "Raleway" },
+  { id: "roboto-condensed", label: "Roboto Condensed", family: "'Roboto Condensed', sans-serif", googleFamily: "Roboto Condensed" },
+  { id: "roboto-slab", label: "Roboto Slab", family: "'Roboto Slab', serif", googleFamily: "Roboto Slab" },
+  { id: "rubik", label: "Rubik", family: "Rubik, sans-serif", googleFamily: "Rubik" },
+  { id: "russo-one", label: "Russo One", family: "'Russo One', sans-serif", googleFamily: "Russo One" },
+  { id: "space-grotesk", label: "Space Grotesk", family: "'Space Grotesk', sans-serif", googleFamily: "Space Grotesk" },
+  { id: "space-mono", label: "Space Mono", family: "'Space Mono', monospace", googleFamily: "Space Mono" },
+  { id: "spline-sans", label: "Spline Sans", family: "'Spline Sans', sans-serif", googleFamily: "Spline Sans" },
+  { id: "syne", label: "Syne", family: "Syne, sans-serif", googleFamily: "Syne" },
+  { id: "teko", label: "Teko", family: "Teko, sans-serif", googleFamily: "Teko" },
+  { id: "times-new-roman", label: "Times New Roman", family: "'Times New Roman', Times, serif" },
+  { id: "titillium-web", label: "Titillium Web", family: "'Titillium Web', sans-serif", googleFamily: "Titillium Web" },
+  { id: "urbanist", label: "Urbanist", family: "Urbanist, sans-serif", googleFamily: "Urbanist" },
+  { id: "work-sans", label: "Work Sans", family: "'Work Sans', sans-serif", googleFamily: "Work Sans" },
+  { id: "arial-narrow", label: "Arial Narrow", family: "'Arial Narrow', Arial, sans-serif" },
+] as const;
+
+export type BuilderFontId = (typeof BUILDER_FONT_OPTIONS)[number]["id"];
+export const BUILDER_FONT_IDS = BUILDER_FONT_OPTIONS.map((font) => font.id) as [BuilderFontId, ...BuilderFontId[]];
+
+const LEGACY_SECTION_FONT_MAP: Record<string, BuilderFontId> = {
+  brand: "anton",
+  anton: "anton",
+  league: "league-gothic",
+  barlow: "barlow-condensed",
+  editorial: "playfair-display",
+  mono: "space-mono",
+  condensed: "arial-narrow",
+};
+
+export function normalizeBuilderFont(value: unknown): BuilderFontId {
+  const candidate = typeof value === "string" ? value : "";
+  if ((BUILDER_FONT_IDS as readonly string[]).includes(candidate)) return candidate as BuilderFontId;
+  return LEGACY_SECTION_FONT_MAP[candidate] || "anton";
+}
+
+export function getBuilderFont(value: unknown) {
+  const id = normalizeBuilderFont(value);
+  return BUILDER_FONT_OPTIONS.find((font) => font.id === id) || BUILDER_FONT_OPTIONS[0];
+}
+
 export interface SectionLayout {
   width?: "narrow" | "standard" | "wide" | "full";
   spacing?: "tight" | "normal" | "relaxed" | "cinematic";
@@ -60,13 +137,12 @@ export interface SectionLayout {
   borderRadius?: "none" | "soft" | "rounded";
   emphasis?: "standard" | "accent" | "muted";
   palette?: "brand" | "mono" | "electric" | "sunset" | "forest";
-  typography?: "brand" | "editorial" | "mono" | "condensed";
   headingScale?: "compact" | "standard" | "display" | "hero";
   paddingX?: "none" | "tight" | "normal" | "wide";
   shadow?: "none" | "soft" | "glow" | "dramatic";
   borderStyle?: "none" | "subtle" | "accent" | "chrome";
   customColor?: string;
-  fontFamily?: "brand" | "anton" | "league" | "barlow" | "editorial" | "mono" | "condensed";
+  fontFamily?: BuilderFontId;
 }
 
 export type PressKitPlatform =
@@ -369,13 +445,12 @@ const DEFAULT_SECTION_LAYOUT: Required<SectionLayout> = {
   borderRadius: "rounded",
   emphasis: "standard",
   palette: "brand",
-  typography: "brand",
   headingScale: "standard",
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
   customColor: "",
-  fontFamily: "brand",
+  fontFamily: "anton",
 };
 
 function makeSection(
@@ -813,7 +888,12 @@ function mergePage(
         ...storedSection,
         id: storedSection.id || `section_${index}`,
         items: mergeSectionItems(template?.items, storedSection.items),
-        layout: { ...DEFAULT_SECTION_LAYOUT, ...template?.layout, ...storedSection.layout },
+        layout: {
+          ...DEFAULT_SECTION_LAYOUT,
+          ...template?.layout,
+          ...storedSection.layout,
+          fontFamily: normalizeBuilderFont(storedSection.layout?.fontFamily),
+        },
       } as PageSection;
     }),
   };

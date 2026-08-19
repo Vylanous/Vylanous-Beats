@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mergeSettings } from "./site-settings";
+import { BUILDER_FONT_OPTIONS, mergeSettings } from "./site-settings";
 
 describe("Site Builder settings migration", () => {
   test("adds all core public pages and global chrome to legacy page-builder settings", () => {
@@ -169,6 +169,30 @@ describe("Site Builder settings migration", () => {
       showInNav: false,
       showInFooter: false,
     });
+  });
+
+  test("provides fifty concrete Builder fonts and migrates legacy font selections", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_font_test",
+          slug: "font-test",
+          title: "Font Test",
+          navLabel: "Font Test",
+          published: true,
+          showInNav: false,
+          sections: [{ id: "font_section", type: "text", layout: { fontFamily: "mono" as never } }],
+        },
+      ],
+    });
+
+    expect(BUILDER_FONT_OPTIONS).toHaveLength(50);
+    expect(BUILDER_FONT_OPTIONS.map((font) => font.label)).toEqual(
+      expect.arrayContaining(["Anton", "Barlow Condensed", "Arial Narrow"]),
+    );
+    expect(settings.pages.find((page) => page.id === "page_font_test")?.sections[0].layout?.fontFamily).toBe(
+      "space-mono",
+    );
   });
 
   test("preserves Press Kit platform and audience analytics through settings migration", () => {

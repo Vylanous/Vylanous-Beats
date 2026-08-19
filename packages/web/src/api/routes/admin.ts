@@ -14,7 +14,7 @@ import {
   invalidateSettingsCache,
   SETTINGS_ID,
 } from "../lib/settings";
-import { mergeSettings } from "../../shared/site-settings";
+import { BUILDER_FONT_IDS, mergeSettings } from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
@@ -295,13 +295,12 @@ const settingsSchema = z.object({
                 borderRadius: z.enum(["none", "soft", "rounded"]).optional(),
                 emphasis: z.enum(["standard", "accent", "muted"]).optional(),
                 palette: z.enum(["brand", "mono", "electric", "sunset", "forest"]).optional(),
-                typography: z.enum(["brand", "editorial", "mono", "condensed"]).optional(),
                 headingScale: z.enum(["compact", "standard", "display", "hero"]).optional(),
                 paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
                 shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
                 borderStyle: z.enum(["none", "subtle", "accent", "chrome"]).optional(),
                 customColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-                fontFamily: z.enum(["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]).optional(),
+                fontFamily: z.enum(BUILDER_FONT_IDS).optional(),
               })
               .optional(),
           }),

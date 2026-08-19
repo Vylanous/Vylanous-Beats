@@ -15,6 +15,7 @@ import { useSiteSettings } from "../lib/site-settings";
 import { customerFetch, useCustomer } from "../lib/customer";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
+import { getBuilderFont } from "../../shared/site-settings";
 import type {
   BuilderPage,
   PageSection,
@@ -52,21 +53,6 @@ const HEADING_SCALE: Record<NonNullable<SectionLayout["headingScale"]>, string> 
   standard: "builder-heading-standard",
   display: "builder-heading-display",
   hero: "builder-heading-hero",
-};
-const FONT_FAMILY: Record<NonNullable<SectionLayout["fontFamily"]>, string> = {
-  brand: "builder-font-brand",
-  anton: "builder-font-anton",
-  league: "builder-font-league",
-  barlow: "builder-font-barlow",
-  editorial: "builder-font-editorial-family",
-  mono: "builder-font-mono-family",
-  condensed: "builder-font-condensed-family",
-};
-const TYPOGRAPHY: Record<NonNullable<SectionLayout["typography"]>, string> = {
-  brand: "builder-type-brand",
-  editorial: "builder-type-editorial",
-  mono: "builder-type-mono",
-  condensed: "builder-type-condensed",
 };
 const PADDING_X: Record<NonNullable<SectionLayout["paddingX"]>, string> = {
   none: "px-0",
@@ -125,13 +111,12 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   borderRadius: "rounded",
   emphasis: "standard",
   palette: "brand",
-  typography: "brand",
   headingScale: "standard",
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
   customColor: "",
-  fontFamily: "brand",
+  fontFamily: "anton",
 };
 
 function usePageMetadata(page: BuilderPage | undefined) {
@@ -268,19 +253,22 @@ function BuilderSection({
   shopDomain: string;
 }) {
   const layout = { ...DEFAULT_LAYOUT, ...section.layout };
+  const selectedFont = getBuilderFont(layout.fontFamily);
   const sectionAttributes = {
     id: section.anchorId || undefined,
     "aria-label": section.ariaLabel || undefined,
   };
-  const customStyle = section.layout?.customColor
-    ? ({ "--builder-custom-color": section.layout.customColor } as Record<string, string>)
-    : undefined;
-  const customColorClass = section.layout?.customColor ? "builder-custom-color" : "";
+  const customStyle = {
+    "--builder-font-family": selectedFont.family,
+    ...(layout.customColor ? { "--builder-custom-color": layout.customColor } : {}),
+  } as Record<string, string>;
+  const customColorClass = layout.customColor ? "builder-custom-color" : "";
   if (section.type === "marquee")
     return (
       <div
         {...sectionAttributes}
-        className={`${section.customClass || ""} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${FONT_FAMILY[layout.fontFamily]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${customColorClass}`}
+        style={customStyle}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} builder-font-selected ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${customColorClass}`}
       >
         <Marquee text={section.title || "VYLANOUS BEATS"} />
       </div>
@@ -304,7 +292,7 @@ function BuilderSection({
     <section
               {...sectionAttributes}
         style={customStyle}
-        className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${FONT_FAMILY[layout.fontFamily]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} ${customColorClass}`}
+        className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} builder-font-selected ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} ${customColorClass}`}
 
     >
       <div
