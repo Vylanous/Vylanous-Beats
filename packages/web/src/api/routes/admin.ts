@@ -178,10 +178,10 @@ const settingsSchema = z.object({
             showHeader: z.boolean().optional(),
             showFooter: z.boolean().optional(),
             background: z.enum(["default", "mesh", "ink"]).optional(),
-            primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-            backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-            eyebrowColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-            linkColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+            primaryColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            backgroundColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            eyebrowColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            linkColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
             chrome: z
               .object({
                 header: z.boolean().optional(),
@@ -298,7 +298,7 @@ const settingsSchema = z.object({
                 paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
                 shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
                 borderStyle: z.enum(["none", "subtle", "accent", "chrome"]).optional(),
-                customColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+                customColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
                 fontFamily: z.enum(["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]).optional(),
               })
               .optional(),

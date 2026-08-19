@@ -17,6 +17,34 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+export function formatAdminError(value: unknown, fallback: string): string {
+  if (typeof value === "string" && value.trim()) return value;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const issues = Array.isArray(record.issues) ? record.issues : Array.isArray(record.errors) ? record.errors : [];
+    const details = issues
+      .map((issue) => {
+        if (typeof issue === "string") return issue;
+        if (!issue || typeof issue !== "object") return "";
+        const item = issue as Record<string, unknown>;
+        const path = Array.isArray(item.path) ? item.path.filter((part) => part !== "").join(".") : "";
+        const message = typeof item.message === "string" ? item.message : "Invalid value";
+        return path ? `${path}: ${message}` : message;
+      })
+      .filter(Boolean);
+    if (details.length) return details.join("; ");
+    if (typeof record.message === "string" && record.message.trim()) return record.message;
+    if (typeof record.error === "string" && record.error.trim()) return record.error;
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized && serialized !== "{}") return serialized;
+    } catch {
+      /* noop */
+    }
+  }
+  return fallback;
+}
+
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getToken();
   const res = await fetch(`/api${path}`, {
@@ -35,7 +63,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     let msg = `Request failed (${res.status})`;
     try {
       const j = await res.json();
-      msg = j.message || j.error || msg;
+      msg = formatAdminError(j, msg);
     } catch {
       /* noop */
     }

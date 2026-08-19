@@ -450,6 +450,15 @@ User request: make Press Kit stats update with the chosen social profiles and en
 - [x] Rebuild the Style tab into visual grouped controls with understandable labels, previews, reset actions, and mobile-friendly layout.
 - [x] Apply page-level colors and header/navigation/footer linkage in the public renderer.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and visual checks. The relevant checks passed; the requested admin screenshot route was unavailable in the managed preview.
-- [ ] Commit and push the Style tab overhaul directly to GitHub main.
+- [x] Commit and push the Style tab overhaul directly to GitHub main.
 
 User request: make the Page Sections Style tab much easier to use; add a true main color changer, background color, eyebrow font color, and per-page linkage to navigation, footer, and header styling.
+
+## Save Site Settings Error
+
+- [x] Trace the Save Site Settings client error handler, request payload, and server validation response.
+- [x] Fix the underlying save failure and replace object-stringified errors with actionable messages.
+- [x] Add regression coverage and validate save behavior, typecheck, lint, build, and diff checks.
+- [ ] Commit and push the Save Site Settings repair directly to GitHub main.
+
+User report: saving Site Settings displays `[object Object]` instead of a useful error message.
