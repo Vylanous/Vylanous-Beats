@@ -37,6 +37,7 @@ import type {
   BuilderPage,
   BuilderTemplate,
   BuilderVersion,
+  PageLayout,
   PageSection,
   PageSectionType,
   PressKitBreakdown,
@@ -807,6 +808,9 @@ export default function PageBuilderPanel() {
                     section={section}
                     preview={previewPage?.sections.find((candidate) => candidate.id === section.id)}
                     fourthwall={settings.fourthwall}
+                    socials={settings.socials}
+                    pageLayout={page.layout}
+                    onPageLayoutChange={(layoutPatch) => updatePage({ ...page, layout: { ...page.layout, ...layoutPatch } })}
                     onFourthwallChange={(patch) =>
                       updateSettings({ fourthwall: { ...settings.fourthwall, ...patch } })
                     }
@@ -1493,6 +1497,9 @@ function SectionEditor({
   section,
   preview,
   fourthwall,
+  socials,
+  pageLayout,
+  onPageLayoutChange,
   onFourthwallChange,
   onChange,
   onDelete,
@@ -1502,6 +1509,9 @@ function SectionEditor({
   section: PageSection;
   preview?: PageSection;
   fourthwall: SiteSettings["fourthwall"];
+  socials: SocialLink[];
+  pageLayout?: PageLayout;
+  onPageLayoutChange: (patch: Partial<PageLayout>) => void;
   onFourthwallChange: (patch: Partial<SiteSettings["fourthwall"]>) => void;
   onChange: (patch: Partial<PageSection>) => void;
   onDelete: () => void;
@@ -1658,6 +1668,7 @@ function SectionEditor({
               {section.type === "pressKit" && (
                 <PressKitEditor
                   value={section.pressKit || { metrics: [], audience: {} }}
+                  socials={socials}
                   onChange={(pressKit) => onChange({ pressKit })}
                 />
               )}
@@ -1734,7 +1745,12 @@ function SectionEditor({
       )}
       {activeTab === "style" && (
         <div role="tabpanel">
-          <LayoutControls layout={layout} onChange={updateLayout} />
+          <StyleWorkspace
+            layout={layout}
+            pageLayout={pageLayout}
+            onChange={updateLayout}
+            onPageLayoutChange={onPageLayoutChange}
+          />
         </div>
       )}
       {activeTab === "advanced" && (
@@ -1792,9 +1808,11 @@ function ImageAssetField({
 
 function PressKitEditor({
   value,
+  socials,
   onChange,
 }: {
   value: PressKitData;
+  socials: SocialLink[];
   onChange: (value: PressKitData) => void;
 }) {
   const metrics = value.metrics || [];
@@ -1882,9 +1900,30 @@ function PressKitEditor({
             Add YouTube, TikTok, Instagram, Facebook, Spotify, or another platform to begin.
           </p>
         )}
-        {metrics.map((metric, index) => (
+        {metrics.map((metric, index) => {
+          const linkedSocial = socials.find((social) => social.id === metric.socialId);
+          return (
           <div key={metric.id} className="rounded-lg border border-white/[0.08] bg-vb-black/40 p-3">
             <div className="mb-3 flex items-end gap-2">
+              <label className="block min-w-0 flex-1 font-body text-xs uppercase tracking-wider text-vb-silver/50">
+                Linked social profile
+                <select
+                  aria-label={`Linked social profile ${index + 1}`}
+                  value={metric.socialId || "manual"}
+                  onChange={(event) => {
+                    const social = socials.find((candidate) => candidate.id === event.target.value);
+                    updateMetric(index, social
+                      ? { socialId: social.id, platform: social.platform === "custom" ? "other" : social.platform, label: social.label, url: social.url }
+                      : { socialId: undefined });
+                  }}
+                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+                >
+                  <option value="manual">Manual profile details</option>
+                  {socials.map((social) => (
+                    <option key={social.id} value={social.id}>{social.label} · {social.url}</option>
+                  ))}
+                </select>
+              </label>
               <label className="block min-w-0 flex-1 font-body text-xs uppercase tracking-wider text-vb-silver/50">
                 Platform
                 <select
@@ -1908,7 +1947,7 @@ function PressKitEditor({
               </button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Display label" value={metric.label || ""} placeholder="Official channel" onChange={(label) => updateMetric(index, { label })} />
+              <Field label="Display label" value={metric.label || ""} placeholder="Official channel" disabled={Boolean(linkedSocial)} onChange={(label) => updateMetric(index, { label })} />
               <Field label="Handle or account" value={metric.handle || ""} placeholder="@vylanous" onChange={(handle) => updateMetric(index, { handle })} />
               <NumberField label="Followers" value={metric.followers} onChange={(followers) => updateMetric(index, { followers })} />
               <NumberField label="Subscribers" value={metric.subscribers} onChange={(subscribers) => updateMetric(index, { subscribers })} />
@@ -1917,10 +1956,11 @@ function PressKitEditor({
               <NumberField label="Total views" value={metric.views} onChange={(views) => updateMetric(index, { views })} />
               <NumberField label="Likes" value={metric.likes} onChange={(likes) => updateMetric(index, { likes })} />
               <NumberField label="Engagement rate %" value={metric.engagementRate} onChange={(engagementRate) => updateMetric(index, { engagementRate })} />
-              <Field label="Profile URL" value={metric.url || ""} placeholder="https://…" onChange={(url) => updateMetric(index, { url })} />
+              <Field label="Profile URL" value={metric.url || ""} placeholder="https://…" disabled={Boolean(linkedSocial)} onChange={(url) => updateMetric(index, { url })} />
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         {(["gender", "age", "locations"] as const).map((key) => {
@@ -2078,6 +2118,91 @@ function ItemsEditor({
     </div>
   );
 }
+
+function StyleWorkspace({
+  layout,
+  pageLayout,
+  onChange,
+  onPageLayoutChange,
+}: {
+  layout: Required<SectionLayout>;
+  pageLayout?: PageLayout;
+  onChange: (patch: Partial<SectionLayout>) => void;
+  onPageLayoutChange: (patch: Partial<PageLayout>) => void;
+}) {
+  const page = pageLayout || {};
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-vb-purple/30 bg-gradient-to-br from-vb-purple/[0.14] to-transparent p-4">
+        <p className="font-sub text-xs uppercase tracking-[0.2em] text-vb-purple-bright">Visual style studio</p>
+        <h3 className="mt-1 font-display text-2xl uppercase text-chrome">Make this page yours</h3>
+        <p className="mt-1 max-w-2xl font-body text-xs leading-relaxed text-vb-silver/55">
+          Start with the page colors, then refine this section’s layout. Every control below updates the live preview as you work.
+        </p>
+      </div>
+      <StyleGroup title="Page colors" description="These colors control the page itself—not just one section.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ColorControl label="Main brand color" value={page.primaryColor || "#7C2FCB"} onChange={(value) => onPageLayoutChange({ primaryColor: value })} hint="Buttons, active states, highlights, and linked chrome." />
+          <ColorControl label="Page background" value={page.backgroundColor || "#0B0A0F"} onChange={(value) => onPageLayoutChange({ backgroundColor: value })} hint="The actual page canvas behind your sections." />
+          <ColorControl label="Eyebrow text color" value={page.eyebrowColor || page.primaryColor || "#B56CFF"} onChange={(value) => onPageLayoutChange({ eyebrowColor: value })} hint="Small uppercase labels above headlines." />
+          <ColorControl label="Link and hover color" value={page.linkColor || page.primaryColor || "#B56CFF"} onChange={(value) => onPageLayoutChange({ linkColor: value })} hint="Links, social actions, and hover emphasis." />
+        </div>
+        <button type="button" onClick={() => onPageLayoutChange({ primaryColor: "", backgroundColor: "", eyebrowColor: "", linkColor: "" })} className="mt-3 font-sub text-[11px] uppercase tracking-wide text-vb-muted hover:text-vb-purple-bright">Reset page colors</button>
+      </StyleGroup>
+      <StyleGroup title="Connect this page’s chrome" description="Choose which global areas inherit this page’s main color while visitors are on this page.">
+        <div className="grid gap-2 sm:grid-cols-3">
+          <ToggleCard label="Header" description="Logo actions and header accents" checked={Boolean(page.chrome?.header)} onChange={(checked) => onPageLayoutChange({ chrome: { ...page.chrome, header: checked } })} />
+          <ToggleCard label="Navigation" description="Active links and menu accents" checked={Boolean(page.chrome?.navigation)} onChange={(checked) => onPageLayoutChange({ chrome: { ...page.chrome, navigation: checked } })} />
+          <ToggleCard label="Footer" description="Footer links and signup accents" checked={Boolean(page.chrome?.footer)} onChange={(checked) => onPageLayoutChange({ chrome: { ...page.chrome, footer: checked } })} />
+        </div>
+      </StyleGroup>
+      <StyleGroup title="Section personality" description="These choices affect the section currently selected above.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SelectField label="Color mood" value={layout.palette} options={["brand", "mono", "electric", "sunset", "forest"]} onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })} />
+          <SelectField label="Text personality" value={layout.typography} options={["brand", "editorial", "mono", "condensed"]} onChange={(value) => onChange({ typography: value as Required<SectionLayout>["typography"] })} />
+          <SelectField label="Font family" value={layout.fontFamily} options={["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]} onChange={(value) => onChange({ fontFamily: value as Required<SectionLayout>["fontFamily"] })} />
+          <SelectField label="Headline scale" value={layout.headingScale} options={["compact", "standard", "display", "hero"]} onChange={(value) => onChange({ headingScale: value as Required<SectionLayout>["headingScale"] })} />
+          <SelectField label="Section background" value={layout.surface} options={["transparent", "ink", "mesh", "accent", "bordered"]} onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })} />
+          <SelectField label="Text alignment" value={layout.alignment} options={["left", "center", "right"]} onChange={(value) => onChange({ alignment: value as Required<SectionLayout>["alignment"] })} />
+        </div>
+        <ColorControl label="Section accent override" value={layout.customColor || page.primaryColor || "#7C2FCB"} onChange={(value) => onChange({ customColor: value })} hint="Optional: use this only when this section needs a different accent." />
+      </StyleGroup>
+      <StyleGroup title="Spacing and finish" description="Control how much room the section gets and how polished its container feels.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SelectField label="Content width" value={layout.width} options={["narrow", "standard", "wide", "full"]} onChange={(value) => onChange({ width: value as Required<SectionLayout>["width"] })} />
+          <SelectField label="Section spacing" value={layout.spacing} options={["tight", "normal", "relaxed", "cinematic"]} onChange={(value) => onChange({ spacing: value as Required<SectionLayout>["spacing"] })} />
+          <SelectField label="Horizontal padding" value={layout.paddingX} options={["none", "tight", "normal", "wide"]} onChange={(value) => onChange({ paddingX: value as Required<SectionLayout>["paddingX"] })} />
+          <SelectField label="Shadow" value={layout.shadow} options={["none", "soft", "glow", "dramatic"]} onChange={(value) => onChange({ shadow: value as Required<SectionLayout>["shadow"] })} />
+          <SelectField label="Border" value={layout.borderStyle} options={["none", "subtle", "accent", "chrome"]} onChange={(value) => onChange({ borderStyle: value as Required<SectionLayout>["borderStyle"] })} />
+          <SelectField label="Corner style" value={layout.borderRadius} options={["none", "soft", "rounded"]} onChange={(value) => onChange({ borderRadius: value as Required<SectionLayout>["borderRadius"] })} />
+        </div>
+      </StyleGroup>
+      <details className="rounded-xl border border-white/[0.08] bg-vb-black/30 p-4">
+        <summary className="cursor-pointer font-sub text-xs uppercase tracking-[0.16em] text-vb-silver/60 hover:text-vb-purple-bright">Media and grid options</summary>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <SelectField label="Column count" value={String(layout.columns)} options={["1", "2", "3", "4"]} onChange={(value) => onChange({ columns: Number(value) as 1 | 2 | 3 | 4 })} />
+          <SelectField label="Media placement" value={layout.mediaPosition} options={["none", "left", "right", "background", "top"]} onChange={(value) => onChange({ mediaPosition: value as Required<SectionLayout>["mediaPosition"] })} />
+          <SelectField label="Media fit" value={layout.mediaFit} options={["cover", "contain"]} onChange={(value) => onChange({ mediaFit: value as Required<SectionLayout>["mediaFit"] })} />
+          <SelectField label="Media shape" value={layout.mediaAspect} options={["auto", "square", "wide", "portrait", "cinema"]} onChange={(value) => onChange({ mediaAspect: value as Required<SectionLayout>["mediaAspect"] })} />
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function StyleGroup({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return <section className="rounded-xl border border-white/[0.08] bg-vb-black/35 p-4"><div className="mb-4"><h4 className="font-sub text-sm uppercase tracking-[0.14em] text-vb-silver/85">{title}</h4><p className="mt-1 font-body text-xs leading-relaxed text-vb-silver/45">{description}</p></div>{children}</section>;
+}
+
+function ColorControl({ label, value, hint, onChange }: { label: string; value: string; hint: string; onChange: (value: string) => void }) {
+  return <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">{label}<span className="mt-1 block normal-case tracking-normal text-vb-silver/35">{hint}</span><div className="mt-2 flex items-center gap-2"><input type="color" aria-label={`${label} color picker`} value={/^#[0-9A-Fa-f]{6}$/.test(value) ? value : "#7C2FCB"} onChange={(event) => onChange(event.currentTarget.value.toUpperCase())} className="h-10 w-12 cursor-pointer rounded-md border border-white/15 bg-transparent p-1" /><input type="text" aria-label={`${label} hex value`} value={value} maxLength={7} onChange={(event) => { const next = event.currentTarget.value.toUpperCase(); if (next === "" || /^#[0-9A-F]{0,6}$/.test(next)) onChange(next); }} className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-vb-black/50 px-3 font-mono text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright" /></div></label>;
+}
+
+function ToggleCard({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return <label className={`cursor-pointer rounded-lg border p-3 transition ${checked ? "border-vb-purple/60 bg-vb-purple/10" : "border-white/[0.08] bg-white/[0.02] hover:border-white/20"}`}><input aria-label={`Link ${label} styling to this page`} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="sr-only" /><span className="flex items-center justify-between gap-2 font-sub text-xs uppercase tracking-wide text-vb-silver-bright"><span>{label}</span><span className={`h-2 w-2 rounded-full ${checked ? "bg-vb-purple-bright" : "bg-white/20"}`} /></span><span className="mt-1 block font-body text-[11px] leading-relaxed text-vb-silver/40">{description}</span></label>;
+}
+
+void LayoutControls;
 
 function LayoutControls({
   layout,

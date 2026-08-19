@@ -433,3 +433,23 @@ Repository constraint: work directly in Vylanous/Vylanous-Beats; do not create a
 
 User request: add a Page Builder Add Block called Press Kit for YouTube, TikTok, Facebook, Instagram, and other platforms with followers/subscribers, videos uploaded, audience gender, demographics, locations, and additional analytics.
 Scope: start with explicit editable metrics and audience data; do not fabricate analytics or claim live API data unless a verified connector is configured.
+
+## Linked Press Kit Social Profiles
+
+- [ ] Audit Press Kit profile selection, social URL handling, persistence, and public links.
+- [ ] Link each Press Kit stats card to a selected social profile with reliable platform and URL behavior.
+- [ ] Add regression coverage and validate saved profile links, stats association, renderer links, and mobile layout.
+- [ ] Commit and push the linked Press Kit stats update to GitHub main.
+
+User request: make Press Kit stats update with the chosen social profiles and ensure selected social profiles link correctly to their stats.
+
+## Page Section Style Tab Overhaul
+
+- [x] Audit the current Style tab, page layout settings, global chrome settings, and public renderer.
+- [x] Add backward-compatible page-level primary, background, eyebrow, and chrome-link style fields with server validation.
+- [x] Rebuild the Style tab into visual grouped controls with understandable labels, previews, reset actions, and mobile-friendly layout.
+- [x] Apply page-level colors and header/navigation/footer linkage in the public renderer.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and visual checks. The relevant checks passed; the requested admin screenshot route was unavailable in the managed preview.
+- [ ] Commit and push the Style tab overhaul directly to GitHub main.
+
+User request: make the Page Sections Style tab much easier to use; add a true main color changer, background color, eyebrow font color, and per-page linkage to navigation, footer, and header styling.

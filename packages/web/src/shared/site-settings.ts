@@ -82,6 +82,8 @@ export type PressKitPlatform =
 
 export interface PressKitMetric {
   id: string;
+  /** References a global Site Builder social link when this metric is profile-linked. */
+  socialId?: string;
   platform: PressKitPlatform;
   label?: string;
   handle?: string;
@@ -155,10 +157,21 @@ export interface PageSeo {
   noIndex?: boolean;
 }
 
+export interface PageChromeLinkage {
+  header?: boolean;
+  navigation?: boolean;
+  footer?: boolean;
+}
+
 export interface PageLayout {
   showHeader?: boolean;
   showFooter?: boolean;
   background?: "default" | "mesh" | "ink";
+  primaryColor?: string;
+  backgroundColor?: string;
+  eyebrowColor?: string;
+  linkColor?: string;
+  chrome?: PageChromeLinkage;
 }
 
 export interface BuilderPage {
@@ -374,7 +387,17 @@ function makePage(
 ): BuilderPage {
   return {
     ...values,
-    layout: { showHeader: true, showFooter: true, background: "default", ...values.layout },
+    layout: {
+      showHeader: true,
+      showFooter: true,
+      background: "default",
+      primaryColor: "",
+      backgroundColor: "",
+      eyebrowColor: "",
+      linkColor: "",
+      chrome: { header: false, navigation: false, footer: false },
+      ...values.layout,
+    },
   };
 }
 
@@ -774,7 +797,11 @@ function mergePage(
     ...storedPage,
     path: pagePath({ path: storedPage?.path, slug: storedPage?.slug || defaultPage.slug }),
     seo: { ...defaultPage.seo, ...storedPage?.seo },
-    layout: { ...defaultPage.layout, ...storedPage?.layout },
+    layout: {
+      ...defaultPage.layout,
+      ...storedPage?.layout,
+      chrome: { ...defaultPage.layout?.chrome, ...storedPage?.layout?.chrome },
+    },
     sections: sections.map((storedSection, index) => {
       const template = defaultPage.sections.find((candidate) => candidate.id === storedSection.id);
       return {

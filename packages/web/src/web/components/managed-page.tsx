@@ -179,6 +179,7 @@ export function ManagedPage({ path }: { path: string }) {
       showHeader={page.layout?.showHeader !== false}
       showFooter={page.layout?.showFooter !== false}
       pageBackground={page.layout?.background}
+      pageStyle={page.layout}
     >
       {page.sections.map((section) => (
         <BuilderSection
@@ -302,7 +303,7 @@ function CopyBlock({
   return (
     <div className={`flex max-w-3xl flex-col ${ALIGNMENT[layout.alignment]}`}>
       {section.eyebrow && (
-        <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+        <p className="page-eyebrow font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
           {section.eyebrow}
         </p>
       )}
@@ -982,7 +983,7 @@ function ActionLink({
   label: string;
   primary?: boolean;
 }) {
-  const className = `inline-flex items-center gap-2 rounded-xl px-6 py-3 font-sub uppercase tracking-wider transition ${primary ? "bg-vb-purple text-white hover:bg-vb-purple-bright" : "border border-white/15 text-vb-silver-bright hover:border-vb-purple/60"}`;
+  const className = `page-action inline-flex items-center gap-2 rounded-xl px-6 py-3 font-sub uppercase tracking-wider transition ${primary ? "bg-vb-purple text-white hover:bg-vb-purple-bright" : "border border-white/15 text-vb-silver-bright hover:border-vb-purple/60"}`;
   return href.startsWith("/") ? (
     <Link to={href} className={className}>
       {label}

@@ -178,6 +178,17 @@ const settingsSchema = z.object({
             showHeader: z.boolean().optional(),
             showFooter: z.boolean().optional(),
             background: z.enum(["default", "mesh", "ink"]).optional(),
+            primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+            backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+            eyebrowColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+            linkColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+            chrome: z
+              .object({
+                header: z.boolean().optional(),
+                navigation: z.boolean().optional(),
+                footer: z.boolean().optional(),
+              })
+              .optional(),
           })
           .optional(),
         seo: z

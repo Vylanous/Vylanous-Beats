@@ -35,7 +35,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative mt-24 border-t border-white/[0.06] bg-vb-black">
+    <footer className="page-footer relative mt-24 border-t border-white/[0.06] bg-vb-black">
       <div className="grid max-w-7xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-4 mx-auto">
         <div className="md:col-span-2">
           <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="-ml-2 h-24 w-auto" />

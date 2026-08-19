@@ -100,6 +100,37 @@ describe("Site Builder settings migration", () => {
     });
   });
 
+  test("preserves page-level colors and chrome linkage through settings migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_brand",
+          slug: "brand",
+          title: "Brand Page",
+          navLabel: "Brand",
+          published: true,
+          showInNav: true,
+          layout: {
+            primaryColor: "#22D3EE",
+            backgroundColor: "#111827",
+            eyebrowColor: "#F59E0B",
+            linkColor: "#A7F3D0",
+            chrome: { header: true, navigation: true, footer: false },
+          },
+          sections: [],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_brand")?.layout).toMatchObject({
+      primaryColor: "#22D3EE",
+      backgroundColor: "#111827",
+      eyebrowColor: "#F59E0B",
+      linkColor: "#A7F3D0",
+      chrome: { header: true, navigation: true, footer: false },
+    });
+  });
+
   test("preserves Press Kit platform and audience analytics through settings migration", () => {
     const settings = mergeSettings({
       pages: [

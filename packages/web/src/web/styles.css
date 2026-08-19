@@ -354,3 +354,54 @@
 .builder-custom-color .border-vb-purple\/35 {
   border-color: color-mix(in srgb, var(--builder-custom-color) 35%, transparent) !important;
 }
+
+
+/* Page-level Style Studio variables. These are opt-in so existing pages retain the global theme. */
+main {
+  background-color: var(--page-background, transparent);
+}
+.page-eyebrow {
+  color: var(--page-eyebrow, var(--color-vb-purple-bright)) !important;
+}
+.page-action {
+  border-color: color-mix(in srgb, var(--page-link, var(--color-vb-purple-bright)) 55%, transparent);
+}
+.page-action.bg-vb-purple {
+  background-color: var(--page-primary, var(--color-vb-purple)) !important;
+}
+.page-action:hover {
+  border-color: var(--page-link, var(--color-vb-purple-bright)) !important;
+}
+.page-chrome-header .page-header .text-purple-glow,
+.page-chrome-header .page-header .text-vb-purple-bright,
+.page-chrome-navigation .page-navigation .text-purple-glow,
+.page-chrome-navigation .page-navigation a:hover,
+.page-chrome-footer .page-footer a:hover,
+.page-chrome-footer .page-footer .text-vb-purple-bright {
+  color: var(--page-link, var(--color-vb-purple-bright)) !important;
+}
+.page-chrome-header .page-header .bg-vb-purple,
+.page-chrome-navigation .page-navigation .bg-vb-purple,
+.page-chrome-footer .page-footer .bg-vb-purple {
+  background-color: var(--page-primary, var(--color-vb-purple)) !important;
+}
+.page-chrome-header .page-header .border-vb-purple,
+.page-chrome-navigation .page-navigation .border-vb-purple,
+.page-chrome-footer .page-footer .border-vb-purple {
+  border-color: color-mix(in srgb, var(--page-primary, var(--color-vb-purple)) 65%, transparent) !important;
+}
+
+.page-style main .text-purple-glow,
+.page-style main .text-vb-purple-bright {
+  color: var(--page-primary, var(--color-vb-purple-bright)) !important;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--page-primary, var(--color-vb-purple)) 45%, transparent);
+}
+.page-style main .bg-vb-purple {
+  background-color: var(--page-primary, var(--color-vb-purple)) !important;
+}
+.page-style main .border-vb-purple,
+.page-style main .border-vb-purple\/20,
+.page-style main .border-vb-purple\/30,
+.page-style main .border-vb-purple\/35 {
+  border-color: color-mix(in srgb, var(--page-primary, var(--color-vb-purple)) 55%, transparent) !important;
+}

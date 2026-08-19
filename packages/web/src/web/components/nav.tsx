@@ -39,7 +39,7 @@ export function Nav() {
   const chromeClass = header.sticky ? "fixed top-0 inset-x-0 z-50" : "relative z-50";
   return (
     <header
-      className={`${chromeClass} transition-all duration-300 ${opaque ? "bg-vb-black/85 backdrop-blur-xl border-b border-white/[0.06]" : "bg-transparent"}`}
+      className={`page-header ${chromeClass} transition-all duration-300 ${opaque ? "bg-vb-black/85 backdrop-blur-xl border-b border-white/[0.06]" : "bg-transparent"}`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
@@ -57,7 +57,7 @@ export function Nav() {
             </span>
           )}
         </Link>
-        <nav className="hidden items-center gap-6 lg:flex">
+        <nav className="page-navigation hidden items-center gap-6 lg:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -137,7 +137,7 @@ export function Nav() {
       </div>
       {mobile && (
         <div className="border-b border-white/[0.06] bg-vb-black/95 backdrop-blur-xl lg:hidden">
-          <nav className="flex flex-col gap-1 px-5 py-4">
+          <nav className="page-navigation flex flex-col gap-1 px-5 py-4">
             {links.map((link) => (
               <Link
                 key={link.href}
