@@ -385,6 +385,53 @@ export function adminRoutes(app: Hono) {
 
   app.get("/admin/me", requireAdmin, (c) => c.json({ ok: true }, 200));
 
+  app.post("/admin/upload", requireAdmin, async (c) => {
+    if (!S3_CONFIGURED) {
+      return c.json(
+        {
+          error: "storage_not_configured",
+          message:
+            "Object storage is not configured. Set R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY (or the S3_* equivalents) on the server.",
+        },
+        503,
+      );
+    }
+    const body = await c.req.parseBody();
+    const uploaded = body.file;
+    const file = uploaded instanceof File ? uploaded : null;
+    const folder = typeof body.folder === "string" ? body.folder : "uploads";
+    if (!file) return c.json({ error: "missing_file", message: "Choose a file to upload." }, 400);
+    if (!/^[a-zA-Z0-9/_-]+$/.test(folder) || folder.includes("..")) {
+      return c.json({ error: "invalid_folder", message: "Invalid upload folder." }, 400);
+    }
+    const contentType = file.type || "application/octet-stream";
+    if (folder === PAGE_BUILDER_IMAGE_FOLDER) {
+      if (!PAGE_BUILDER_IMAGE_TYPES.has(contentType.toLowerCase())) {
+        return c.json(
+          { error: "unsupported_image_type", message: "Use a JPG, PNG, WebP, GIF, or AVIF image." },
+          415,
+        );
+      }
+      if (file.size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
+        return c.json(
+          { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+          413,
+        );
+      }
+    }
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const key = `${folder}/${Date.now()}-${randomUUID()}-${safe}`;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: key,
+        Body: Buffer.from(await file.arrayBuffer()),
+        ContentType: contentType,
+      }),
+    );
+    return c.json({ key }, 200);
+  });
+
   app.post(
     "/admin/upload/presign",
     requireAdmin,

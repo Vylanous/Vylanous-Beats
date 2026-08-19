@@ -379,3 +379,10 @@
 - [x] Add editable page titles and descriptions with backward-compatible metadata rendering.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
 - [x] Commit and push the verified Builder Studio repair to GitHub.
+
+## R2 Production Upload Repair
+
+- [x] Inspect R2 CORS configuration, presigned upload generation, browser upload headers, and production origins.
+- [x] Repair the R2 upload flow and configure allowed production origins and headers.
+- [x] Run upload-focused tests, full validation, and final diff review.
+- [ ] Commit and push the verified R2 upload repair and report any required Cloudflare deployment step.

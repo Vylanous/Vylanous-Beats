@@ -111,36 +111,39 @@ export async function resetAdminSettings(): Promise<{ settings: SiteSettings }> 
   return req<{ settings: SiteSettings }>("/admin/settings/reset", { method: "POST" });
 }
 
-/** Upload a file to Tigris via presigned PUT. Returns the stored object key. */
+/** Upload a file through the same-origin server endpoint and return its durable storage key. */
 export async function uploadFile(file: File, folder: string): Promise<string> {
-  const { url, key } = await adminApi.presign(
-    file.name,
-    file.type || "application/octet-stream",
-    folder,
-    file.size,
-  );
-  let put: Response;
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file, file.name);
+  form.append("folder", folder);
+  let response: Response;
   try {
-    put = await fetch(url, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": file.type || "application/octet-stream" },
+    response = await fetch("/api/admin/upload", {
+      method: "POST",
+      body: form,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
   } catch {
-    throw new Error(
-      "The upload could not reach object storage. Confirm the R2 bucket CORS policy allows this site origin and the Content-Type header.",
-    );
+    throw new Error("The upload request could not reach the site server. Check your connection and try again.");
   }
-  if (!put.ok) {
-    let detail = "";
+  if (response.status === 401) {
+    clearToken();
+    throw new Error("Your admin session expired. Sign in again before uploading.");
+  }
+  if (!response.ok) {
+    let message = `Upload failed (${response.status})`;
     try {
-      detail = (await put.text()).slice(0, 200);
+      const body = (await response.json()) as { message?: string; error?: string };
+      message = body.message || body.error || message;
     } catch {
       /* noop */
     }
-    throw new Error(`Upload failed (${put.status})${detail ? `: ${detail}` : ""}`);
+    throw new Error(message);
   }
-  return key;
+  const result = (await response.json()) as { key?: string };
+  if (!result.key) throw new Error("Upload completed without a storage key.");
+  return result.key;
 }
 
 export interface AdminBeat {
