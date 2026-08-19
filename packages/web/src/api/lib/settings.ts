@@ -52,6 +52,12 @@ export async function publicSettings(s: SiteSettings) {
     pages: await Promise.all(
       s.pages.map(async (page) => ({
         ...page,
+        layout: page.layout
+          ? {
+              ...page.layout,
+              backgroundImage: await signBrandUrl(page.layout.backgroundImage || ""),
+            }
+          : page.layout,
         seo: page.seo
           ? { ...page.seo, ogImageUrl: await signBrandUrl(page.seo.ogImageUrl || "") }
           : page.seo,

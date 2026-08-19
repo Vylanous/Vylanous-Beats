@@ -512,6 +512,26 @@ Live finding: `/api/settings` returns a published `page_artist` at `/artist` wit
 
 Expanded requirement: ensure every designated published Page Builder page, including top-level and nested paths, routes to its saved managed content while protected system routes retain their intended application screens.
 
+## Page Background and Visual Treatments
+
+- [x] Audit current page-level style settings, upload controls, public layout rendering, and CSS variable coverage.
+- [x] Add backward-compatible page background image, overlay, placement, and treatment settings with server validation.
+- [x] Add Style tab controls for page background color, background image upload, overlay strength, image behavior, and page-specific visual treatments.
+- [x] Apply the configured page background and treatments in the public renderer with responsive and accessible behavior.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and visual review. Automated validation passed; the managed preview workspace does not serve this repository’s Builder route for a representative visual capture.
+- [x] Commit and push the page background customization update directly to GitHub main.
+
+User request: retain the existing color customization while adding a real page background color control, an uploaded page background image, and additional page-level options that make each Builder page visually distinct.
+
+## Builder Inline Text Formatting
+
+- [x] Add selection-based Bold, Italic, and Underline controls to the Page Section text-content editor.
+- [x] Persist formatted body copy with backward-compatible server validation and render it safely without raw HTML.
+- [x] Add parser regression coverage and include the feature in the full validation suite.
+- [x] Commit and push the formatted text-control update directly to GitHub main.
+
+User request: allow individual parts of the text body entered for Page Sections to be bold, italic, or underlined on every Builder page.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.

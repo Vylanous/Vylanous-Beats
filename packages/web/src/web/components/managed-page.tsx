@@ -12,6 +12,7 @@ import { FourthwallMerch } from "./fourthwall-merch";
 import { Marquee } from "./marquee";
 import { api } from "../lib/api";
 import { builderPagePath, normalizeManagedPath } from "../lib/page-routes";
+import { parseInlineText, stripInlineText } from "../lib/inline-text";
 import { useSiteSettings } from "../lib/site-settings";
 import { customerFetch, useCustomer } from "../lib/customer";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
@@ -125,7 +126,7 @@ function usePageMetadata(page: BuilderPage | undefined) {
     if (!page) return;
     const title = page.seo?.title || `${page.title} | Vylanous Beats`;
     const description =
-      page.seo?.description || page.sections.find((section) => section.body)?.body || "";
+      page.seo?.description || stripInlineText(page.sections.find((section) => section.body)?.body || "");
     const canonicalPath = page.seo?.canonicalPath || page.path || `/${page.slug}`;
     const canonicalUrl = new URL(canonicalPath, window.location.origin).toString();
     const imageUrl =
@@ -183,6 +184,7 @@ export function ManagedPage({ path }: { path: string }) {
         <BuilderSection
           key={section.id}
           section={section}
+          pageLayout={page.layout}
           currency={fourthwall.currency}
           shopDomain={fourthwall.shopDomain}
         />
@@ -247,15 +249,22 @@ function UnavailablePage() {
 
 function BuilderSection({
   section,
+  pageLayout,
   currency,
   shopDomain,
 }: {
   section: PageSection;
+  pageLayout?: BuilderPage["layout"];
   currency: string;
   shopDomain: string;
 }) {
-  const layout = { ...DEFAULT_LAYOUT, ...section.layout };
-  const selectedFont = getBuilderFont(layout.fontFamily);
+  const layout: Required<SectionLayout> = {
+    ...DEFAULT_LAYOUT,
+    ...section.layout,
+    ...(pageLayout?.contentWidth ? { width: pageLayout.contentWidth } : {}),
+    ...(pageLayout?.sectionSpacing ? { spacing: pageLayout.sectionSpacing } : {}),
+  };
+  const selectedFont = getBuilderFont(pageLayout?.pageFont || layout.fontFamily);
   const sectionAttributes = {
     id: section.anchorId || undefined,
     "aria-label": section.ariaLabel || undefined,
@@ -350,12 +359,22 @@ function CopyBlock({
       </Heading>
       {section.body && (
         <p className="mt-5 max-w-2xl whitespace-pre-line font-body text-lg leading-relaxed text-vb-silver/70">
-          {section.body}
+          <FormattedBody value={section.body} formatted={section.bodyFormat === "inline"} />
         </p>
       )}
       <Actions section={section} />
     </div>
   );
+}
+
+function FormattedBody({ value, formatted }: { value: string; formatted: boolean }) {
+  if (!formatted) return value;
+  return parseInlineText(value).map((token, index) => {
+    if (token.style === "bold") return <strong key={index}>{token.text}</strong>;
+    if (token.style === "italic") return <em key={index}>{token.text}</em>;
+    if (token.style === "underline") return <u key={index}>{token.text}</u>;
+    return <span key={index}>{token.text}</span>;
+  });
 }
 
 function HeroSection({

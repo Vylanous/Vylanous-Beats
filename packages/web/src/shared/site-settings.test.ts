@@ -131,6 +131,73 @@ describe("Site Builder settings migration", () => {
     });
   });
 
+  test("preserves page background media, treatments, and page-wide visual defaults through migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_visual",
+          slug: "visual",
+          title: "Visual Page",
+          navLabel: "Visual",
+          published: true,
+          showInNav: false,
+          layout: {
+            backgroundColor: "#090511",
+            backgroundImage: "site-builder/backgrounds/visual-page.webp",
+            backgroundImageFit: "cover",
+            backgroundImagePosition: "top",
+            backgroundOverlay: "strong",
+            pageTreatment: "grid",
+            pageFont: "space-grotesk",
+            contentWidth: "standard",
+            sectionSpacing: "relaxed",
+          },
+          sections: [],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_visual")?.layout).toMatchObject({
+      backgroundColor: "#090511",
+      backgroundImage: "site-builder/backgrounds/visual-page.webp",
+      backgroundImageFit: "cover",
+      backgroundImagePosition: "top",
+      backgroundOverlay: "strong",
+      pageTreatment: "grid",
+      pageFont: "space-grotesk",
+      contentWidth: "standard",
+      sectionSpacing: "relaxed",
+    });
+  });
+
+  test("preserves opt-in formatted text bodies through settings migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_copy",
+          slug: "copy",
+          title: "Copy Page",
+          navLabel: "Copy",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "copy_section",
+              type: "text",
+              body: "**Bold** _italic_ [u]underlined[/u] copy.",
+              bodyFormat: "inline",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_copy")?.sections[0]).toMatchObject({
+      body: "**Bold** _italic_ [u]underlined[/u] copy.",
+      bodyFormat: "inline",
+    });
+  });
+
   test("preserves parent-child page navigation settings through migration", () => {
     const settings = mergeSettings({
       pages: [

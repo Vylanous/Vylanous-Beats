@@ -207,6 +207,8 @@ export interface PageSection {
   eyebrow?: string;
   title?: string;
   body?: string;
+  /** Enables the Builder's restricted bold, italic, and underline inline formatting syntax. */
+  bodyFormat?: "plain" | "inline";
   imageUrl?: string;
   videoUrl?: string;
   ctaLabel?: string;
@@ -245,6 +247,17 @@ export interface PageLayout {
   background?: "default" | "mesh" | "ink";
   primaryColor?: string;
   backgroundColor?: string;
+  /** Stored Builder image key or approved external URL used behind the whole page. */
+  backgroundImage?: string;
+  backgroundImageFit?: "cover" | "contain" | "tile";
+  backgroundImagePosition?: "center" | "top" | "bottom" | "left" | "right";
+  backgroundOverlay?: "none" | "soft" | "medium" | "strong";
+  /** Decorative treatment layered above the page background and below content. */
+  pageTreatment?: "none" | "grain" | "grid" | "spotlight";
+  /** Defaults inherited by untouched sections to make a page visually distinct. */
+  pageFont?: BuilderFontId;
+  contentWidth?: "narrow" | "standard" | "wide" | "full";
+  sectionSpacing?: "tight" | "normal" | "relaxed" | "cinematic";
   eyebrowColor?: string;
   linkColor?: string;
   chrome?: PageChromeLinkage;
@@ -472,6 +485,11 @@ function makePage(
       background: "default",
       primaryColor: "",
       backgroundColor: "",
+      backgroundImage: "",
+      backgroundImageFit: "cover",
+      backgroundImagePosition: "center",
+      backgroundOverlay: "medium",
+      pageTreatment: "none",
       eyebrowColor: "",
       linkColor: "",
       chrome: { header: false, navigation: false, footer: false },

@@ -182,6 +182,16 @@ const settingsSchema = z.object({
             background: z.enum(["default", "mesh", "ink"]).optional(),
             primaryColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
             backgroundColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            backgroundImage: z.string().max(2000).optional(),
+            backgroundImageFit: z.enum(["cover", "contain", "tile"]).optional(),
+            backgroundImagePosition: z
+              .enum(["center", "top", "bottom", "left", "right"])
+              .optional(),
+            backgroundOverlay: z.enum(["none", "soft", "medium", "strong"]).optional(),
+            pageTreatment: z.enum(["none", "grain", "grid", "spotlight"]).optional(),
+            pageFont: z.enum(BUILDER_FONT_IDS).optional(),
+            contentWidth: z.enum(["narrow", "standard", "wide", "full"]).optional(),
+            sectionSpacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
             eyebrowColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
             linkColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
             chrome: z
@@ -225,7 +235,8 @@ const settingsSchema = z.object({
             ]),
             eyebrow: z.string().optional(),
             title: z.string().optional(),
-            body: z.string().optional(),
+            body: z.string().max(12_000).optional(),
+            bodyFormat: z.enum(["plain", "inline"]).optional(),
             imageUrl: z.string().optional(),
             videoUrl: z.string().optional(),
             ctaLabel: z.string().optional(),

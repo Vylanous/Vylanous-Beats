@@ -4,6 +4,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Bold,
   ChevronDown,
   ChevronUp,
   Copy,
@@ -14,6 +15,7 @@ import {
   Undo2,
   WandSparkles,
   GripVertical,
+  Italic,
   Instagram,
   LayoutTemplate,
   Link2,
@@ -26,6 +28,7 @@ import {
   Smartphone,
   Tablet,
   Trash2,
+  Underline,
   Video,
   Youtube,
   type LucideIcon,
@@ -841,6 +844,7 @@ export default function PageBuilderPanel() {
                     fourthwall={settings.fourthwall}
                     socials={settings.socials}
                     pageLayout={page.layout}
+                    pageLayoutPreview={previewPage?.layout}
                     onPageLayoutChange={(layoutPatch) => updatePage({ ...page, layout: { ...page.layout, ...layoutPatch } })}
                     onFourthwallChange={(patch) =>
                       updateSettings({ fourthwall: { ...settings.fourthwall, ...patch } })
@@ -1592,6 +1596,7 @@ function SectionEditor({
   fourthwall,
   socials,
   pageLayout,
+  pageLayoutPreview,
   onPageLayoutChange,
   onFourthwallChange,
   onChange,
@@ -1604,6 +1609,7 @@ function SectionEditor({
   fourthwall: SiteSettings["fourthwall"];
   socials: SocialLink[];
   pageLayout?: PageLayout;
+  pageLayoutPreview?: PageLayout;
   onPageLayoutChange: (patch: Partial<PageLayout>) => void;
   onFourthwallChange: (patch: Partial<SiteSettings["fourthwall"]>) => void;
   onChange: (patch: Partial<PageSection>) => void;
@@ -1724,11 +1730,13 @@ function SectionEditor({
                 </div>
               )}
               {supportsCopy && section.type !== "image" && (
-                <Textarea
+                <RichTextArea
                   label="Text content"
                   value={section.body || ""}
+                  formatted={section.bodyFormat === "inline"}
                   placeholder="Write the supporting copy visitors will see."
                   onChange={(value) => onChange({ body: value })}
+                  onFormat={() => onChange({ bodyFormat: "inline" })}
                 />
               )}
               {supportsMedia && (
@@ -1841,6 +1849,7 @@ function SectionEditor({
           <StyleWorkspace
             layout={layout}
             pageLayout={pageLayout}
+            pageLayoutPreview={pageLayoutPreview}
             onChange={updateLayout}
             onPageLayoutChange={onPageLayoutChange}
           />
@@ -1865,12 +1874,14 @@ function ImageAssetField({
   hint,
   value,
   previewUrl,
+  folder = "site-builder/images",
   onChange,
 }: {
   label: string;
   hint: string;
   value: string;
   previewUrl?: string;
+  folder?: string;
   onChange: (value: string) => void;
 }) {
   const externalUrl = /^(https?:)?\/\//.test(value) || value.startsWith("/") ? value : "";
@@ -1881,7 +1892,7 @@ function ImageAssetField({
         label={label}
         hint={hint}
         accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-        folder="site-builder/images"
+        folder={folder}
         kind="image"
         maxBytes={10 * 1024 * 1024}
         value={value}
@@ -2215,11 +2226,13 @@ function ItemsEditor({
 function StyleWorkspace({
   layout,
   pageLayout,
+  pageLayoutPreview,
   onChange,
   onPageLayoutChange,
 }: {
   layout: Required<SectionLayout>;
   pageLayout?: PageLayout;
+  pageLayoutPreview?: PageLayout;
   onChange: (patch: Partial<SectionLayout>) => void;
   onPageLayoutChange: (patch: Partial<PageLayout>) => void;
 }) {
@@ -2241,6 +2254,35 @@ function StyleWorkspace({
           <ColorControl label="Link and hover color" value={page.linkColor || page.primaryColor || "#B56CFF"} onChange={(value) => onPageLayoutChange({ linkColor: value })} hint="Links, social actions, and hover emphasis." />
         </div>
         <button type="button" onClick={() => onPageLayoutChange({ primaryColor: "", backgroundColor: "", eyebrowColor: "", linkColor: "" })} className="mt-3 font-sub text-[11px] uppercase tracking-wide text-vb-muted hover:text-vb-purple-bright">Reset page colors</button>
+      </StyleGroup>
+      <StyleGroup title="Page background image" description="Upload a full-page image, then tune how it sits behind your page content.">
+        <ImageAssetField
+          label="Background image"
+          hint="Recommended: 2560 × 1440 px or larger. Use a dark, high-contrast image so text stays readable."
+          value={page.backgroundImage || ""}
+          previewUrl={pageLayoutPreview?.backgroundImage}
+          folder="site-builder/backgrounds"
+          onChange={(backgroundImage) => onPageLayoutChange({ backgroundImage })}
+        />
+        {page.backgroundImage ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <SelectField label="Image fit" value={page.backgroundImageFit || "cover"} options={["cover", "contain", "tile"]} onChange={(value) => onPageLayoutChange({ backgroundImageFit: value as NonNullable<PageLayout["backgroundImageFit"]> })} />
+            <SelectField label="Image position" value={page.backgroundImagePosition || "center"} options={["center", "top", "bottom", "left", "right"]} onChange={(value) => onPageLayoutChange({ backgroundImagePosition: value as NonNullable<PageLayout["backgroundImagePosition"]> })} />
+            <SelectField label="Readability overlay" value={page.backgroundOverlay || "medium"} options={["none", "soft", "medium", "strong"]} onChange={(value) => onPageLayoutChange({ backgroundOverlay: value as NonNullable<PageLayout["backgroundOverlay"]> })} />
+            <SelectField label="Page texture" value={page.pageTreatment || "none"} options={["none", "grain", "grid", "spotlight"]} onChange={(value) => onPageLayoutChange({ pageTreatment: value as NonNullable<PageLayout["pageTreatment"]> })} />
+          </div>
+        ) : (
+          <p className="mt-3 font-body text-xs text-vb-silver/40">Your selected page background color remains visible until an image is uploaded.</p>
+        )}
+        <button type="button" onClick={() => onPageLayoutChange({ backgroundImage: "", backgroundImageFit: "cover", backgroundImagePosition: "center", backgroundOverlay: "medium", pageTreatment: "none" })} className="mt-3 font-sub text-[11px] uppercase tracking-wide text-vb-muted hover:text-vb-purple-bright">Remove background treatment</button>
+      </StyleGroup>
+      <StyleGroup title="Page-wide defaults" description="Optionally apply one font, content width, and vertical rhythm to every section on this page.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <PageFontPicker value={page.pageFont} onChange={(pageFont) => onPageLayoutChange({ pageFont })} />
+          <SelectField label="Content width" value={page.contentWidth || "block"} options={["block", "narrow", "standard", "wide", "full"]} onChange={(value) => onPageLayoutChange({ contentWidth: value === "block" ? undefined : value as NonNullable<PageLayout["contentWidth"]> })} />
+          <SelectField label="Section spacing" value={page.sectionSpacing || "block"} options={["block", "tight", "normal", "relaxed", "cinematic"]} onChange={(value) => onPageLayoutChange({ sectionSpacing: value === "block" ? undefined : value as NonNullable<PageLayout["sectionSpacing"]> })} />
+        </div>
+        <p className="mt-2 font-body text-xs text-vb-silver/40">Choose “block” to keep each section’s individual font, width, or spacing choice.</p>
       </StyleGroup>
       <StyleGroup title="Connect this page’s chrome" description="Choose which global areas inherit this page’s main color while visitors are on this page.">
         <div className="grid gap-2 sm:grid-cols-3">
@@ -2316,6 +2358,26 @@ function FontLibraryPicker({
             {font.label}
           </option>
         ))}
+      </select>
+    </label>
+  );
+}
+
+function PageFontPicker({
+  value,
+  onChange,
+}: {
+  value?: PageLayout["pageFont"];
+  onChange: (value: PageLayout["pageFont"] | undefined) => void;
+}) {
+  const selected = value ? BUILDER_FONT_OPTIONS.find((font) => font.id === value) : undefined;
+  return (
+    <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
+      Page font override
+      <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">Set one font for every section, or preserve each block’s own choice.</span>
+      <select aria-label="Page font override" value={value || "block"} onChange={(event) => onChange(event.target.value === "block" ? undefined : event.target.value as PageLayout["pageFont"])} style={{ fontFamily: selected?.family }} className="mt-2 w-full rounded-lg border border-white/10 bg-vb-black/50 px-3 py-2.5 text-base normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright">
+        <option value="block">Use each block’s font</option>
+        {BUILDER_FONT_OPTIONS.map((font) => <option key={font.id} value={font.id} style={{ fontFamily: font.family }}>{font.label}</option>)}
       </select>
     </label>
   );
@@ -2615,6 +2677,58 @@ function Textarea({
         className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60"
       />
     </label>
+  );
+}
+
+function RichTextArea({
+  label,
+  value,
+  formatted,
+  onChange,
+  onFormat,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  formatted: boolean;
+  onChange: (value: string) => void;
+  onFormat: () => void;
+  placeholder?: string;
+}) {
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const wrapSelection = (open: string, close = open) => {
+    const input = inputRef.current;
+    if (!input || input.selectionStart === input.selectionEnd) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const selected = value.slice(start, end);
+    onChange(`${value.slice(0, start)}${open}${selected}${close}${value.slice(end)}`);
+    onFormat();
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(start + open.length, end + open.length);
+    });
+  };
+  const controls = [
+    { label: "Bold selected text", icon: Bold, apply: () => wrapSelection("**") },
+    { label: "Italicize selected text", icon: Italic, apply: () => wrapSelection("_") },
+    { label: "Underline selected text", icon: Underline, apply: () => wrapSelection("[u]", "[/u]") },
+  ];
+  return (
+    <div className="mt-3">
+      <div className="flex items-end justify-between gap-3">
+        <label htmlFor="builder-rich-text-content" className="font-body text-xs uppercase tracking-wider text-vb-silver/50">{label}</label>
+        <div className="flex items-center gap-1 rounded-md border border-white/10 bg-vb-black/60 p-1" aria-label="Text formatting controls">
+          {controls.map(({ label: controlLabel, icon: Icon, apply }) => (
+            <button key={controlLabel} type="button" aria-label={controlLabel} title={controlLabel} onMouseDown={(event) => event.preventDefault()} onClick={apply} className="grid h-7 w-7 place-items-center rounded text-vb-silver/60 transition hover:bg-vb-purple/20 hover:text-vb-purple-bright focus:outline-none focus:ring-2 focus:ring-vb-purple-bright/60">
+              <Icon size={14} strokeWidth={2.4} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <textarea ref={inputRef} id="builder-rich-text-content" aria-label={label} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} rows={5} className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60" />
+      <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">Select words in your copy, then use the controls above. Bold, italic, and underline work across published Builder pages{formatted ? "." : " once applied."}</p>
+    </div>
   );
 }
 function SelectField({

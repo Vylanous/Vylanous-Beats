@@ -414,3 +414,53 @@ main {
 .page-style main .border-vb-purple\/35 {
   border-color: color-mix(in srgb, var(--page-primary, var(--color-vb-purple)) 55%, transparent) !important;
 }
+
+/* Builder page backgrounds sit behind every page area without intercepting content or controls. */
+.page-style {
+  isolation: isolate;
+  position: relative;
+  background-color: var(--page-background, transparent);
+}
+.page-style > :not(.page-background-media):not(.page-background-overlay):not(.page-background-treatment) {
+  position: relative;
+  z-index: 1;
+}
+.page-background-media,
+.page-background-overlay,
+.page-background-treatment {
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+}
+.page-background-media {
+  z-index: -3;
+  background-image: var(--page-background-image, none);
+  background-repeat: no-repeat;
+}
+.page-background-overlay {
+  z-index: -2;
+  background: var(--page-background-overlay, transparent);
+}
+.page-background-treatment { z-index: -1; }
+.page-background-fit-cover .page-background-media { background-size: cover; }
+.page-background-fit-contain .page-background-media { background-size: contain; }
+.page-background-fit-tile .page-background-media { background-repeat: repeat; background-size: auto; }
+.page-background-position-center .page-background-media { background-position: center; }
+.page-background-position-top .page-background-media { background-position: center top; }
+.page-background-position-bottom .page-background-media { background-position: center bottom; }
+.page-background-position-left .page-background-media { background-position: left center; }
+.page-background-position-right .page-background-media { background-position: right center; }
+.page-treatment-grain .page-background-treatment {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+.page-treatment-grid .page-background-treatment {
+  background-image: linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.page-treatment-spotlight .page-background-treatment {
+  background: radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--page-primary, #7c2fcb) 34%, transparent), transparent 48%);
+}
+@media (max-width: 640px) {
+  .page-background-fit-contain .page-background-media { background-size: cover; }
+}
