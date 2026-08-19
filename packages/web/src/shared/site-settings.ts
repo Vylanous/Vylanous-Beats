@@ -144,7 +144,20 @@ export interface SectionLayout {
   headingScale?: "compact" | "standard" | "display" | "hero";
   paddingX?: "none" | "tight" | "normal" | "wide";
   shadow?: "none" | "soft" | "glow" | "dramatic";
-  borderStyle?: "none" | "subtle" | "accent" | "chrome";
+  borderStyle?:
+    | "none"
+    | "subtle"
+    | "accent"
+    | "chrome"
+    | "thin"
+    | "double"
+    | "dashed"
+    | "gradient"
+    | "neon";
+  /** Optional color used by section glow shadows and animated border treatments. */
+  glowColor?: string;
+  /** Decorative motion is disabled for visitors who prefer reduced motion. */
+  glowAnimation?: "none" | "move" | "pulse" | "slowFlash";
   customColor?: string;
   /** Heading and card-title font; preserves the existing section font selector. */
   fontFamily?: BuilderFontId;
@@ -222,6 +235,11 @@ export interface PageSection {
   bodyFormat?: "plain" | "inline";
   imageUrl?: string;
   videoUrl?: string;
+  /** Dedicated 16:9 cover displayed above any section content. */
+  coverImageUrl?: string;
+  /** Optional muted, looping 16:9 cover video displayed in place of a cover image. */
+  coverVideoUrl?: string;
+  coverOverlay?: "none" | "soft" | "strong";
   ctaLabel?: string;
   ctaHref?: string;
   secondaryCtaLabel?: string;
@@ -347,6 +365,16 @@ export interface NewsletterPopupSettings {
   consentText: string;
 }
 
+export interface AnnouncementBannerSettings {
+  enabled: boolean;
+  message: string;
+  ctaLabel: string;
+  ctaHref: string;
+  tone: "accent" | "sale" | "notice";
+  target: "all" | "selected";
+  pageIds: string[];
+}
+
 export interface FourthwallSettings {
   shopDomain: string;
   defaultCollection: string;
@@ -390,8 +418,11 @@ export interface SiteSettings {
   header: HeaderSettings;
   footer: FooterSettings;
   newsletterPopup: NewsletterPopupSettings;
+  announcementBanner: AnnouncementBannerSettings;
   socials: SocialLink[];
   pages: BuilderPage[];
+  /** IDs of removable seeded pages intentionally deleted by the owner. */
+  deletedPageIds: string[];
   fourthwall: FourthwallSettings;
   builder: BuilderMeta;
 }
@@ -450,6 +481,16 @@ export const DEFAULT_NEWSLETTER_POPUP: NewsletterPopupSettings = {
   consentText: "I agree to receive new drops and updates by email.",
 };
 
+export const DEFAULT_ANNOUNCEMENT_BANNER: AnnouncementBannerSettings = {
+  enabled: false,
+  message: "",
+  ctaLabel: "",
+  ctaHref: "",
+  tone: "accent",
+  target: "all",
+  pageIds: [],
+};
+
 export const DEFAULT_FOURTHWALL: FourthwallSettings = {
   shopDomain: "vylanous-shop.fourthwall.com",
   defaultCollection: "all",
@@ -473,6 +514,8 @@ const DEFAULT_SECTION_LAYOUT: Required<SectionLayout> = {
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
+  glowColor: "",
+  glowAnimation: "none",
   customColor: "",
   fontFamily: "anton",
   bodyFontFamily: "barlow",
@@ -872,8 +915,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   header: DEFAULT_HEADER,
   footer: DEFAULT_FOOTER,
   newsletterPopup: DEFAULT_NEWSLETTER_POPUP,
+  announcementBanner: DEFAULT_ANNOUNCEMENT_BANNER,
   socials: DEFAULT_SOCIALS,
   pages: DEFAULT_PAGES,
+  deletedPageIds: [],
   fourthwall: DEFAULT_FOURTHWALL,
   builder: DEFAULT_BUILDER_META,
 };
@@ -932,10 +977,11 @@ function mergePage(
   };
 }
 
-function mergePages(storedPages: unknown): BuilderPage[] {
+function mergePages(storedPages: unknown, deletedPageIds: string[] = []): BuilderPage[] {
   const saved = Array.isArray(storedPages) ? (storedPages as Partial<BuilderPage>[]) : [];
+  const deleted = new Set(deletedPageIds);
   const matched = new Set<number>();
-  const core = DEFAULT_PAGES.map((defaultPage) => {
+  const core = DEFAULT_PAGES.filter((defaultPage) => !deleted.has(defaultPage.id)).map((defaultPage) => {
     const index = saved.findIndex(
       (candidate) =>
         candidate.id === defaultPage.id ||
@@ -968,8 +1014,9 @@ function mergePages(storedPages: unknown): BuilderPage[] {
 }
 
 /** Merge stored settings over defaults so production data gains new builder controls safely. */
-type StoredSiteSettings = Omit<Partial<SiteSettings>, "newsletterPopup"> & {
+type StoredSiteSettings = Omit<Partial<SiteSettings>, "newsletterPopup" | "announcementBanner"> & {
   newsletterPopup?: Partial<NewsletterPopupSettings>;
+  announcementBanner?: Partial<AnnouncementBannerSettings>;
 };
 
 export function mergeSettings(stored: StoredSiteSettings | null | undefined): SiteSettings {
@@ -982,8 +1029,21 @@ export function mergeSettings(stored: StoredSiteSettings | null | undefined): Si
     newsletterPopup: stored?.newsletterPopup
       ? { ...DEFAULT_NEWSLETTER_POPUP, ...stored.newsletterPopup }
       : { ...DEFAULT_NEWSLETTER_POPUP },
+    announcementBanner: stored?.announcementBanner
+      ? {
+          ...DEFAULT_ANNOUNCEMENT_BANNER,
+          ...stored.announcementBanner,
+          pageIds: Array.isArray(stored.announcementBanner.pageIds)
+            ? stored.announcementBanner.pageIds
+            : [],
+        }
+      : { ...DEFAULT_ANNOUNCEMENT_BANNER },
     socials: Array.isArray(stored?.socials) ? stored.socials : DEFAULT_SOCIALS,
-    pages: mergePages(stored?.pages),
+    deletedPageIds: Array.isArray(stored?.deletedPageIds) ? stored.deletedPageIds : [],
+    pages: mergePages(
+      stored?.pages,
+      Array.isArray(stored?.deletedPageIds) ? stored.deletedPageIds : [],
+    ),
     fourthwall: stored?.fourthwall
       ? { ...DEFAULT_FOURTHWALL, ...stored.fourthwall }
       : { ...DEFAULT_FOURTHWALL },

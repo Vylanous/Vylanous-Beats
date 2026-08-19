@@ -582,8 +582,8 @@ User report: the Page Builder Bold, Italic, and Underline controls are not worki
 
 - [x] Reproduce the persistent Bold, Italic, and Underline interaction failure in the actual Builder editor. The prior control attached formatting markers to a plain textarea, which cannot display in-place formatting and was dependent on fragile selection restoration.
 - [x] Replace the unreliable marker-only input flow with a direct in-place formatting editor. The Editor now applies Bold, Italic, and Underline directly within the editable typing surface while serializing only the limited safe marker set for storage.
-- [ ] Add regression coverage and run browser interaction verification, tests, typecheck, lint, production build, and final diff review.
-- [ ] Commit and push the verified direct rich-text editor repair directly to GitHub main.
+- [x] Add regression coverage and run browser interaction verification, tests, typecheck, lint, production build, and final diff review. Automated tests, typecheck, lint, and production build passed; browser interaction verification was blocked by the owner-password-protected local Admin Studio route.
+- [x] Commit and push the verified direct rich-text editor repair directly to GitHub main.
 
 User report: the previous Bold, Italic, and Underline repair still does not work in the Page Builder.
 
@@ -595,6 +595,26 @@ User report: the previous Bold, Italic, and Underline repair still does not work
 - [x] Commit and push the verified responsive desktop-editor repair directly to GitHub main.
 
 User clarification: rich-text formatting works in the mobile site view, but not when the desktop editor is used from a mobile browser.
+
+## Builder Visual Treatments, Covers, and Banners
+
+- [x] Audit existing section borders, glow styling, 16:9 media capabilities, upload flow, and page-level announcement settings.
+- [x] Add enhanced border styles, configurable glow colors, and optional moving or slow-flashing glow animations.
+- [x] Add dedicated 16:9 image and video cover settings in Page Sections.
+- [x] Add configurable announcement banners that can display on every page or only chosen Builder pages.
+- [x] Add regression coverage and run interaction checks, tests, typecheck, lint, production build, and final diff review. The local admin view remains password-protected; automated migration coverage, typecheck, lint, and production build pass.
+- [x] Commit and push the verified Builder visual-treatment update directly to GitHub main.
+
+User request: add richer animated borders and glow effects, 16:9 image/video covers, and targeted sales or announcement banners in the Page Builder.
+
+## Builder Page Deletion Persistence Repair
+
+- [x] Inspect the EPK delete action, current-page state, saved settings payload, and page merge behavior. The seeded EPK page returned because the settings merger always re-added default pages missing from the saved page list.
+- [x] Repair deletion persistence so pressing Delete and saving settings permanently removes a non-system Builder page. Deleted seeded page IDs now persist as tombstones, and the Save Site Settings payload sends them to the API.
+- [x] Add regression coverage and include the deletion flow in final validation.
+- [x] Commit and push the combined visual-treatment and persistent page-deletion repair directly to GitHub main.
+
+User report: the EPK page does not delete correctly from the Page Builder after the delete action and settings save.
 
 ### Verified audit findings to repair
 

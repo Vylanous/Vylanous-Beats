@@ -65,6 +65,8 @@ export async function publicSettings(s: SiteSettings) {
           page.sections.map(async (section) => ({
             ...section,
             imageUrl: await signBrandUrl(section.imageUrl || ""),
+            coverImageUrl: await signBrandUrl(section.coverImageUrl || ""),
+            coverVideoUrl: await signBrandUrl(section.coverVideoUrl || ""),
             items: section.items
               ? await Promise.all(
                   section.items.map(async (item) => ({

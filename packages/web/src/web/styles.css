@@ -378,6 +378,47 @@
   font-size: clamp(14px, 2.2vw, var(--builder-body-size)) !important;
 }
 
+/* Page Builder section finishes. The color is supplied per section by the Style tab. */
+.builder-border-thin { border-width: 1px; }
+.builder-border-double { border-style: double; border-width: 4px; }
+.builder-border-dashed { border-style: dashed; }
+.builder-border-gradient {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--color-vb-ink), var(--color-vb-ink)) padding-box,
+    linear-gradient(120deg, color-mix(in srgb, var(--builder-glow-color) 95%, white), transparent 36%, var(--builder-glow-color)) border-box;
+}
+.builder-border-neon {
+  border-color: color-mix(in srgb, var(--builder-glow-color) 88%, white);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--builder-glow-color) 55%, transparent), 0 0 42px color-mix(in srgb, var(--builder-glow-color) 30%, transparent);
+}
+.builder-glow-pulse,
+.builder-glow-slowFlash,
+.builder-glow-move {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--builder-glow-color) 44%, transparent), 0 0 54px color-mix(in srgb, var(--builder-glow-color) 18%, transparent);
+}
+@keyframes builder-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, var(--builder-glow-color) 30%, transparent), 0 0 32px color-mix(in srgb, var(--builder-glow-color) 12%, transparent); }
+  50% { box-shadow: 0 0 22px color-mix(in srgb, var(--builder-glow-color) 68%, transparent), 0 0 68px color-mix(in srgb, var(--builder-glow-color) 34%, transparent); }
+}
+@keyframes builder-glow-flash {
+  0%, 78%, 100% { box-shadow: 0 0 10px color-mix(in srgb, var(--builder-glow-color) 22%, transparent); }
+  84%, 92% { box-shadow: 0 0 24px color-mix(in srgb, var(--builder-glow-color) 78%, transparent), 0 0 72px color-mix(in srgb, var(--builder-glow-color) 34%, transparent); }
+}
+@keyframes builder-glow-move {
+  0% { box-shadow: -26px -10px 26px color-mix(in srgb, var(--builder-glow-color) 48%, transparent), 20px 14px 50px color-mix(in srgb, var(--builder-glow-color) 12%, transparent); }
+  50% { box-shadow: 26px 10px 30px color-mix(in srgb, var(--builder-glow-color) 58%, transparent), -20px -14px 54px color-mix(in srgb, var(--builder-glow-color) 18%, transparent); }
+  100% { box-shadow: -26px -10px 26px color-mix(in srgb, var(--builder-glow-color) 48%, transparent), 20px 14px 50px color-mix(in srgb, var(--builder-glow-color) 12%, transparent); }
+}
+.builder-glow-pulse { animation: builder-glow-pulse 2.8s ease-in-out infinite; }
+.builder-glow-slowFlash { animation: builder-glow-flash 5.4s ease-in-out infinite; }
+.builder-glow-move { animation: builder-glow-move 5.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .builder-glow-pulse,
+  .builder-glow-slowFlash,
+  .builder-glow-move { animation: none; }
+}
+
 
 /* Page-level Style Studio variables. These are opt-in so existing pages retain the global theme. */
 main {

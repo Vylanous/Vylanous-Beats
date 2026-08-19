@@ -5,6 +5,8 @@ import { CartDrawer } from "./cart-drawer";
 import { PlayerBar } from "./player-bar";
 import { NewsletterPopup } from "./newsletter-popup";
 import { usePlayer } from "../lib/player";
+import { useSiteSettings } from "../lib/site-settings";
+import { builderPagePath, normalizeManagedPath } from "../lib/page-routes";
 import type { PageLayout } from "../../shared/site-settings";
 
 export function Layout({
@@ -21,6 +23,14 @@ export function Layout({
   pageStyle?: PageLayout;
 }) {
   const { current } = usePlayer();
+  const settings = useSiteSettings();
+  const activePath = typeof window === "undefined" ? "/" : normalizeManagedPath(window.location.pathname);
+  const activePage = settings.pages.find((page) => builderPagePath(page) === activePath);
+  const announcement = settings.announcementBanner;
+  const showAnnouncement =
+    announcement.enabled &&
+    Boolean(announcement.message.trim()) &&
+    (announcement.target === "all" || Boolean(activePage && announcement.pageIds.includes(activePage.id)));
   const background =
     pageBackground === "mesh" ? "bg-mesh" : pageBackground === "ink" ? "bg-vb-ink" : "";
   const pageVars = {
@@ -60,11 +70,42 @@ export function Layout({
         </>
       )}
       {showHeader && <Nav />}
+      {showAnnouncement && <AnnouncementBanner {...announcement} />}
       <main className={`flex-1 ${current ? "pb-20" : ""}`}>{children}</main>
       {showFooter && <Footer />}
       <CartDrawer />
       <PlayerBar />
       <NewsletterPopup />
     </div>
+  );
+}
+
+function AnnouncementBanner({
+  message,
+  ctaLabel,
+  ctaHref,
+  tone,
+}: {
+  message: string;
+  ctaLabel: string;
+  ctaHref: string;
+  tone: "accent" | "sale" | "notice";
+}) {
+  const tones = {
+    accent: "border-vb-purple/35 bg-vb-purple/[0.13] text-vb-silver-bright",
+    sale: "border-amber-300/35 bg-amber-300/[0.12] text-amber-50",
+    notice: "border-cyan-300/30 bg-cyan-300/[0.1] text-cyan-50",
+  };
+  return (
+    <aside className={`relative z-10 border-y px-5 py-3 ${tones[tone]}`} aria-label="Site announcement">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
+        <p className="font-sub text-xs uppercase tracking-[0.14em]">{message}</p>
+        {ctaLabel && ctaHref && (
+          <a href={ctaHref} className="shrink-0 rounded-full border border-current/40 px-3 py-1 font-sub text-[10px] uppercase tracking-[0.14em] transition hover:bg-white/15">
+            {ctaLabel} →
+          </a>
+        )}
+      </div>
+    </aside>
   );
 }

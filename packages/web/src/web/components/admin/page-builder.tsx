@@ -303,7 +303,10 @@ export default function PageBuilderPanel() {
         candidate.parentPageId === target.id ? { ...candidate, parentPageId: undefined } : candidate,
       );
     const nextPage = remainingPages.find((candidate) => !candidate.isSystem) || remainingPages[0];
-    updateSettings({ pages: remainingPages });
+    updateSettings({
+      pages: remainingPages,
+      deletedPageIds: Array.from(new Set([...settings.deletedPageIds, target.id])),
+    });
     setSelectedId(nextPage?.id || "");
     setFocusedSectionId(nextPage?.sections[0]?.id || "");
     setNotice(
@@ -341,7 +344,10 @@ export default function PageBuilderPanel() {
         fourthwall: settings.fourthwall,
         header: settings.header,
         footer: settings.footer,
+        newsletterPopup: settings.newsletterPopup,
+        announcementBanner: settings.announcementBanner,
         socials: settings.socials,
+        deletedPageIds: settings.deletedPageIds,
         builder,
       });
       const refreshed = await getAdminSettings();
@@ -1141,6 +1147,8 @@ function GlobalChromeEditor({
     onChange({ footer: { ...settings.footer, ...patch } });
   const updatePopup = (patch: Partial<SiteSettings["newsletterPopup"]>) =>
     onChange({ newsletterPopup: { ...settings.newsletterPopup, ...patch } });
+  const updateAnnouncement = (patch: Partial<SiteSettings["announcementBanner"]>) =>
+    onChange({ announcementBanner: { ...settings.announcementBanner, ...patch } });
   const updateSocial = (id: string, patch: Partial<SocialLink>) =>
     onChange({
       socials: settings.socials.map((social) =>
@@ -1233,6 +1241,38 @@ function GlobalChromeEditor({
           value={settings.footer.description}
           onChange={(value) => updateFooter({ description: value })}
         />
+      </section>
+      <section className="rounded-2xl border border-vb-purple/25 bg-gradient-to-br from-vb-purple/[0.08] to-transparent p-5 xl:col-span-2">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-sub text-xl uppercase tracking-wide">Sales & announcement banner</h2>
+            <p className="mt-1 max-w-2xl font-body text-sm text-vb-silver/50">
+              Display a compact promotion or announcement above selected page content. Target every page or only the Builder pages you choose.
+            </p>
+          </div>
+          <Toggle
+            label="Show banner"
+            checked={settings.announcementBanner.enabled}
+            onChange={(enabled) => updateAnnouncement({ enabled })}
+          />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Field label="Announcement message" value={settings.announcementBanner.message} placeholder="Summer sale — save 20% on any lease" onChange={(message) => updateAnnouncement({ message })} />
+          <SelectField label="Banner style" value={settings.announcementBanner.tone} options={["accent", "sale", "notice"]} onChange={(tone) => updateAnnouncement({ tone: tone as SiteSettings["announcementBanner"]["tone"] })} />
+          <Field label="Button label (optional)" value={settings.announcementBanner.ctaLabel} placeholder="Shop sale" onChange={(ctaLabel) => updateAnnouncement({ ctaLabel })} />
+          <Field label="Button destination (optional)" value={settings.announcementBanner.ctaHref} placeholder="/beats or https://…" onChange={(ctaHref) => updateAnnouncement({ ctaHref })} />
+        </div>
+        <div className="mt-4">
+          <SelectField label="Where to show this banner" value={settings.announcementBanner.target} options={["all", "selected"]} onChange={(target) => updateAnnouncement({ target: target as SiteSettings["announcementBanner"]["target"] })} />
+          {settings.announcementBanner.target === "selected" && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {settings.pages.map((page) => {
+                const selected = settings.announcementBanner.pageIds.includes(page.id);
+                return <ToggleCard key={page.id} label={page.title} description={page.path || `/${page.slug}`} checked={selected} onChange={(checked) => updateAnnouncement({ pageIds: checked ? [...settings.announcementBanner.pageIds, page.id] : settings.announcementBanner.pageIds.filter((id) => id !== page.id) })} />;
+              })}
+            </div>
+          )}
+        </div>
       </section>
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 xl:col-span-2">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1746,6 +1786,46 @@ function SectionEditor({
                     })
                   }
                 />
+              )}
+              {!['divider', 'spacer', 'marquee'].includes(section.type) && (
+                <details className="mt-3 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.04] p-4">
+                  <summary className="cursor-pointer font-sub text-xs uppercase tracking-[0.16em] text-vb-purple-bright">
+                    16:9 section cover
+                  </summary>
+                  <p className="mt-2 font-body text-xs leading-relaxed text-vb-silver/45">
+                    Add a wide photo or a muted looping video above this section’s content. A cover video takes priority and the photo remains available as its fallback frame.
+                  </p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <FileUpload
+                      label="16:9 cover photo"
+                      hint="Recommended 1920 × 1080 px. JPG, PNG, WebP, GIF, or AVIF up to 10 MB."
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      folder="site-builder/images"
+                      kind="image"
+                      maxBytes={10 * 1024 * 1024}
+                      value={section.coverImageUrl || ""}
+                      previewUrl={preview?.coverImageUrl}
+                      onChange={(coverImageUrl) => onChange({ coverImageUrl })}
+                    />
+                    <FileUpload
+                      label="16:9 animated cover video"
+                      hint="MP4, WebM, or MOV up to 50 MB. Plays muted and loops automatically."
+                      accept="video/mp4,video/webm,video/quicktime"
+                      folder="site-builder/videos"
+                      maxBytes={50 * 1024 * 1024}
+                      value={section.coverVideoUrl || ""}
+                      onChange={(coverVideoUrl) => onChange({ coverVideoUrl })}
+                    />
+                  </div>
+                  <div className="mt-3 max-w-sm">
+                    <SelectField
+                      label="Cover readability overlay"
+                      value={section.coverOverlay || "soft"}
+                      options={["none", "soft", "strong"]}
+                      onChange={(coverOverlay) => onChange({ coverOverlay: coverOverlay as NonNullable<PageSection["coverOverlay"]> })}
+                    />
+                  </div>
+                </details>
               )}
               {supportsMedia && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -2318,9 +2398,12 @@ function StyleWorkspace({
           <SelectField label="Section spacing" value={layout.spacing} options={["tight", "normal", "relaxed", "cinematic"]} onChange={(value) => onChange({ spacing: value as Required<SectionLayout>["spacing"] })} />
           <SelectField label="Horizontal padding" value={layout.paddingX} options={["none", "tight", "normal", "wide"]} onChange={(value) => onChange({ paddingX: value as Required<SectionLayout>["paddingX"] })} />
           <SelectField label="Shadow" value={layout.shadow} options={["none", "soft", "glow", "dramatic"]} onChange={(value) => onChange({ shadow: value as Required<SectionLayout>["shadow"] })} />
-          <SelectField label="Border" value={layout.borderStyle} options={["none", "subtle", "accent", "chrome"]} onChange={(value) => onChange({ borderStyle: value as Required<SectionLayout>["borderStyle"] })} />
+          <SelectField label="Border" value={layout.borderStyle} options={["none", "subtle", "thin", "accent", "chrome", "double", "dashed", "gradient", "neon"]} onChange={(value) => onChange({ borderStyle: value as Required<SectionLayout>["borderStyle"] })} />
+          <SelectField label="Glow motion" value={layout.glowAnimation} options={["none", "move", "pulse", "slowFlash"]} onChange={(value) => onChange({ glowAnimation: value as Required<SectionLayout>["glowAnimation"] })} />
           <SelectField label="Corner style" value={layout.borderRadius} options={["none", "soft", "rounded"]} onChange={(value) => onChange({ borderRadius: value as Required<SectionLayout>["borderRadius"] })} />
         </div>
+        <ColorControl label="Glow color" value={layout.glowColor || layout.customColor || page.primaryColor || "#7C2FCB"} onChange={(glowColor) => onChange({ glowColor })} hint="Used by glow shadows, neon borders, and animated glow treatments." />
+        <p className="mt-2 font-body text-xs text-vb-silver/40">Choose “Thin” for a refined one-pixel line. “Slow Flash” creates a low-frequency promotional glow; “Move” travels around neon and gradient borders.</p>
       </StyleGroup>
       <details className="rounded-xl border border-white/[0.08] bg-vb-black/30 p-4">
         <summary className="cursor-pointer font-sub text-xs uppercase tracking-[0.16em] text-vb-silver/60 hover:text-vb-purple-bright">Optional media and grid controls</summary>

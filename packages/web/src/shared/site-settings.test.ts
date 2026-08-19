@@ -298,6 +298,65 @@ describe("Site Builder settings migration", () => {
     });
   });
 
+  test("preserves animated glow treatments and 16:9 cover image or video media", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_visual_treatments",
+          slug: "visual-treatments",
+          title: "Visual Treatments",
+          navLabel: "Visual Treatments",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "cover_section",
+              type: "text",
+              coverImageUrl: "site-builder/images/cover.webp",
+              coverVideoUrl: "site-builder/videos/cover.webm",
+              coverOverlay: "strong",
+              layout: {
+                borderStyle: "neon",
+                glowColor: "#22D3EE",
+                glowAnimation: "slowFlash",
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_visual_treatments")?.sections[0]).toMatchObject({
+      coverImageUrl: "site-builder/images/cover.webp",
+      coverVideoUrl: "site-builder/videos/cover.webm",
+      coverOverlay: "strong",
+      layout: { borderStyle: "neon", glowColor: "#22D3EE", glowAnimation: "slowFlash" },
+    });
+  });
+
+  test("preserves targeted announcement banners and omits a deliberately deleted seeded EPK page", () => {
+    const settings = mergeSettings({
+      deletedPageIds: ["page_epk"],
+      announcementBanner: {
+        enabled: true,
+        message: "Summer sale",
+        ctaLabel: "Browse beats",
+        ctaHref: "/beats",
+        tone: "sale",
+        target: "selected",
+        pageIds: ["page_artist"],
+      },
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_epk")).toBeUndefined();
+    expect(settings.announcementBanner).toMatchObject({
+      enabled: true,
+      tone: "sale",
+      target: "selected",
+      pageIds: ["page_artist"],
+    });
+  });
+
   test("preserves Press Kit platform and audience analytics through settings migration", () => {
     const settings = mergeSettings({
       pages: [

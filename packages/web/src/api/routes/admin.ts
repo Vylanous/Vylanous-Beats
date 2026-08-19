@@ -56,6 +56,8 @@ const beatUpdateSchema = z.object({
 
 const PAGE_BUILDER_IMAGE_FOLDER = "site-builder/images";
 const PAGE_BUILDER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PAGE_BUILDER_VIDEO_FOLDER = "site-builder/videos";
+const PAGE_BUILDER_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 const PAGE_BUILDER_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -63,6 +65,7 @@ const PAGE_BUILDER_IMAGE_TYPES = new Set([
   "image/gif",
   "image/avif",
 ]);
+const PAGE_BUILDER_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const uploadPresignSchema = z.object({
   filename: z.string().min(1).max(180),
   contentType: z.string().min(1).max(120),
@@ -135,6 +138,18 @@ const settingsSchema = z.object({
       dismissLabel: z.string().max(80),
       successMessage: z.string().max(240),
       consentText: z.string().max(240),
+    })
+    .partial()
+    .optional(),
+  announcementBanner: z
+    .object({
+      enabled: z.boolean(),
+      message: z.string().max(240),
+      ctaLabel: z.string().max(80),
+      ctaHref: z.string().max(2000),
+      tone: z.enum(["accent", "sale", "notice"]),
+      target: z.enum(["all", "selected"]),
+      pageIds: z.array(z.string().max(120)).max(60),
     })
     .partial()
     .optional(),
@@ -239,6 +254,9 @@ const settingsSchema = z.object({
             bodyFormat: z.enum(["plain", "inline"]).optional(),
             imageUrl: z.string().optional(),
             videoUrl: z.string().optional(),
+            coverImageUrl: z.string().optional(),
+            coverVideoUrl: z.string().optional(),
+            coverOverlay: z.enum(["none", "soft", "strong"]).optional(),
             ctaLabel: z.string().optional(),
             ctaHref: z.string().optional(),
             secondaryCtaLabel: z.string().optional(),
@@ -309,7 +327,9 @@ const settingsSchema = z.object({
                 headingScale: z.enum(["compact", "standard", "display", "hero"]).optional(),
                 paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
                 shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
-                borderStyle: z.enum(["none", "subtle", "accent", "chrome"]).optional(),
+                borderStyle: z.enum(["none", "subtle", "accent", "chrome", "thin", "double", "dashed", "gradient", "neon"]).optional(),
+                glowColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+                glowAnimation: z.enum(["none", "move", "pulse", "slowFlash"]).optional(),
                 customColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
                 fontFamily: z.enum(BUILDER_FONT_IDS).optional(),
                 bodyFontFamily: z.enum(BUILDER_FONT_IDS).optional(),
@@ -323,6 +343,7 @@ const settingsSchema = z.object({
       }),
     )
     .optional(),
+  deletedPageIds: z.array(z.string().max(120)).max(100).optional(),
   fourthwall: z
     .object({
       shopDomain: z.string(),
@@ -484,6 +505,20 @@ export function adminRoutes(app: Hono) {
         );
       }
     }
+    if (folder === PAGE_BUILDER_VIDEO_FOLDER) {
+      if (!PAGE_BUILDER_VIDEO_TYPES.has(contentType.toLowerCase())) {
+        return c.json(
+          { error: "unsupported_video_type", message: "Use an MP4, WebM, or MOV video." },
+          415,
+        );
+      }
+      if (file.size > PAGE_BUILDER_VIDEO_MAX_BYTES) {
+        return c.json(
+          { error: "video_too_large", message: "Page Builder cover videos must be 50 MB or smaller." },
+          413,
+        );
+      }
+    }
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const key = `${folder}/${Date.now()}-${randomUUID()}-${safe}`;
     await s3.send(
@@ -516,6 +551,20 @@ export function adminRoutes(app: Hono) {
         if (!size || size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
           return c.json(
             { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+            413,
+          );
+        }
+      }
+      if (folder === PAGE_BUILDER_VIDEO_FOLDER) {
+        if (!PAGE_BUILDER_VIDEO_TYPES.has(contentType.toLowerCase())) {
+          return c.json(
+            { error: "unsupported_video_type", message: "Use an MP4, WebM, or MOV video." },
+            415,
+          );
+        }
+        if (!size || size > PAGE_BUILDER_VIDEO_MAX_BYTES) {
+          return c.json(
+            { error: "video_too_large", message: "Page Builder cover videos must be 50 MB or smaller." },
             413,
           );
         }

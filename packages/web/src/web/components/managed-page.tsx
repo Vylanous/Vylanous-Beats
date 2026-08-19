@@ -73,6 +73,11 @@ const BORDER_STYLE: Record<NonNullable<SectionLayout["borderStyle"]>, string> = 
   subtle: "border-white/[0.08]",
   accent: "border-vb-purple/35",
   chrome: "border-white/30",
+  thin: "border-white/[0.22]",
+  double: "border-2 border-vb-purple/35",
+  dashed: "border-dashed border-vb-purple/50",
+  gradient: "border-vb-purple/45",
+  neon: "border-vb-purple-bright/70",
 };
 const SURFACE: Record<NonNullable<SectionLayout["surface"]>, string> = {
   transparent: "",
@@ -117,6 +122,8 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
+  glowColor: "",
+  glowAnimation: "none",
   customColor: "",
   fontFamily: "anton",
   bodyFontFamily: "barlow",
@@ -280,6 +287,7 @@ function BuilderSection({
     "--builder-eyebrow-size": layout.eyebrowSize,
     "--builder-heading-size": layout.headingSize,
     "--builder-body-size": layout.bodySize,
+    "--builder-glow-color": layout.glowColor || layout.customColor || "#7C2FCB",
     ...(layout.customColor ? { "--builder-custom-color": layout.customColor } : {}),
   } as Record<string, string>;
   const customColorClass = layout.customColor ? "builder-custom-color" : "";
@@ -312,12 +320,13 @@ function BuilderSection({
     <section
               {...sectionAttributes}
         style={customStyle}
-        className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} builder-font-selected builder-direct-typography ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} ${customColorClass}`}
+        className={`${section.customClass || ""} relative isolate border ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} builder-font-selected builder-direct-typography ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} builder-border-${layout.borderStyle} builder-glow-${layout.glowAnimation} ${customColorClass}`}
 
     >
       <div
         className={`relative mx-auto flex ${WIDTH[layout.width]} ${SPACING[layout.spacing]} flex-col ${PADDING_X[layout.paddingX]} ${ALIGNMENT[layout.alignment]}`}
       >
+        <SectionCover section={section} />
         {section.type === "hero" && <HeroSection section={section} layout={layout} />}
         {section.type === "text" && <CopySection section={section} layout={layout} />}
         {section.type === "image" && <ImageSection section={section} layout={layout} />}
@@ -335,6 +344,41 @@ function BuilderSection({
         {section.type === "licenseComparison" && <LicenseComparison section={section} />}
       </div>
     </section>
+  );
+}
+
+function SectionCover({ section }: { section: PageSection }) {
+  if (!section.coverImageUrl && !section.coverVideoUrl) return null;
+  const overlay =
+    section.coverOverlay === "strong"
+      ? "after:absolute after:inset-0 after:bg-vb-black/70"
+      : section.coverOverlay === "soft"
+        ? "after:absolute after:inset-0 after:bg-vb-black/35"
+        : "";
+  return (
+    <div className={`relative mb-8 w-full overflow-hidden rounded-2xl border border-white/[0.1] aspect-[16/9] ${overlay}`}>
+      {section.coverVideoUrl ? (
+        // oxlint-disable-next-line jsx-a11y/media-has-caption -- decorative muted cover video without spoken content.
+        <video
+          className="h-full w-full object-cover"
+          src={section.coverVideoUrl}
+          poster={section.coverImageUrl || undefined}
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+        />
+      ) : (
+        <img
+          src={section.coverImageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      )}
+    </div>
   );
 }
 
