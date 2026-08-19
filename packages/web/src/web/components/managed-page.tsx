@@ -15,7 +15,13 @@ import { useSiteSettings } from "../lib/site-settings";
 import { customerFetch, useCustomer } from "../lib/customer";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
-import type { BuilderPage, PageSection, SectionLayout } from "../../shared/site-settings";
+import type {
+  BuilderPage,
+  PageSection,
+  PressKitBreakdown,
+  PressKitMetric,
+  SectionLayout,
+} from "../../shared/site-settings";
 
 const WIDTH: Record<NonNullable<SectionLayout["width"]>, string> = {
   narrow: "max-w-2xl",
@@ -264,7 +270,7 @@ function BuilderSection({
         {section.type === "gallery" && <GallerySection section={section} layout={layout} />}
         {section.type === "featureCards" && <FeatureCards section={section} layout={layout} />}
         {section.type === "callout" && <CalloutSection section={section} layout={layout} />}
-        {section.type === "pressKit" && <CopySection section={section} layout={layout} icon />}
+        {section.type === "pressKit" && <PressKitSection section={section} layout={layout} />}
         {section.type === "merch" && (
           <MerchSection section={section} currency={currency} shopDomain={shopDomain} />
         )}
@@ -554,6 +560,102 @@ function FeatureCards({
     </div>
   );
 }
+const PRESS_KIT_LABELS: Record<PressKitMetric["platform"], string> = {
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  spotify: "Spotify",
+  soundcloud: "SoundCloud",
+  x: "X",
+  website: "Website",
+  other: "Other",
+};
+
+function compactMetric(value: number | undefined): string {
+  if (value === undefined || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
+
+function PressKitSection({
+  section,
+  layout,
+}: {
+  section: PageSection;
+  layout: Required<SectionLayout>;
+}) {
+  const pressKit = section.pressKit || { metrics: [], audience: {} };
+  const metrics = pressKit.metrics || [];
+  const audienceGroups: { key: "gender" | "age" | "locations"; label: string; rows: PressKitBreakdown[] }[] = [
+    { key: "gender", label: "Gender", rows: pressKit.audience.gender || [] },
+    { key: "age", label: "Age groups", rows: pressKit.audience.age || [] },
+    { key: "locations", label: "Top locations", rows: pressKit.audience.locations || [] },
+  ];
+  return (
+    <div className="w-full">
+      <CopyBlock section={section} layout={layout} />
+      {metrics.length === 0 && audienceGroups.every((group) => group.rows.length === 0) ? (
+        <div className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-6 font-body text-sm text-vb-muted">
+          Press Kit analytics will appear here once platform and audience data is added in the Site Builder.
+        </div>
+      ) : (
+        <div className="mt-8 space-y-8">
+          {metrics.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {metrics.map((metric) => (
+                <article key={metric.id} className={`rounded-xl border border-white/[0.08] bg-vb-ink/80 p-5 ${RADIUS[layout.borderRadius]}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-sub text-xs uppercase tracking-[0.18em] text-vb-purple-bright">{PRESS_KIT_LABELS[metric.platform]}</p>
+                      <h3 className="mt-2 font-display text-2xl uppercase text-chrome">{metric.label || PRESS_KIT_LABELS[metric.platform]}</h3>
+                      {metric.handle && <p className="mt-1 font-body text-xs text-vb-muted">{metric.handle}</p>}
+                    </div>
+                    {metric.url && <a href={metric.url} target="_blank" rel="noreferrer" aria-label={`Open ${metric.label || PRESS_KIT_LABELS[metric.platform]} profile`} className="text-vb-silver/55 hover:text-vb-purple-bright"><ExternalLink size={16} /></a>}
+                  </div>
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {metric.followers !== undefined && <PressMetric label="Followers" value={compactMetric(metric.followers)} />}
+                    {metric.subscribers !== undefined && <PressMetric label="Subscribers" value={compactMetric(metric.subscribers)} />}
+                    {metric.videos !== undefined && <PressMetric label="Videos" value={compactMetric(metric.videos)} />}
+                    {metric.posts !== undefined && <PressMetric label="Posts" value={compactMetric(metric.posts)} />}
+                    {metric.views !== undefined && <PressMetric label="Views" value={compactMetric(metric.views)} />}
+                    {metric.likes !== undefined && <PressMetric label="Likes" value={compactMetric(metric.likes)} />}
+                    {metric.engagementRate !== undefined && <PressMetric label="Engagement" value={`${metric.engagementRate}%`} />}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          {audienceGroups.some((group) => group.rows.length > 0) && (
+            <div className="grid gap-5 lg:grid-cols-3">
+              {audienceGroups.map((group) => group.rows.length > 0 && (
+                <div key={group.key} className={`rounded-xl border border-white/[0.08] bg-vb-ink/70 p-5 ${RADIUS[layout.borderRadius]}`}>
+                  <h3 className="font-sub text-xs uppercase tracking-[0.18em] text-vb-purple-bright">Audience · {group.label}</h3>
+                  <div className="mt-5 space-y-4">
+                    {group.rows.map((row) => (
+                      <div key={`${group.key}-${row.label}`}>
+                        <div className="mb-1 flex items-center justify-between gap-3 font-body text-xs text-vb-silver/70"><span>{row.label}</span><span>{row.value}%</span></div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-vb-purple" style={{ width: `${Math.max(0, Math.min(100, row.value))}%` }} /></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {(pressKit.sourceNote || pressKit.updatedAt || pressKit.audience.note) && (
+            <p className="font-body text-xs text-vb-muted">{pressKit.sourceNote}{pressKit.sourceNote && pressKit.updatedAt ? " · " : ""}{pressKit.updatedAt ? `Updated ${pressKit.updatedAt}` : ""}{(pressKit.sourceNote || pressKit.updatedAt) && pressKit.audience.note ? " · " : ""}{pressKit.audience.note}</p>
+          )}
+        </div>
+      )}
+      <Actions section={section} />
+    </div>
+  );
+}
+
+function PressMetric({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3"><p className="font-body text-[10px] uppercase tracking-wider text-vb-muted">{label}</p><p className="mt-1 font-display text-xl text-chrome">{value}</p></div>;
+}
+
 function CalloutSection({
   section,
   layout,

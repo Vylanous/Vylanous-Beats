@@ -236,6 +236,36 @@ const settingsSchema = z.object({
               )
               .max(24)
               .optional(),
+            pressKit: z
+              .object({
+                updatedAt: z.string().max(80).optional(),
+                sourceNote: z.string().max(240).optional(),
+                metrics: z
+                  .array(
+                    z.object({
+                      id: z.string().max(80),
+                      platform: z.enum(["youtube", "tiktok", "instagram", "facebook", "spotify", "soundcloud", "x", "website", "other"]),
+                      label: z.string().max(80).optional(),
+                      handle: z.string().max(120).optional(),
+                      followers: z.number().min(0).max(10_000_000_000).optional(),
+                      subscribers: z.number().min(0).max(10_000_000_000).optional(),
+                      videos: z.number().int().min(0).max(10_000_000).optional(),
+                      posts: z.number().int().min(0).max(10_000_000).optional(),
+                      views: z.number().min(0).max(10_000_000_000_000).optional(),
+                      likes: z.number().min(0).max(10_000_000_000_000).optional(),
+                      engagementRate: z.number().min(0).max(100).optional(),
+                      url: z.string().max(2000).optional(),
+                    }),
+                  )
+                  .max(24),
+                audience: z.object({
+                  gender: z.array(z.object({ label: z.string().max(80), value: z.number().min(0).max(100) })).max(12).optional(),
+                  age: z.array(z.object({ label: z.string().max(80), value: z.number().min(0).max(100) })).max(12).optional(),
+                  locations: z.array(z.object({ label: z.string().max(120), value: z.number().min(0).max(100) })).max(24).optional(),
+                  note: z.string().max(240).optional(),
+                }),
+              })
+              .optional(),
             layout: z
               .object({
                 width: z.enum(["narrow", "standard", "wide", "full"]).optional(),

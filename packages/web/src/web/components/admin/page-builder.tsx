@@ -39,6 +39,10 @@ import type {
   BuilderVersion,
   PageSection,
   PageSectionType,
+  PressKitBreakdown,
+  PressKitData,
+  PressKitMetric,
+  PressKitPlatform,
   SectionItem,
   SectionLayout,
   SiteSettings,
@@ -73,6 +77,18 @@ const DEVICE_OPTIONS = [
   { value: "tablet", label: "Tablet", Icon: Tablet, canvasClass: "w-[720px] max-w-full" },
   { value: "mobile", label: "Mobile", Icon: Smartphone, canvasClass: "w-[390px] max-w-full" },
 ] as const;
+
+const PRESS_KIT_PLATFORMS: { value: PressKitPlatform; label: string }[] = [
+  { value: "youtube", label: "YouTube" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "instagram", label: "Instagram" },
+  { value: "facebook", label: "Facebook" },
+  { value: "spotify", label: "Spotify" },
+  { value: "soundcloud", label: "SoundCloud" },
+  { value: "x", label: "X" },
+  { value: "website", label: "Website" },
+  { value: "other", label: "Other" },
+];
 
 const SECTION_TYPES: { type: PageSectionType; label: string }[] = [
   { type: "hero", label: "Hero" },
@@ -1639,6 +1655,12 @@ function SectionEditor({
                   onChange={(items) => onChange({ items })}
                 />
               )}
+              {section.type === "pressKit" && (
+                <PressKitEditor
+                  value={section.pressKit || { metrics: [], audience: {} }}
+                  onChange={(pressKit) => onChange({ pressKit })}
+                />
+              )}
               {section.type === "merch" && (
                 <div className="mt-3 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-3">
                   <div className="mb-3">
@@ -1765,6 +1787,198 @@ function ImageAssetField({
         onChange={onChange}
       />
     </div>
+  );
+}
+
+function PressKitEditor({
+  value,
+  onChange,
+}: {
+  value: PressKitData;
+  onChange: (value: PressKitData) => void;
+}) {
+  const metrics = value.metrics || [];
+  const audience = value.audience || {};
+  const updateMetric = (index: number, patch: Partial<PressKitMetric>) =>
+    onChange({
+      ...value,
+      metrics: metrics.map((metric, metricIndex) =>
+        metricIndex === index ? { ...metric, ...patch } : metric,
+      ),
+    });
+  const updateBreakdown = (
+    key: "gender" | "age" | "locations",
+    index: number,
+    patch: Partial<PressKitBreakdown>,
+  ) => {
+    const rows = audience[key] || [];
+    onChange({
+      ...value,
+      audience: {
+        ...audience,
+        [key]: rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)),
+      },
+    });
+  };
+  const addBreakdown = (key: "gender" | "age" | "locations") =>
+    onChange({
+      ...value,
+      audience: {
+        ...audience,
+        [key]: [...(audience[key] || []), { label: "New segment", value: 0 }],
+      },
+    });
+  const removeBreakdown = (key: "gender" | "age" | "locations", index: number) =>
+    onChange({
+      ...value,
+      audience: {
+        ...audience,
+        [key]: (audience[key] || []).filter((_, rowIndex) => rowIndex !== index),
+      },
+    });
+  return (
+    <div className="mt-3 space-y-4 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-3">
+      <div>
+        <h3 className="font-sub text-sm uppercase tracking-wide text-vb-purple-bright">Press Kit analytics</h3>
+        <p className="mt-1 font-body text-xs text-vb-silver/45">
+          Enter verified figures from each platform. The block presents a polished snapshot for press, booking, and partnership inquiries.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field
+          label="Last updated"
+          value={value.updatedAt || ""}
+          placeholder="August 2026"
+          onChange={(updatedAt) => onChange({ ...value, updatedAt })}
+        />
+        <Field
+          label="Source note"
+          value={value.sourceNote || ""}
+          placeholder="Platform analytics, last 28 days"
+          onChange={(sourceNote) => onChange({ ...value, sourceNote })}
+        />
+      </div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="font-sub text-xs uppercase tracking-wide text-vb-silver/70">Platforms</h4>
+          <button
+            type="button"
+            onClick={() =>
+              onChange({
+                ...value,
+                metrics: [
+                  ...metrics,
+                  { id: newId("metric"), platform: "youtube", label: "YouTube" },
+                ],
+              })
+            }
+            className="inline-flex items-center gap-1 rounded border border-vb-purple/40 px-2 py-1 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10"
+          >
+            <Plus size={13} /> Add platform
+          </button>
+        </div>
+        {metrics.length === 0 && (
+          <p className="rounded-lg border border-dashed border-white/10 px-3 py-3 font-body text-xs text-vb-silver/40">
+            Add YouTube, TikTok, Instagram, Facebook, Spotify, or another platform to begin.
+          </p>
+        )}
+        {metrics.map((metric, index) => (
+          <div key={metric.id} className="rounded-lg border border-white/[0.08] bg-vb-black/40 p-3">
+            <div className="mb-3 flex items-end gap-2">
+              <label className="block min-w-0 flex-1 font-body text-xs uppercase tracking-wider text-vb-silver/50">
+                Platform
+                <select
+                  aria-label={`Platform ${index + 1}`}
+                  value={metric.platform}
+                  onChange={(event) => updateMetric(index, { platform: event.target.value as PressKitPlatform })}
+                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+                >
+                  {PRESS_KIT_PLATFORMS.map((platform) => (
+                    <option key={platform.value} value={platform.value}>{platform.label}</option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                aria-label={`Remove platform ${index + 1}`}
+                onClick={() => onChange({ ...value, metrics: metrics.filter((_, metricIndex) => metricIndex !== index) })}
+                className="h-10 rounded-lg px-2 text-vb-silver/40 hover:bg-red-500/10 hover:text-red-400"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Display label" value={metric.label || ""} placeholder="Official channel" onChange={(label) => updateMetric(index, { label })} />
+              <Field label="Handle or account" value={metric.handle || ""} placeholder="@vylanous" onChange={(handle) => updateMetric(index, { handle })} />
+              <NumberField label="Followers" value={metric.followers} onChange={(followers) => updateMetric(index, { followers })} />
+              <NumberField label="Subscribers" value={metric.subscribers} onChange={(subscribers) => updateMetric(index, { subscribers })} />
+              <NumberField label="Videos uploaded" value={metric.videos} onChange={(videos) => updateMetric(index, { videos })} />
+              <NumberField label="Posts uploaded" value={metric.posts} onChange={(posts) => updateMetric(index, { posts })} />
+              <NumberField label="Total views" value={metric.views} onChange={(views) => updateMetric(index, { views })} />
+              <NumberField label="Likes" value={metric.likes} onChange={(likes) => updateMetric(index, { likes })} />
+              <NumberField label="Engagement rate %" value={metric.engagementRate} onChange={(engagementRate) => updateMetric(index, { engagementRate })} />
+              <Field label="Profile URL" value={metric.url || ""} placeholder="https://…" onChange={(url) => updateMetric(index, { url })} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {(["gender", "age", "locations"] as const).map((key) => {
+          const rows = audience[key] || [];
+          const label = key === "gender" ? "Gender" : key === "age" ? "Age groups" : "Top locations";
+          return (
+            <div key={key} className="rounded-lg border border-white/[0.08] bg-vb-black/40 p-3">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h4 className="font-sub text-xs uppercase tracking-wide text-vb-silver/70">{label}</h4>
+                <button type="button" onClick={() => addBreakdown(key)} className="rounded border border-white/10 px-2 py-1 font-sub text-[10px] uppercase text-vb-purple-bright hover:bg-vb-purple/10">Add</button>
+              </div>
+              <div className="space-y-2">
+                {rows.map((row, index) => (
+                  <div key={`${key}-${index}`} className="flex items-center gap-2">
+                    <input aria-label={`${label} segment ${index + 1}`} value={row.label} onChange={(event) => updateBreakdown(key, index, { label: event.target.value })} className="min-w-0 flex-1 rounded border border-white/10 bg-vb-black px-2 py-2 font-body text-xs text-vb-silver-bright outline-none focus:border-vb-purple-bright/60" />
+                    <input aria-label={`${label} percentage ${index + 1}`} type="number" min="0" max="100" step="0.1" value={row.value} onChange={(event) => updateBreakdown(key, index, { value: Number(event.target.value) || 0 })} className="w-20 rounded border border-white/10 bg-vb-black px-2 py-2 font-body text-xs text-vb-silver-bright outline-none focus:border-vb-purple-bright/60" />
+                    <span className="font-body text-xs text-vb-silver/40">%</span>
+                    <button type="button" aria-label={`Remove ${label} segment ${index + 1}`} onClick={() => removeBreakdown(key, index)} className="text-vb-silver/35 hover:text-red-400"><Trash2 size={13} /></button>
+                  </div>
+                ))}
+                {rows.length === 0 && <p className="font-body text-xs text-vb-silver/35">No data added.</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <Textarea
+        label="Audience note"
+        value={audience.note || ""}
+        placeholder="Optional context about the reporting period or methodology."
+        onChange={(note) => onChange({ ...value, audience: { ...audience, note } })}
+      />
+    </div>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value?: number;
+  onChange: (value: number | undefined) => void;
+}) {
+  return (
+    <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/50">
+      {label}
+      <input
+        aria-label={label}
+        type="number"
+        min="0"
+        step="any"
+        value={value ?? ""}
+        onChange={(event) => onChange(event.target.value === "" ? undefined : Number(event.target.value))}
+        className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+      />
+    </label>
   );
 }
 

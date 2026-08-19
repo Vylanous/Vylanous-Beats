@@ -100,6 +100,59 @@ describe("Site Builder settings migration", () => {
     });
   });
 
+  test("preserves Press Kit platform and audience analytics through settings migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_epk",
+          slug: "epk",
+          title: "Electronic Press Kit",
+          navLabel: "EPK",
+          published: true,
+          showInNav: true,
+          sections: [
+            {
+              id: "epk_press",
+              type: "pressKit",
+              title: "Press Kit",
+              pressKit: {
+                updatedAt: "August 2026",
+                sourceNote: "Platform analytics",
+                metrics: [
+                  {
+                    id: "youtube",
+                    platform: "youtube",
+                    label: "YouTube",
+                    subscribers: 12500,
+                    videos: 42,
+                    views: 240000,
+                  },
+                ],
+                audience: {
+                  gender: [{ label: "Women", value: 42 }],
+                  age: [{ label: "18–24", value: 38 }],
+                  locations: [{ label: "United States", value: 61 }],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const pressKit = settings.pages
+      .find((page) => page.id === "page_epk")
+      ?.sections.find((section) => section.id === "epk_press")?.pressKit;
+    expect(pressKit).toMatchObject({
+      updatedAt: "August 2026",
+      metrics: [{ platform: "youtube", subscribers: 12500, videos: 42, views: 240000 }],
+      audience: {
+        gender: [{ label: "Women", value: 42 }],
+        locations: [{ label: "United States", value: 61 }],
+      },
+    });
+  });
+
   test("preserves advanced section metadata through settings migration", () => {
     const settings = mergeSettings({
       pages: [

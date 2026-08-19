@@ -422,3 +422,14 @@
 User-reported issue: Clear Licensing card image uploads do not save to the live site. Preserve existing builder customization, same-origin storage proxy, accessible controls, and mobile layout.
 Parallel investigation list: page-builder upload/state, admin API persistence/storage, managed-page renderer/tests.
 Repository constraint: work directly in Vylanous/Vylanous-Beats; do not create a Manus checkpoint.
+
+## Press Kit Analytics Block
+
+- [x] Audit existing Press Kit section support, Add Block registry, editor controls, and public renderer.
+- [x] Add backward-compatible Press Kit platform, content, audience, and location data fields with server validation.
+- [x] Build the Press Kit editor controls and responsive public stats rendering.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and conflict review. The focused tests, typecheck, lint, and build pass; three existing URL-sign fixtures fail under the current injected storage environment.
+- [ ] Commit and push the Press Kit block directly to GitHub main.
+
+User request: add a Page Builder Add Block called Press Kit for YouTube, TikTok, Facebook, Instagram, and other platforms with followers/subscribers, videos uploaded, audience gender, demographics, locations, and additional analytics.
+Scope: start with explicit editable metrics and audience data; do not fabricate analytics or claim live API data unless a verified connector is configured.

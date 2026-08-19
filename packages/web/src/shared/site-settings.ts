@@ -69,6 +69,51 @@ export interface SectionLayout {
   fontFamily?: "brand" | "anton" | "league" | "barlow" | "editorial" | "mono" | "condensed";
 }
 
+export type PressKitPlatform =
+  | "youtube"
+  | "tiktok"
+  | "instagram"
+  | "facebook"
+  | "spotify"
+  | "soundcloud"
+  | "x"
+  | "website"
+  | "other";
+
+export interface PressKitMetric {
+  id: string;
+  platform: PressKitPlatform;
+  label?: string;
+  handle?: string;
+  followers?: number;
+  subscribers?: number;
+  videos?: number;
+  posts?: number;
+  views?: number;
+  likes?: number;
+  engagementRate?: number;
+  url?: string;
+}
+
+export interface PressKitBreakdown {
+  label: string;
+  value: number;
+}
+
+export interface PressKitAudience {
+  gender?: PressKitBreakdown[];
+  age?: PressKitBreakdown[];
+  locations?: PressKitBreakdown[];
+  note?: string;
+}
+
+export interface PressKitData {
+  updatedAt?: string;
+  sourceNote?: string;
+  metrics: PressKitMetric[];
+  audience: PressKitAudience;
+}
+
 export interface SectionItem {
   id: string;
   title: string;
@@ -98,6 +143,7 @@ export interface PageSection {
   /** Optional accessible label for the rendered section landmark. */
   ariaLabel?: string;
   items?: SectionItem[];
+  pressKit?: PressKitData;
   layout?: SectionLayout;
 }
 
@@ -584,8 +630,9 @@ export const DEFAULT_PAGES: BuilderPage[] = [
         layout: { surface: "mesh", spacing: "cinematic" },
       }),
       makeSection("epk_press", "pressKit", {
-        title: "Press Materials",
-        body: "Add your official bio, key links, performance history, and a downloadable one-sheet here.",
+        title: "Press Kit",
+        body: "Audience snapshots and platform reach for booking, press, and collaboration inquiries.",
+        pressKit: { metrics: [], audience: {} },
       }),
     ],
   }),
