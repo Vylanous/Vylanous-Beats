@@ -59,6 +59,12 @@ export interface SectionLayout {
   imageOverlay?: "none" | "soft" | "strong";
   borderRadius?: "none" | "soft" | "rounded";
   emphasis?: "standard" | "accent" | "muted";
+  palette?: "brand" | "mono" | "electric" | "sunset" | "forest";
+  typography?: "brand" | "editorial" | "mono" | "condensed";
+  headingScale?: "compact" | "standard" | "display" | "hero";
+  paddingX?: "none" | "tight" | "normal" | "wide";
+  shadow?: "none" | "soft" | "glow" | "dramatic";
+  borderStyle?: "none" | "subtle" | "accent" | "chrome";
 }
 
 export interface SectionItem {
@@ -297,6 +303,12 @@ const DEFAULT_SECTION_LAYOUT: Required<SectionLayout> = {
   imageOverlay: "none",
   borderRadius: "rounded",
   emphasis: "standard",
+  palette: "brand",
+  typography: "brand",
+  headingScale: "standard",
+  paddingX: "normal",
+  shadow: "none",
+  borderStyle: "none",
 };
 
 function makeSection(

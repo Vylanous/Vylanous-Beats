@@ -34,6 +34,43 @@ const ALIGNMENT: Record<NonNullable<SectionLayout["alignment"]>, string> = {
   center: "text-center items-center",
   right: "text-right items-end",
 };
+const PALETTE: Record<NonNullable<SectionLayout["palette"]>, string> = {
+  brand: "builder-palette-brand",
+  mono: "builder-palette-mono",
+  electric: "builder-palette-electric",
+  sunset: "builder-palette-sunset",
+  forest: "builder-palette-forest",
+};
+const HEADING_SCALE: Record<NonNullable<SectionLayout["headingScale"]>, string> = {
+  compact: "builder-heading-compact",
+  standard: "builder-heading-standard",
+  display: "builder-heading-display",
+  hero: "builder-heading-hero",
+};
+const TYPOGRAPHY: Record<NonNullable<SectionLayout["typography"]>, string> = {
+  brand: "builder-type-brand",
+  editorial: "builder-type-editorial",
+  mono: "builder-type-mono",
+  condensed: "builder-type-condensed",
+};
+const PADDING_X: Record<NonNullable<SectionLayout["paddingX"]>, string> = {
+  none: "px-0",
+  tight: "px-3 sm:px-5",
+  normal: "px-5 sm:px-8",
+  wide: "px-8 sm:px-14 lg:px-20",
+};
+const SHADOW: Record<NonNullable<SectionLayout["shadow"]>, string> = {
+  none: "",
+  soft: "shadow-[0_18px_55px_rgba(0,0,0,0.18)]",
+  glow: "shadow-[0_18px_70px_rgba(124,47,203,0.24)]",
+  dramatic: "shadow-[0_26px_90px_rgba(0,0,0,0.38)]",
+};
+const BORDER_STYLE: Record<NonNullable<SectionLayout["borderStyle"]>, string> = {
+  none: "border-transparent",
+  subtle: "border-white/[0.08]",
+  accent: "border-vb-purple/35",
+  chrome: "border-white/30",
+};
 const SURFACE: Record<NonNullable<SectionLayout["surface"]>, string> = {
   transparent: "",
   ink: "bg-vb-ink",
@@ -72,6 +109,12 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   imageOverlay: "none",
   borderRadius: "rounded",
   emphasis: "standard",
+  palette: "brand",
+  typography: "brand",
+  headingScale: "standard",
+  paddingX: "normal",
+  shadow: "none",
+  borderStyle: "none",
 };
 
 function usePageMetadata(page: BuilderPage | undefined) {
@@ -167,7 +210,10 @@ function BuilderSection({
   };
   if (section.type === "marquee")
     return (
-      <div {...sectionAttributes} className={section.customClass || undefined}>
+      <div
+        {...sectionAttributes}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]}`}
+      >
         <Marquee text={section.title || "VYLANOUS BEATS"} />
       </div>
     );
@@ -175,18 +221,24 @@ function BuilderSection({
     return (
       <div
         {...sectionAttributes}
-        className={`${section.customClass || ""} mx-auto h-px ${WIDTH[layout.width]} bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} mx-auto h-px ${WIDTH[layout.width]} bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
       />
     );
   if (section.type === "spacer")
-    return <div {...sectionAttributes} aria-hidden="true" className={`${section.customClass || ""} ${SPACING[layout.spacing]}`} />;
+    return (
+      <div
+        {...sectionAttributes}
+        aria-hidden="true"
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} ${SPACING[layout.spacing]}`}
+      />
+    );
   return (
     <section
       {...sectionAttributes}
-      className={`${section.customClass || ""} ${SURFACE[layout.surface]}`}
+      className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]}`}
     >
       <div
-        className={`relative mx-auto flex ${WIDTH[layout.width]} ${SPACING[layout.spacing]} flex-col px-5 sm:px-8 ${ALIGNMENT[layout.alignment]}`}
+        className={`relative mx-auto flex ${WIDTH[layout.width]} ${SPACING[layout.spacing]} flex-col ${PADDING_X[layout.paddingX]} ${ALIGNMENT[layout.alignment]}`}
       >
         {section.type === "hero" && <HeroSection section={section} layout={layout} />}
         {section.type === "text" && <CopySection section={section} layout={layout} />}

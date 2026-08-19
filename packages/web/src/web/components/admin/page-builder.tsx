@@ -105,6 +105,12 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   imageOverlay: "none",
   borderRadius: "rounded",
   emphasis: "standard",
+  palette: "brand",
+  typography: "brand",
+  headingScale: "standard",
+  paddingX: "normal",
+  shadow: "none",
+  borderStyle: "none",
 };
 
 function newId(prefix: string) {
@@ -782,6 +788,10 @@ export default function PageBuilderPanel() {
                   <SectionEditor
                     section={section}
                     preview={previewPage?.sections.find((candidate) => candidate.id === section.id)}
+                    fourthwall={settings.fourthwall}
+                    onFourthwallChange={(patch) =>
+                      updateSettings({ fourthwall: { ...settings.fourthwall, ...patch } })
+                    }
                     onChange={(patch) => updateSection(section.id, patch)}
                     onDuplicate={() => duplicateSection(section.id)}
                     onDelete={() =>
@@ -797,7 +807,6 @@ export default function PageBuilderPanel() {
             </div>
           </section>
           <SeoEditor page={page} preview={previewPage} onChange={updatePage} />
-          <FourthwallEditor settings={settings} onChange={updateSettings} />
         </div>
       </div>
     </div>
@@ -1465,6 +1474,8 @@ function PagePropertiesEditor({
 function SectionEditor({
   section,
   preview,
+  fourthwall,
+  onFourthwallChange,
   onChange,
   onDelete,
   onDuplicate,
@@ -1472,6 +1483,8 @@ function SectionEditor({
 }: {
   section: PageSection;
   preview?: PageSection;
+  fourthwall: SiteSettings["fourthwall"];
+  onFourthwallChange: (patch: Partial<SiteSettings["fourthwall"]>) => void;
   onChange: (patch: Partial<PageSection>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -1625,13 +1638,41 @@ function SectionEditor({
                 />
               )}
               {section.type === "merch" && (
-                <Field
-                  label="Fourthwall collection"
-                  value={section.collection || ""}
-                  hint="Use `all` for every product, or enter the Fourthwall collection handle."
-                  placeholder="all"
-                  onChange={(value) => onChange({ collection: value })}
-                />
+                <div className="mt-3 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-3">
+                  <div className="mb-3">
+                    <h3 className="font-sub text-sm uppercase tracking-wide text-vb-purple-bright">
+                      Merch store settings
+                    </h3>
+                    <p className="mt-1 font-body text-xs text-vb-silver/45">
+                      These settings apply to this Merch page and its Fourthwall product feed.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field
+                      label="Shop domain"
+                      value={fourthwall.shopDomain}
+                      placeholder="your-shop.fourthwall.com"
+                      onChange={(value) =>
+                        onFourthwallChange({ shopDomain: value.replace(/^https?:\/\//, "") })
+                      }
+                    />
+                    <Field
+                      label="Collection"
+                      value={section.collection || fourthwall.defaultCollection}
+                      hint="Use all for every product."
+                      onChange={(value) => {
+                        onChange({ collection: value });
+                        onFourthwallChange({ defaultCollection: value });
+                      }}
+                    />
+                    <Field
+                      label="Currency"
+                      value={fourthwall.currency}
+                      placeholder="USD"
+                      onChange={(value) => onFourthwallChange({ currency: value.toUpperCase().slice(0, 3) })}
+                    />
+                  </div>
+                </div>
               )}
               {supportsCta && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -1858,6 +1899,48 @@ function LayoutControls({
       </summary>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SelectField
+          label="Color palette"
+          value={layout.palette}
+          options={["brand", "mono", "electric", "sunset", "forest"]}
+          onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })}
+        />
+        <SelectField
+          label="Typography"
+          value={layout.typography}
+          options={["brand", "editorial", "mono", "condensed"]}
+          onChange={(value) =>
+            onChange({ typography: value as Required<SectionLayout>["typography"] })
+          }
+        />
+        <SelectField
+          label="Heading scale"
+          value={layout.headingScale}
+          options={["compact", "standard", "display", "hero"]}
+          onChange={(value) =>
+            onChange({ headingScale: value as Required<SectionLayout>["headingScale"] })
+          }
+        />
+        <SelectField
+          label="Horizontal padding"
+          value={layout.paddingX}
+          options={["none", "tight", "normal", "wide"]}
+          onChange={(value) => onChange({ paddingX: value as Required<SectionLayout>["paddingX"] })}
+        />
+        <SelectField
+          label="Shadow effect"
+          value={layout.shadow}
+          options={["none", "soft", "glow", "dramatic"]}
+          onChange={(value) => onChange({ shadow: value as Required<SectionLayout>["shadow"] })}
+        />
+        <SelectField
+          label="Border treatment"
+          value={layout.borderStyle}
+          options={["none", "subtle", "accent", "chrome"]}
+          onChange={(value) =>
+            onChange({ borderStyle: value as Required<SectionLayout>["borderStyle"] })
+          }
+        />
+        <SelectField
           label="Content width"
           value={layout.width}
           options={["narrow", "standard", "wide", "full"]}
@@ -1994,41 +2077,6 @@ function SeoEditor({
   );
 }
 
-function FourthwallEditor({
-  settings,
-  onChange,
-}: {
-  settings: SiteSettings;
-  onChange: (patch: Partial<SiteSettings>) => void;
-}) {
-  const set = (patch: Partial<SiteSettings["fourthwall"]>) =>
-    onChange({ fourthwall: { ...settings.fourthwall, ...patch } });
-  return (
-    <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-      <h2 className="font-sub text-xl uppercase tracking-wide">Fourthwall storefront</h2>
-      <p className="mt-1 font-body text-sm text-vb-silver/50">
-        Merch sections load products securely from your existing Fourthwall shop.
-      </p>
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <Field
-          label="Shop domain"
-          value={settings.fourthwall.shopDomain}
-          onChange={(value) => set({ shopDomain: value.replace(/^https?:\/\//, "") })}
-        />
-        <Field
-          label="Default collection"
-          value={settings.fourthwall.defaultCollection}
-          onChange={(value) => set({ defaultCollection: value })}
-        />
-        <Field
-          label="Currency"
-          value={settings.fourthwall.currency}
-          onChange={(value) => set({ currency: value.toUpperCase().slice(0, 3) })}
-        />
-      </div>
-    </section>
-  );
-}
 
 function Field({
   label,

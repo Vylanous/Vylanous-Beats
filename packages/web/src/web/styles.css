@@ -246,3 +246,66 @@
     scrollbar-width: none;
   }
 }
+
+
+/* Builder Studio section style presets. These classes are intentionally scoped to
+ * builder sections so page-level brand chrome remains unchanged. */
+.builder-palette-mono {
+  --builder-accent: #c9ccd6;
+  --builder-accent-bright: #ffffff;
+  --builder-surface: rgba(255, 255, 255, 0.06);
+}
+.builder-palette-electric {
+  --builder-accent: #22d3ee;
+  --builder-accent-bright: #67e8f9;
+  --builder-surface: rgba(34, 211, 238, 0.08);
+}
+.builder-palette-sunset {
+  --builder-accent: #fb7185;
+  --builder-accent-bright: #fdba74;
+  --builder-surface: rgba(251, 113, 133, 0.08);
+}
+.builder-palette-forest {
+  --builder-accent: #34d399;
+  --builder-accent-bright: #a7f3d0;
+  --builder-surface: rgba(52, 211, 153, 0.08);
+}
+.builder-palette-electric .text-purple-glow,
+.builder-palette-sunset .text-purple-glow,
+.builder-palette-forest .text-purple-glow,
+.builder-palette-mono .text-purple-glow {
+  color: var(--builder-accent-bright);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--builder-accent) 55%, transparent);
+}
+.builder-palette-electric .text-vb-purple-bright,
+.builder-palette-sunset .text-vb-purple-bright,
+.builder-palette-forest .text-vb-purple-bright,
+.builder-palette-mono .text-vb-purple-bright {
+  color: var(--builder-accent-bright);
+}
+.builder-type-editorial .font-display {
+  font-family: Georgia, "Times New Roman", serif !important;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+.builder-type-mono .font-display,
+.builder-type-mono .font-sub,
+.builder-type-mono .font-body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  letter-spacing: 0.02em;
+}
+.builder-type-condensed .font-display,
+.builder-type-condensed .font-sub,
+.builder-type-condensed .font-body {
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif !important;
+  letter-spacing: 0.015em;
+}
+.builder-heading-compact .font-display {
+  font-size: clamp(2.2rem, 5vw, 4rem) !important;
+}
+.builder-heading-display .font-display {
+  font-size: clamp(3.8rem, 9vw, 8rem) !important;
+}
+.builder-heading-hero .font-display {
+  font-size: clamp(4.5rem, 12vw, 11rem) !important;
+}

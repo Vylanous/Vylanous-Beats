@@ -251,6 +251,12 @@ const settingsSchema = z.object({
                 imageOverlay: z.enum(["none", "soft", "strong"]).optional(),
                 borderRadius: z.enum(["none", "soft", "rounded"]).optional(),
                 emphasis: z.enum(["standard", "accent", "muted"]).optional(),
+                palette: z.enum(["brand", "mono", "electric", "sunset", "forest"]).optional(),
+                typography: z.enum(["brand", "editorial", "mono", "condensed"]).optional(),
+                headingScale: z.enum(["compact", "standard", "display", "hero"]).optional(),
+                paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
+                shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
+                borderStyle: z.enum(["none", "subtle", "accent", "chrome"]).optional(),
               })
               .optional(),
           }),
