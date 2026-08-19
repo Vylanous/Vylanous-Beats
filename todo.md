@@ -378,4 +378,4 @@
 - [x] Fix Clear Licensing and shared Builder Studio upload/save persistence paths.
 - [x] Add editable page titles and descriptions with backward-compatible metadata rendering.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
-- [ ] Commit and push the verified Builder Studio repair to GitHub.
+- [x] Commit and push the verified Builder Studio repair to GitHub.
