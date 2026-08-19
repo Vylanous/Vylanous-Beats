@@ -1794,11 +1794,18 @@ function ItemsEditor({
       </div>
       {items.length > 0 && (
         <div className="mb-3 grid gap-3 sm:grid-cols-2">
-          {items.map((item, index) => (
-            <div
-              key={item.id}
-              className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"
-            >
+          {items.map((item, index) => {
+            const updateItem = (patch: Partial<SectionItem>) =>
+              onChange(
+                items.map((candidate, candidateIndex) =>
+                  candidateIndex === index ? { ...candidate, ...patch } : candidate,
+                ),
+              );
+            return (
+              <div
+                key={item.id}
+                className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3"
+              >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <span className="font-body text-xs text-vb-silver/55">
                   {item.title || `Item ${index + 1}`}
@@ -1814,48 +1821,24 @@ function ItemsEditor({
               <Field
                 label="Title"
                 value={item.title}
-                onChange={(title) =>
-                  onChange(
-                    items.map((candidate) =>
-                      candidate.id === item.id ? { ...candidate, title } : candidate,
-                    ),
-                  )
-                }
+                onChange={(title) => updateItem({ title })}
               />
               <Textarea
                 label="Description"
                 value={item.body || ""}
-                onChange={(body) =>
-                  onChange(
-                    items.map((candidate) =>
-                      candidate.id === item.id ? { ...candidate, body } : candidate,
-                    ),
-                  )
-                }
+                onChange={(body) => updateItem({ body })}
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field
                   label="Button label"
                   value={item.label || ""}
-                  onChange={(labelValue) =>
-                    onChange(
-                      items.map((candidate) =>
-                        candidate.id === item.id ? { ...candidate, label: labelValue } : candidate,
-                      ),
-                    )
-                  }
+                  onChange={(labelValue) => updateItem({ label: labelValue })}
                 />
                 <Field
                   label="Link URL"
                   value={item.href || ""}
                   placeholder="https://… or /page"
-                  onChange={(href) =>
-                    onChange(
-                      items.map((candidate) =>
-                        candidate.id === item.id ? { ...candidate, href } : candidate,
-                      ),
-                    )
-                  }
+                  onChange={(href) => updateItem({ href })}
                 />
               </div>
               <FileUpload
@@ -1867,16 +1850,11 @@ function ItemsEditor({
                 maxBytes={10 * 1024 * 1024}
                 value={item.imageUrl || ""}
                 previewUrl={previewItems.find((candidate) => candidate.id === item.id)?.imageUrl}
-                onChange={(imageUrl) =>
-                  onChange(
-                    items.map((candidate) =>
-                      candidate.id === item.id ? { ...candidate, imageUrl } : candidate,
-                    ),
-                  )
-                }
+                onChange={(imageUrl) => updateItem({ imageUrl })}
               />
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <p className="mt-3 font-body text-xs text-vb-silver/40">

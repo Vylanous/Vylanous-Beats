@@ -704,6 +704,19 @@ function pagePath(page: Pick<BuilderPage, "path" | "slug">): string {
   return page.path || (page.slug === "home" ? "/" : `/${page.slug}`);
 }
 
+function mergeSectionItems(
+  templateItems: SectionItem[] | undefined,
+  storedItems: SectionItem[] | undefined,
+): SectionItem[] | undefined {
+  if (!Array.isArray(storedItems)) return templateItems;
+  const templates = new Map((templateItems || []).map((item) => [item.id, item]));
+  return storedItems.map((storedItem, index) => ({
+    ...templates.get(storedItem.id),
+    ...storedItem,
+    id: storedItem.id || `item_${index}`,
+  }));
+}
+
 function mergePage(
   defaultPage: BuilderPage,
   storedPage: Partial<BuilderPage> | undefined,
@@ -721,6 +734,7 @@ function mergePage(
         ...template,
         ...storedSection,
         id: storedSection.id || `section_${index}`,
+        items: mergeSectionItems(template?.items, storedSection.items),
         layout: { ...DEFAULT_SECTION_LAYOUT, ...template?.layout, ...storedSection.layout },
       } as PageSection;
     }),

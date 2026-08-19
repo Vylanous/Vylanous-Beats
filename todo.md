@@ -410,3 +410,15 @@
 - [x] Build hex and color-picker controls, expanded font selection, and live section styling.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
 - [x] Commit and push the verified custom color and font expansion to GitHub.
+
+## Clear Licensing Card Image Upload Repair
+
+- [x] Trace the Clear Licensing image editor state, upload/proxy flow, save payload, persistence, and live renderer.
+- [x] Fix the root cause so uploaded Clear Licensing artwork survives save and displays on the live site.
+- [x] Add or update regression coverage for the Clear Licensing upload/save path.
+- [x] Run targeted tests, typecheck, lint, build, and final diff/conflict review. The focused checks pass; three pre-existing URL-sign tests fail under the current injected storage environment.
+- [ ] Commit and push the verified Clear Licensing upload repair to GitHub.
+
+User-reported issue: Clear Licensing card image uploads do not save to the live site. Preserve existing builder customization, same-origin storage proxy, accessible controls, and mobile layout.
+Parallel investigation list: page-builder upload/state, admin API persistence/storage, managed-page renderer/tests.
+Repository constraint: work directly in Vylanous/Vylanous-Beats; do not create a Manus checkpoint.

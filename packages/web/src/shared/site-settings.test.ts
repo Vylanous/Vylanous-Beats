@@ -56,6 +56,50 @@ describe("Site Builder settings migration", () => {
     expect(settings.newsletterPopup.buttonLabel).toBe("Join the list");
   });
 
+  test("preserves uploaded feature-card artwork through settings migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "home",
+          slug: "home",
+          title: "Home",
+          navLabel: "Home",
+          published: true,
+          showInNav: true,
+          sections: [
+            {
+              id: "home_values",
+              type: "featureCards",
+              items: [
+                {
+                  id: "delivery",
+                  title: "Instant Delivery",
+                },
+                {
+                  id: "licensing",
+                  title: "Clear Licensing",
+                  body: "Five tiers from free to full exclusive ownership.",
+                  imageUrl: "site-builder/images/clear-licensing-artwork.png",
+                },
+                {
+                  id: "quality",
+                  title: "Studio Quality",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const section = settings.pages.find((page) => page.id === "home")?.sections[0];
+    expect(section?.items?.find((item) => item.id === "licensing")).toMatchObject({
+      id: "licensing",
+      title: "Clear Licensing",
+      imageUrl: "site-builder/images/clear-licensing-artwork.png",
+    });
+  });
+
   test("preserves advanced section metadata through settings migration", () => {
     const settings = mergeSettings({
       pages: [
