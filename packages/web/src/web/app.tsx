@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import Index from "./pages/index";
 import { Provider } from "./components/provider";
+import { MANAGED_PAGE_FALLBACK_ROUTE } from "./lib/page-routes";
 
 const BeatsPage = lazy(() => import("./pages/beats"));
 const BeatDetail = lazy(() => import("./pages/beat-detail"));
@@ -49,7 +50,7 @@ function App() {
           <Route path="/dashboard" component={DashboardPage} />
           <Route path="/verify-email" component={VerifyEmailPage} />
           <Route path="/admin" component={AdminPage} />
-          <Route path="/:rest*" component={BuilderPage} />
+          <Route path={MANAGED_PAGE_FALLBACK_ROUTE} component={BuilderPage} />
           <Route>
             <div className="min-h-screen grid place-items-center bg-vb-black">
               <div className="text-center">

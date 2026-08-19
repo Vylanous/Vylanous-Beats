@@ -532,6 +532,15 @@ User request: retain the existing color customization while adding a real page b
 
 User request: allow individual parts of the text body entered for Page Sections to be bold, italic, or underlined on every Builder page.
 
+## Artist Blog Nested Route Diagnosis
+
+- [x] Inspect saved Artist and Blog Builder-page settings, generated nested paths, and route matching behavior. The parent Artist page and its generated `/artist/blog` links are correct; direct production access to `/artist/blog` reaches the application 404 page.
+- [x] Identify and repair the confirmed nested Artist Blog routing cause, if code is responsible. Confirmed source cause: the Wouter pattern `/:rest*` accepts only one URL segment, so it matches `/artist` but not `/artist/blog`; the catch-all now uses the parser’s `/*` wildcard form.
+- [x] Add regression coverage and run relevant tests, typecheck, lint, production build, and final diff review. Targeted route tests, the full isolated suite, typecheck, lint, and production build pass.
+- [x] Commit and push the verified nested Artist Blog routing repair directly to GitHub main.
+
+User report: the Blog page nested within the Artist page is not routing properly.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.
