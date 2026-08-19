@@ -393,7 +393,7 @@
 - [x] Add backward-compatible section style tokens for palette, typography, spacing, sizing, borders, and layout effects.
 - [x] Build the visual Style tab controls and apply the new settings to live section rendering.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
-- [ ] Commit and push the verified Style tab expansion to GitHub.
+- [x] Commit and push the verified Style tab expansion to GitHub.
 
 ## Builder Studio Merch Settings Consolidation
 
@@ -401,4 +401,4 @@
 - [x] Expose the relevant Fourthwall storefront settings within the Merch page or Merch section editor.
 - [x] Preserve existing saved Fourthwall configuration and live merch behavior.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
-- [ ] Commit and push the verified Merch settings consolidation to GitHub.
+- [x] Commit and push the verified Merch settings consolidation to GitHub.
