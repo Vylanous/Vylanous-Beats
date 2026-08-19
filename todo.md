@@ -417,7 +417,7 @@
 - [x] Fix the root cause so uploaded Clear Licensing artwork survives save and displays on the live site.
 - [x] Add or update regression coverage for the Clear Licensing upload/save path.
 - [x] Run targeted tests, typecheck, lint, build, and final diff/conflict review. The focused checks pass; three pre-existing URL-sign tests fail under the current injected storage environment.
-- [ ] Commit and push the verified Clear Licensing upload repair to GitHub.
+- [x] Commit and push the verified Clear Licensing upload repair to GitHub.
 
 User-reported issue: Clear Licensing card image uploads do not save to the live site. Preserve existing builder customization, same-origin storage proxy, accessible controls, and mobile layout.
 Parallel investigation list: page-builder upload/state, admin API persistence/storage, managed-page renderer/tests.
