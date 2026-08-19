@@ -65,6 +65,8 @@ export interface SectionLayout {
   paddingX?: "none" | "tight" | "normal" | "wide";
   shadow?: "none" | "soft" | "glow" | "dramatic";
   borderStyle?: "none" | "subtle" | "accent" | "chrome";
+  customColor?: string;
+  fontFamily?: "brand" | "anton" | "league" | "barlow" | "editorial" | "mono" | "condensed";
 }
 
 export interface SectionItem {
@@ -309,6 +311,8 @@ const DEFAULT_SECTION_LAYOUT: Required<SectionLayout> = {
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
+  customColor: "",
+  fontFamily: "brand",
 };
 
 function makeSection(

@@ -257,6 +257,8 @@ const settingsSchema = z.object({
                 paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
                 shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
                 borderStyle: z.enum(["none", "subtle", "accent", "chrome"]).optional(),
+                customColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+                fontFamily: z.enum(["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]).optional(),
               })
               .optional(),
           }),

@@ -402,3 +402,11 @@
 - [x] Preserve existing saved Fourthwall configuration and live merch behavior.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
 - [x] Commit and push the verified Merch settings consolidation to GitHub.
+
+## Builder Studio Custom Color and Font Controls
+
+- [x] Audit current section style fields, font presets, Style tab controls, and live CSS rendering.
+- [x] Add backward-compatible custom color and font fields with server validation.
+- [x] Build hex and color-picker controls, expanded font selection, and live section styling.
+- [x] Add regression coverage and run typecheck, tests, lint, production build, and final diff review.
+- [ ] Commit and push the verified custom color and font expansion to GitHub.

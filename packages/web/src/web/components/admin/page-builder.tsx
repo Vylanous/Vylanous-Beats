@@ -111,6 +111,8 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
+  customColor: "",
+  fontFamily: "brand",
 };
 
 function newId(prefix: string) {
@@ -1905,13 +1907,61 @@ function LayoutControls({
           onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })}
         />
         <SelectField
-          label="Typography"
+          label="Typography preset"
           value={layout.typography}
           options={["brand", "editorial", "mono", "condensed"]}
           onChange={(value) =>
             onChange({ typography: value as Required<SectionLayout>["typography"] })
           }
         />
+        <SelectField
+          label="Font family"
+          value={layout.fontFamily}
+          options={["brand", "anton", "league", "barlow", "editorial", "mono", "condensed"]}
+          onChange={(value) =>
+            onChange({ fontFamily: value as Required<SectionLayout>["fontFamily"] })
+          }
+        />
+        <div className="space-y-1.5">
+          <span className="font-sub text-xs uppercase tracking-wide text-vb-silver/70">
+            Custom accent color
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              id="builder-custom-accent-color"
+              type="color"
+              aria-label="Choose custom accent color"
+              value={layout.customColor || "#7c2fcb"}
+              onChange={(event) => onChange({ customColor: event.currentTarget.value.toUpperCase() })}
+              className="h-10 w-12 cursor-pointer rounded-md border border-white/15 bg-transparent p-1"
+            />
+            <input
+              id="builder-custom-accent-hex"
+              type="text"
+              aria-label="Custom accent color hex value"
+              value={layout.customColor}
+              placeholder="#7C2FCB"
+              maxLength={7}
+              onChange={(event) => {
+                const value = event.currentTarget.value.toUpperCase();
+                if (value === "" || /^#[0-9A-F]{0,6}$/.test(value)) onChange({ customColor: value });
+              }}
+              className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-vb-black/40 px-3 font-mono text-sm text-vb-silver-bright outline-none transition focus:border-vb-purple-bright focus:ring-2 focus:ring-vb-purple/30"
+            />
+            {layout.customColor && (
+              <button
+                type="button"
+                onClick={() => onChange({ customColor: "" })}
+                className="font-sub text-[11px] uppercase tracking-wide text-vb-muted hover:text-vb-purple-bright"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+          <p className="font-body text-[11px] text-vb-muted">
+            Overrides the selected palette accent for this section.
+          </p>
+        </div>
         <SelectField
           label="Heading scale"
           value={layout.headingScale}

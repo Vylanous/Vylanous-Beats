@@ -309,3 +309,48 @@
 .builder-heading-hero .font-display {
   font-size: clamp(4.5rem, 12vw, 11rem) !important;
 }
+
+
+.builder-font-anton .font-display,
+.builder-font-anton .font-sub,
+.builder-font-anton .font-body {
+  font-family: "Anton", sans-serif !important;
+}
+.builder-font-league .font-display,
+.builder-font-league .font-sub,
+.builder-font-league .font-body {
+  font-family: "League Gothic", sans-serif !important;
+}
+.builder-font-barlow .font-display,
+.builder-font-barlow .font-sub,
+.builder-font-barlow .font-body {
+  font-family: "Barlow Semi Condensed", sans-serif !important;
+}
+.builder-font-editorial-family .font-display,
+.builder-font-editorial-family .font-sub,
+.builder-font-editorial-family .font-body {
+  font-family: Georgia, "Times New Roman", serif !important;
+}
+.builder-font-mono-family .font-display,
+.builder-font-mono-family .font-sub,
+.builder-font-mono-family .font-body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+.builder-font-condensed-family .font-display,
+.builder-font-condensed-family .font-sub,
+.builder-font-condensed-family .font-body {
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif !important;
+}
+.builder-custom-color .text-purple-glow,
+.builder-custom-color .text-vb-purple-bright {
+  color: var(--builder-custom-color) !important;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--builder-custom-color) 55%, transparent);
+}
+.builder-custom-color .bg-vb-purple\/15,
+.builder-custom-color .bg-vb-purple\/\[0\.06\] {
+  background-color: color-mix(in srgb, var(--builder-custom-color) 15%, transparent) !important;
+}
+.builder-custom-color .border-vb-purple\/20,
+.builder-custom-color .border-vb-purple\/35 {
+  border-color: color-mix(in srgb, var(--builder-custom-color) 35%, transparent) !important;
+}

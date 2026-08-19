@@ -47,6 +47,15 @@ const HEADING_SCALE: Record<NonNullable<SectionLayout["headingScale"]>, string> 
   display: "builder-heading-display",
   hero: "builder-heading-hero",
 };
+const FONT_FAMILY: Record<NonNullable<SectionLayout["fontFamily"]>, string> = {
+  brand: "builder-font-brand",
+  anton: "builder-font-anton",
+  league: "builder-font-league",
+  barlow: "builder-font-barlow",
+  editorial: "builder-font-editorial-family",
+  mono: "builder-font-mono-family",
+  condensed: "builder-font-condensed-family",
+};
 const TYPOGRAPHY: Record<NonNullable<SectionLayout["typography"]>, string> = {
   brand: "builder-type-brand",
   editorial: "builder-type-editorial",
@@ -115,6 +124,8 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   paddingX: "normal",
   shadow: "none",
   borderStyle: "none",
+  customColor: "",
+  fontFamily: "brand",
 };
 
 function usePageMetadata(page: BuilderPage | undefined) {
@@ -208,11 +219,15 @@ function BuilderSection({
     id: section.anchorId || undefined,
     "aria-label": section.ariaLabel || undefined,
   };
+  const customStyle = section.layout?.customColor
+    ? ({ "--builder-custom-color": section.layout.customColor } as Record<string, string>)
+    : undefined;
+  const customColorClass = section.layout?.customColor ? "builder-custom-color" : "";
   if (section.type === "marquee")
     return (
       <div
         {...sectionAttributes}
-        className={`${section.customClass || ""} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]}`}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${FONT_FAMILY[layout.fontFamily]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${customColorClass}`}
       >
         <Marquee text={section.title || "VYLANOUS BEATS"} />
       </div>
@@ -234,8 +249,10 @@ function BuilderSection({
     );
   return (
     <section
-      {...sectionAttributes}
-      className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]}`}
+              {...sectionAttributes}
+        style={customStyle}
+        className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} ${TYPOGRAPHY[layout.typography]} ${FONT_FAMILY[layout.fontFamily]} ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} ${customColorClass}`}
+
     >
       <div
         className={`relative mx-auto flex ${WIDTH[layout.width]} ${SPACING[layout.spacing]} flex-col ${PADDING_X[layout.paddingX]} ${ALIGNMENT[layout.alignment]}`}
