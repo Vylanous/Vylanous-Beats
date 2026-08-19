@@ -34,7 +34,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
-import { parseInlineText } from "../../lib/inline-text";
+import { insertInlineText, parseInlineText } from "../../lib/inline-text";
 import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
@@ -1740,8 +1740,12 @@ function SectionEditor({
                   value={section.body || ""}
                   formatted={section.bodyFormat === "inline"}
                   placeholder="Write the supporting copy visitors will see."
-                  onChange={(value) => onChange({ body: value })}
-                  onFormat={() => onChange({ bodyFormat: "inline" })}
+                  onChange={(value, enableInlineFormat) =>
+                    onChange({
+                      body: value,
+                      ...(enableInlineFormat ? { bodyFormat: "inline" } : {}),
+                    })
+                  }
                 />
               )}
               {supportsMedia && (
@@ -2695,28 +2699,31 @@ function RichTextArea({
   value,
   formatted,
   onChange,
-  onFormat,
   placeholder,
 }: {
   label: string;
   value: string;
   formatted: boolean;
-  onChange: (value: string) => void;
-  onFormat: () => void;
+  onChange: (value: string, enableInlineFormat?: boolean) => void;
   placeholder?: string;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [formatStatus, setFormatStatus] = useState("");
   const wrapSelection = (open: string, close = open) => {
     const input = inputRef.current;
-    if (!input || input.selectionStart === input.selectionEnd) return;
+    if (!input) return;
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    const selected = value.slice(start, end);
-    onChange(`${value.slice(0, start)}${open}${selected}${close}${value.slice(end)}`);
-    onFormat();
+    const insertion = insertInlineText(value, start, end, open, close);
+    onChange(insertion.value, true);
+    setFormatStatus(
+      insertion.usedPlaceholder
+        ? "Formatting is ready. Replace the selected placeholder with your text."
+        : "Formatting applied to the selected text.",
+    );
     requestAnimationFrame(() => {
       input.focus();
-      input.setSelectionRange(start + open.length, end + open.length);
+      input.setSelectionRange(insertion.selectionStart, insertion.selectionEnd);
     });
   };
   const controls = [
@@ -2737,7 +2744,8 @@ function RichTextArea({
         </div>
       </div>
       <textarea ref={inputRef} id="builder-rich-text-content" aria-label={label} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} rows={5} className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60" />
-      <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">Select words in your copy, then use the controls above. Bold, italic, and underline work across published Builder pages{formatted ? "." : " once applied."}</p>
+      <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">Select existing words, or place the cursor where new formatted copy should begin, then use a control. Bold, italic, and underline work across published Builder pages{formatted ? "." : " once applied."}</p>
+      <output className="mt-1 block font-body text-[11px] text-vb-purple-bright">{formatStatus}</output>
       <div aria-live="polite" aria-label="Live formatted text preview" className="mt-3 rounded-lg border border-vb-purple/25 bg-vb-purple/[0.07] p-3">
         <p className="font-sub text-[10px] uppercase tracking-[0.18em] text-vb-purple-bright">Live preview</p>
         <p className="mt-1 whitespace-pre-wrap font-body text-sm leading-relaxed text-vb-silver-bright">

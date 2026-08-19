@@ -5,6 +5,38 @@ export interface InlineTextToken {
   style: InlineTextStyle;
 }
 
+export interface InlineTextInsertion {
+  value: string;
+  selectionStart: number;
+  selectionEnd: number;
+  usedPlaceholder: boolean;
+}
+
+/**
+ * Safely inserts a limited inline-format wrapper around the selected range. If
+ * no text is selected, it inserts a selected placeholder so the next keystroke
+ * replaces it with formatted copy instead of silently doing nothing.
+ */
+export function insertInlineText(
+  value: string,
+  start: number,
+  end: number,
+  open: string,
+  close = open,
+  placeholder = "formatted text",
+): InlineTextInsertion {
+  const selectionStart = Math.max(0, Math.min(start, value.length));
+  const selectionEnd = Math.max(selectionStart, Math.min(end, value.length));
+  const selected = value.slice(selectionStart, selectionEnd);
+  const insertedText = selected || placeholder;
+  return {
+    value: `${value.slice(0, selectionStart)}${open}${insertedText}${close}${value.slice(selectionEnd)}`,
+    selectionStart: selectionStart + open.length,
+    selectionEnd: selectionStart + open.length + insertedText.length,
+    usedPlaceholder: !selected,
+  };
+}
+
 const WRAPPERS: Array<{ open: string; close: string; style: Exclude<InlineTextStyle, "plain"> }> = [
   { open: "**", close: "**", style: "bold" },
   { open: "[u]", close: "[/u]", style: "underline" },

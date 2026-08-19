@@ -569,6 +569,15 @@ User request: confirm that Builder child pages load from a two-segment URL enter
 
 User request: allow body text to use a different font from headers and provide direct text-size controls instead of abstract styles such as relaxed or condensed.
 
+## Builder Rich-Text Formatting Repair
+
+- [x] Inspect selection handling, marker insertion, parsing, editor preview, and public rendering for Bold, Italic, and Underline. The toolbar made separate body and format updates in one React event, allowing a stale update to overwrite the inserted marker text; it also ignored cursor-only formatting.
+- [x] Repair the confirmed rich-text interaction defect and add clear formatting-state feedback. Formatting now saves body text and inline state atomically, supports both selections and cursor insertion, and confirms the applied formatting state.
+- [x] Add focused regression coverage and run tests, typecheck, lint, production build, and final diff review. Focused formatting tests, the full isolated suite, typecheck, lint, and production build pass.
+- [x] Commit and push the verified rich-text formatting repair directly to GitHub main.
+
+User report: the Page Builder Bold, Italic, and Underline controls are not working correctly.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.
