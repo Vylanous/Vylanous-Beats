@@ -385,4 +385,4 @@
 - [x] Inspect R2 CORS configuration, presigned upload generation, browser upload headers, and production origins.
 - [x] Repair the R2 upload flow and configure allowed production origins and headers.
 - [x] Run upload-focused tests, full validation, and final diff review.
-- [ ] Commit and push the verified R2 upload repair and report any required Cloudflare deployment step.
+- [x] Commit and push the verified R2 upload repair and report any required Cloudflare deployment step.
