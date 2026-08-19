@@ -550,6 +550,15 @@ User report: the Blog page nested within the Artist page is not routing properly
 
 User report: Bold, Italic, and Underline controls do not show a live preview while text is being entered in the Page Builder.
 
+## Builder Two-Segment Child-Page Paths
+
+- [x] Verify page-path editor validation, persistence, parent-child settings, and public routing for user-entered two-segment URLs. The URL Path input preserves entries such as `/artist/blog`; server validation permits them; path normalization retains both segments; and the public `/*` Builder fallback resolves them.
+- [x] Repair any confirmed two-segment child-page path handling gap. No additional runtime repair was required after the nested wildcard fix; direct coverage now verifies raw and trailing-slash two-segment URL Path entries normalize to `/artist/blog`.
+- [x] Add regression coverage and run relevant tests, typecheck, lint, production build, and final diff review. Targeted path tests, the full isolated suite, typecheck, lint, and production build pass.
+- [x] Commit and push the verified two-segment Builder path support and regression coverage directly to GitHub main.
+
+User request: confirm that Builder child pages load from a two-segment URL entered in the URL Path field, such as `/artist/blog`.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.

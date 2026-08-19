@@ -13,6 +13,8 @@ describe("managed Builder page routes", () => {
   test("uses a saved path when present and falls back to the page slug", () => {
     expect(builderPagePath({ slug: "artist", path: "/artist/" })).toBe("/artist");
     expect(builderPagePath({ slug: "artist-blog", path: "/artist/blog" })).toBe("/artist/blog");
+    expect(builderPagePath({ slug: "blog", path: "artist/blog" })).toBe("/artist/blog");
+    expect(builderPagePath({ slug: "blog", path: "/artist/blog/" })).toBe("/artist/blog");
     expect(builderPagePath({ slug: "epk", path: "" })).toBe("/epk");
   });
 
