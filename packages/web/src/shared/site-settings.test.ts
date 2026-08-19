@@ -262,6 +262,42 @@ describe("Site Builder settings migration", () => {
     );
   });
 
+  test("preserves independent heading and body fonts with direct text sizes", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_typography",
+          slug: "typography",
+          title: "Typography",
+          navLabel: "Typography",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "typography_copy",
+              type: "text",
+              layout: {
+                fontFamily: "anton",
+                bodyFontFamily: "inter",
+                eyebrowSize: "14px",
+                headingSize: "72px",
+                bodySize: "20px",
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_typography")?.sections[0].layout).toMatchObject({
+      fontFamily: "anton",
+      bodyFontFamily: "inter",
+      eyebrowSize: "14px",
+      headingSize: "72px",
+      bodySize: "20px",
+    });
+  });
+
   test("preserves Press Kit platform and audience analytics through settings migration", () => {
     const settings = mergeSettings({
       pages: [

@@ -119,6 +119,10 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   borderStyle: "none",
   customColor: "",
   fontFamily: "anton",
+  bodyFontFamily: "barlow",
+  eyebrowSize: "16px",
+  headingSize: "64px",
+  bodySize: "18px",
 };
 
 function usePageMetadata(page: BuilderPage | undefined) {
@@ -264,13 +268,18 @@ function BuilderSection({
     ...(pageLayout?.contentWidth ? { width: pageLayout.contentWidth } : {}),
     ...(pageLayout?.sectionSpacing ? { spacing: pageLayout.sectionSpacing } : {}),
   };
-  const selectedFont = getBuilderFont(pageLayout?.pageFont || layout.fontFamily);
+  const selectedHeadingFont = getBuilderFont(pageLayout?.pageFont || layout.fontFamily);
+  const selectedBodyFont = getBuilderFont(layout.bodyFontFamily);
   const sectionAttributes = {
     id: section.anchorId || undefined,
     "aria-label": section.ariaLabel || undefined,
   };
   const customStyle = {
-    "--builder-font-family": selectedFont.family,
+    "--builder-heading-font-family": selectedHeadingFont.family,
+    "--builder-body-font-family": selectedBodyFont.family,
+    "--builder-eyebrow-size": layout.eyebrowSize,
+    "--builder-heading-size": layout.headingSize,
+    "--builder-body-size": layout.bodySize,
     ...(layout.customColor ? { "--builder-custom-color": layout.customColor } : {}),
   } as Record<string, string>;
   const customColorClass = layout.customColor ? "builder-custom-color" : "";
@@ -279,7 +288,7 @@ function BuilderSection({
       <div
         {...sectionAttributes}
         style={customStyle}
-        className={`${section.customClass || ""} ${PALETTE[layout.palette]} builder-font-selected ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${customColorClass}`}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} builder-font-selected builder-direct-typography ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${customColorClass}`}
       >
         <Marquee text={section.title || "VYLANOUS BEATS"} />
       </div>
@@ -303,7 +312,7 @@ function BuilderSection({
     <section
               {...sectionAttributes}
         style={customStyle}
-        className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} builder-font-selected ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} ${customColorClass}`}
+        className={`${section.customClass || ""} ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} builder-font-selected builder-direct-typography ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} ${customColorClass}`}
 
     >
       <div
@@ -348,17 +357,17 @@ function CopyBlock({
   return (
     <div className={`flex max-w-3xl flex-col ${ALIGNMENT[layout.alignment]}`}>
       {section.eyebrow && (
-        <p className="page-eyebrow font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+        <p className="page-eyebrow builder-eyebrow font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
           {section.eyebrow}
         </p>
       )}
       <Heading
-        className={`mt-3 whitespace-pre-line font-display uppercase leading-[0.88] ${heading === "h1" ? "text-6xl sm:text-8xl" : "text-5xl sm:text-6xl"} ${emphasis}`}
+        className={`builder-section-heading mt-3 whitespace-pre-line font-display uppercase leading-[0.88] ${heading === "h1" ? "text-6xl sm:text-8xl" : "text-5xl sm:text-6xl"} ${emphasis}`}
       >
         {section.title}
       </Heading>
       {section.body && (
-        <p className="mt-5 max-w-2xl whitespace-pre-line font-body text-lg leading-relaxed text-vb-silver/70">
+        <p className="builder-section-body mt-5 max-w-2xl whitespace-pre-line font-body text-lg leading-relaxed text-vb-silver/70">
           <FormattedBody value={section.body} formatted={section.bodyFormat === "inline"} />
         </p>
       )}

@@ -359,9 +359,23 @@
 }
 
 .builder-font-selected .font-display,
-.builder-font-selected .font-sub,
+.builder-font-selected .font-sub {
+  font-family: var(--builder-heading-font-family) !important;
+}
 .builder-font-selected .font-body {
-  font-family: var(--builder-font-family) !important;
+  font-family: var(--builder-body-font-family) !important;
+}
+.builder-direct-typography .font-sub,
+.builder-direct-typography .builder-eyebrow {
+  font-size: clamp(12px, 1.7vw, var(--builder-eyebrow-size)) !important;
+}
+.builder-direct-typography .font-display,
+.builder-direct-typography .builder-section-heading {
+  font-size: clamp(32px, 7vw, var(--builder-heading-size)) !important;
+}
+.builder-direct-typography .font-body,
+.builder-direct-typography .builder-section-body {
+  font-size: clamp(14px, 2.2vw, var(--builder-body-size)) !important;
 }
 
 

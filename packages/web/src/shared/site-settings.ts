@@ -124,6 +124,10 @@ export function getBuilderFont(value: unknown) {
   return BUILDER_FONT_OPTIONS.find((font) => font.id === id) || BUILDER_FONT_OPTIONS[0];
 }
 
+export type BuilderEyebrowSize = "12px" | "14px" | "16px" | "18px" | "20px";
+export type BuilderHeadingSize = "32px" | "40px" | "48px" | "56px" | "64px" | "72px" | "88px" | "104px";
+export type BuilderBodySize = "14px" | "16px" | "18px" | "20px" | "22px" | "24px";
+
 export interface SectionLayout {
   width?: "narrow" | "standard" | "wide" | "full";
   spacing?: "tight" | "normal" | "relaxed" | "cinematic";
@@ -142,7 +146,14 @@ export interface SectionLayout {
   shadow?: "none" | "soft" | "glow" | "dramatic";
   borderStyle?: "none" | "subtle" | "accent" | "chrome";
   customColor?: string;
+  /** Heading and card-title font; preserves the existing section font selector. */
   fontFamily?: BuilderFontId;
+  /** Optional body-copy font that can differ from the heading font. */
+  bodyFontFamily?: BuilderFontId;
+  /** Direct text sizes applied responsively by the public renderer. */
+  eyebrowSize?: BuilderEyebrowSize;
+  headingSize?: BuilderHeadingSize;
+  bodySize?: BuilderBodySize;
 }
 
 export type PressKitPlatform =
@@ -464,6 +475,10 @@ const DEFAULT_SECTION_LAYOUT: Required<SectionLayout> = {
   borderStyle: "none",
   customColor: "",
   fontFamily: "anton",
+  bodyFontFamily: "barlow",
+  eyebrowSize: "16px",
+  headingSize: "64px",
+  bodySize: "18px",
 };
 
 function makeSection(

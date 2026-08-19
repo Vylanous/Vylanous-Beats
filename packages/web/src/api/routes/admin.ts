@@ -312,6 +312,10 @@ const settingsSchema = z.object({
                 borderStyle: z.enum(["none", "subtle", "accent", "chrome"]).optional(),
                 customColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
                 fontFamily: z.enum(BUILDER_FONT_IDS).optional(),
+                bodyFontFamily: z.enum(BUILDER_FONT_IDS).optional(),
+                eyebrowSize: z.enum(["12px", "14px", "16px", "18px", "20px"]).optional(),
+                headingSize: z.enum(["32px", "40px", "48px", "56px", "64px", "72px", "88px", "104px"]).optional(),
+                bodySize: z.enum(["14px", "16px", "18px", "20px", "22px", "24px"]).optional(),
               })
               .optional(),
           }),

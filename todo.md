@@ -559,6 +559,16 @@ User report: Bold, Italic, and Underline controls do not show a live preview whi
 
 User request: confirm that Builder child pages load from a two-segment URL entered in the URL Path field, such as `/artist/blog`.
 
+## Builder Independent Typography Controls
+
+- [x] Audit section typography fields, Style tab controls, validation, and public text rendering.
+- [x] Add a body-copy font selection independent from the heading font, with backward-compatible persistence.
+- [x] Replace abstract typography sizing with direct eyebrow, heading, and body text-size controls.
+- [x] Add regression coverage and run relevant tests, typecheck, lint, production build, and final diff review. The full isolated suite, typecheck, lint, and production build pass.
+- [x] Commit and push the verified typography controls directly to GitHub main.
+
+User request: allow body text to use a different font from headers and provide direct text-size controls instead of abstract styles such as relaxed or condensed.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.

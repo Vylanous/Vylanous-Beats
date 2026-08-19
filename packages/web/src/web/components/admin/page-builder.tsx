@@ -133,6 +133,10 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   borderStyle: "none",
   customColor: "",
   fontFamily: "anton",
+  bodyFontFamily: "barlow",
+  eyebrowSize: "16px",
+  headingSize: "64px",
+  bodySize: "18px",
 };
 
 function newId(prefix: string) {
@@ -2292,11 +2296,14 @@ function StyleWorkspace({
           <ToggleCard label="Footer" description="Footer links and signup accents" checked={Boolean(page.chrome?.footer)} onChange={(checked) => onPageLayoutChange({ chrome: { ...page.chrome, footer: checked } })} />
         </div>
       </StyleGroup>
-      <StyleGroup title="Section appearance" description="Choose this section’s color treatment, real font, headline size, and alignment.">
+      <StyleGroup title="Section appearance" description="Choose separate heading and body fonts, direct text sizes, color treatment, and alignment.">
         <div className="grid gap-3 sm:grid-cols-2">
           <SelectField label="Color mood" value={layout.palette} options={["brand", "mono", "electric", "sunset", "forest"]} onChange={(value) => onChange({ palette: value as Required<SectionLayout>["palette"] })} />
-          <FontLibraryPicker value={layout.fontFamily} onChange={(fontFamily) => onChange({ fontFamily })} />
-          <SelectField label="Headline scale" value={layout.headingScale} options={["compact", "standard", "display", "hero"]} onChange={(value) => onChange({ headingScale: value as Required<SectionLayout>["headingScale"] })} />
+          <FontLibraryPicker label="Heading font" value={layout.fontFamily} onChange={(fontFamily) => onChange({ fontFamily })} />
+          <FontLibraryPicker label="Body font" value={layout.bodyFontFamily} onChange={(bodyFontFamily) => onChange({ bodyFontFamily })} />
+          <SelectField label="Eyebrow text size" value={layout.eyebrowSize} options={["12px", "14px", "16px", "18px", "20px"]} onChange={(value) => onChange({ eyebrowSize: value as Required<SectionLayout>["eyebrowSize"] })} />
+          <SelectField label="Heading text size" value={layout.headingSize} options={["32px", "40px", "48px", "56px", "64px", "72px", "88px", "104px"]} onChange={(value) => onChange({ headingSize: value as Required<SectionLayout>["headingSize"] })} />
+          <SelectField label="Body text size" value={layout.bodySize} options={["14px", "16px", "18px", "20px", "22px", "24px"]} onChange={(value) => onChange({ bodySize: value as Required<SectionLayout>["bodySize"] })} />
           <SelectField label="Section background" value={layout.surface} options={["transparent", "ink", "mesh", "accent", "bordered"]} onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })} />
           <SelectField label="Text alignment" value={layout.alignment} options={["left", "center", "right"]} onChange={(value) => onChange({ alignment: value as Required<SectionLayout>["alignment"] })} />
         </div>
@@ -2334,16 +2341,18 @@ function ColorControl({ label, value, hint, onChange }: { label: string; value: 
 }
 
 function FontLibraryPicker({
+  label = "Font family",
   value,
   onChange,
 }: {
+  label?: string;
   value: Required<SectionLayout>["fontFamily"];
   onChange: (value: Required<SectionLayout>["fontFamily"]) => void;
 }) {
   const selected = BUILDER_FONT_OPTIONS.find((font) => font.id === value) || BUILDER_FONT_OPTIONS[0];
   return (
     <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
-      Font family
+      {label}
       <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
         Choose from 50 practical display, sans, serif, and mono fonts.
       </span>
