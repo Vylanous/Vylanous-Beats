@@ -34,7 +34,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
-import { insertInlineText, parseInlineText } from "../../lib/inline-text";
+import { parseInlineText } from "../../lib/inline-text";
 import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
@@ -1738,7 +1738,6 @@ function SectionEditor({
                 <RichTextArea
                   label="Text content"
                   value={section.body || ""}
-                  formatted={section.bodyFormat === "inline"}
                   placeholder="Write the supporting copy visitors will see."
                   onChange={(value, enableInlineFormat) =>
                     onChange({
@@ -2697,63 +2696,125 @@ function Textarea({
 function RichTextArea({
   label,
   value,
-  formatted,
   onChange,
   placeholder,
 }: {
   label: string;
   value: string;
-  formatted: boolean;
   onChange: (value: string, enableInlineFormat?: boolean) => void;
   placeholder?: string;
 }) {
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  /* oxlint-disable jsx-a11y/prefer-tag-over-role -- contenteditable is required to show direct inline formatting while typing. */
+  const editorRef = useRef<HTMLDivElement>(null);
+  const serializedValueRef = useRef<string | null>(null);
   const [formatStatus, setFormatStatus] = useState("");
-  const wrapSelection = (open: string, close = open) => {
-    const input = inputRef.current;
-    if (!input) return;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const insertion = insertInlineText(value, start, end, open, close);
-    onChange(insertion.value, true);
-    setFormatStatus(
-      insertion.usedPlaceholder
-        ? "Formatting is ready. Replace the selected placeholder with your text."
-        : "Formatting applied to the selected text.",
-    );
-    requestAnimationFrame(() => {
-      input.focus();
-      input.setSelectionRange(insertion.selectionStart, insertion.selectionEnd);
+  const syncEditor = (nextValue: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const fragment = document.createDocumentFragment();
+    parseInlineText(nextValue).forEach((token) => {
+      const text = document.createTextNode(token.text);
+      if (token.style === "bold") {
+        const element = document.createElement("strong");
+        element.append(text);
+        fragment.append(element);
+      } else if (token.style === "italic") {
+        const element = document.createElement("em");
+        element.append(text);
+        fragment.append(element);
+      } else if (token.style === "underline") {
+        const element = document.createElement("u");
+        element.append(text);
+        fragment.append(element);
+      } else {
+        fragment.append(text);
+      }
     });
+    editor.replaceChildren(fragment);
+  };
+  const serializeEditor = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    const element = node as HTMLElement;
+    if (element.tagName === "BR") return "\n";
+    const content = Array.from(element.childNodes).map(serializeEditor).join("");
+    if (["STRONG", "B"].includes(element.tagName)) return `**${content}**`;
+    if (["EM", "I"].includes(element.tagName)) return `_${content}_`;
+    if (element.tagName === "U") return `[u]${content}[/u]`;
+    return ["DIV", "P"].includes(element.tagName) ? `${content}\n` : content;
+  };
+  useEffect(() => {
+    if (serializedValueRef.current === value) return;
+    syncEditor(value);
+    serializedValueRef.current = value;
+  }, [value]);
+  const persistEditor = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const nextValue = Array.from(editor.childNodes).map(serializeEditor).join("").replace(/\n$/, "");
+    serializedValueRef.current = nextValue;
+    onChange(nextValue, true);
+  };
+  const applyFormat = (command: "bold" | "italic" | "underline", label: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    document.execCommand(command);
+    persistEditor();
+    setFormatStatus(`${label} formatting applied. Continue typing or select another passage to format.`);
   };
   const controls = [
-    { label: "Bold selected text", icon: Bold, apply: () => wrapSelection("**") },
-    { label: "Italicize selected text", icon: Italic, apply: () => wrapSelection("_") },
-    { label: "Underline selected text", icon: Underline, apply: () => wrapSelection("[u]", "[/u]") },
+    { label: "Bold selected text", icon: Bold, apply: () => applyFormat("bold", "Bold") },
+    { label: "Italicize selected text", icon: Italic, apply: () => applyFormat("italic", "Italic") },
+    { label: "Underline selected text", icon: Underline, apply: () => applyFormat("underline", "Underline") },
   ];
   return (
     <div className="mt-3">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <label htmlFor="builder-rich-text-content" className="font-body text-xs uppercase tracking-wider text-vb-silver/50">{label}</label>
-        <div className="flex items-center gap-1 rounded-md border border-white/10 bg-vb-black/60 p-1" aria-label="Text formatting controls">
+        <div className="flex shrink-0 items-center gap-1 rounded-md border border-white/10 bg-vb-black/60 p-1 touch-manipulation" aria-label="Text formatting controls">
           {controls.map(({ label: controlLabel, icon: Icon, apply }) => (
-            <button key={controlLabel} type="button" aria-label={controlLabel} title={controlLabel} onMouseDown={(event) => event.preventDefault()} onClick={apply} className="grid h-7 w-7 place-items-center rounded text-vb-silver/60 transition hover:bg-vb-purple/20 hover:text-vb-purple-bright focus:outline-none focus:ring-2 focus:ring-vb-purple-bright/60">
+            <button
+              key={controlLabel}
+              type="button"
+              aria-label={controlLabel}
+              title={controlLabel}
+              onMouseDown={(event) => event.preventDefault()}
+              onPointerDown={(event) => event.preventDefault()}
+              onClick={apply}
+              className="grid h-9 w-9 place-items-center rounded text-vb-silver/60 transition hover:bg-vb-purple/20 hover:text-vb-purple-bright focus:outline-none focus:ring-2 focus:ring-vb-purple-bright/60 sm:h-7 sm:w-7"
+            >
               <Icon size={14} strokeWidth={2.4} />
             </button>
           ))}
         </div>
       </div>
-      <textarea ref={inputRef} id="builder-rich-text-content" aria-label={label} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} rows={5} className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none placeholder:text-vb-silver/25 focus:border-vb-purple-bright/60" />
-      <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">Select existing words, or place the cursor where new formatted copy should begin, then use a control. Bold, italic, and underline work across published Builder pages{formatted ? "." : " once applied."}</p>
+      <div
+        ref={editorRef}
+        id="builder-rich-text-content"
+        role="textbox"
+        aria-label={label}
+        aria-multiline="true"
+        aria-placeholder={placeholder}
+        contentEditable
+        tabIndex={0}
+        suppressContentEditableWarning
+        onInput={persistEditor}
+        onKeyDown={(event) => {
+          if (!event.metaKey && !event.ctrlKey) return;
+          const command = event.key.toLowerCase();
+          if (command === "b") { event.preventDefault(); applyFormat("bold", "Bold"); }
+          if (command === "i") { event.preventDefault(); applyFormat("italic", "Italic"); }
+          if (command === "u") { event.preventDefault(); applyFormat("underline", "Underline"); }
+        }}
+        data-placeholder={placeholder}
+        className="mt-1.5 min-h-32 w-full whitespace-pre-wrap rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-vb-silver/25 focus:border-vb-purple-bright/60"
+      />
+      <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">Format text directly where you type: select words and choose a control, or use Ctrl/Cmd + B, I, or U. The result you see here is the saved page content.</p>
       <output className="mt-1 block font-body text-[11px] text-vb-purple-bright">{formatStatus}</output>
-      <div aria-live="polite" aria-label="Live formatted text preview" className="mt-3 rounded-lg border border-vb-purple/25 bg-vb-purple/[0.07] p-3">
-        <p className="font-sub text-[10px] uppercase tracking-[0.18em] text-vb-purple-bright">Live preview</p>
-        <p className="mt-1 whitespace-pre-wrap font-body text-sm leading-relaxed text-vb-silver-bright">
-          {value ? <FormattedText value={value} formatted={formatted} /> : <span className="text-vb-silver/40">Formatted copy will appear here as you type.</span>}
-        </p>
-      </div>
     </div>
   );
+  /* oxlint-enable jsx-a11y/prefer-tag-over-role */
 }
 
 function FormattedText({ value, formatted }: { value: string; formatted: boolean }) {

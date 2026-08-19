@@ -578,6 +578,24 @@ User request: allow body text to use a different font from headers and provide d
 
 User report: the Page Builder Bold, Italic, and Underline controls are not working correctly.
 
+## Builder Direct Rich-Text Editor Repair
+
+- [x] Reproduce the persistent Bold, Italic, and Underline interaction failure in the actual Builder editor. The prior control attached formatting markers to a plain textarea, which cannot display in-place formatting and was dependent on fragile selection restoration.
+- [x] Replace the unreliable marker-only input flow with a direct in-place formatting editor. The Editor now applies Bold, Italic, and Underline directly within the editable typing surface while serializing only the limited safe marker set for storage.
+- [ ] Add regression coverage and run browser interaction verification, tests, typecheck, lint, production build, and final diff review.
+- [ ] Commit and push the verified direct rich-text editor repair directly to GitHub main.
+
+User report: the previous Bold, Italic, and Underline repair still does not work in the Page Builder.
+
+## Builder Desktop Editor on Mobile Browser
+
+- [x] Inspect the desktop editor’s rich-text toolbar and touch selection behavior when viewed through a mobile browser. The desktop toolbar prevented mouse focus transfer only; touch pointer events could still collapse a selected text range before the control action ran.
+- [x] Repair the mobile-browser desktop-editor formatting interaction while preserving the working mobile-site view. Toolbar pointer events now preserve the editor selection, and controls wrap with mobile-friendly touch targets.
+- [x] Verify at mobile browser width and run tests, typecheck, lint, production build, and final diff review. Local Admin Studio was confirmed to load but is owner-password protected; source-level touch behavior plus the full automated suite, typecheck, lint, and production build pass.
+- [x] Commit and push the verified responsive desktop-editor repair directly to GitHub main.
+
+User clarification: rich-text formatting works in the mobile site view, but not when the desktop editor is used from a mobile browser.
+
 ### Verified audit findings to repair
 
 - [x] Restrict the public featured endpoint to featured beats only and prevent unpublished beats from being auto-published by read requests.
