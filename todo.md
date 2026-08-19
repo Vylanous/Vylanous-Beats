@@ -470,6 +470,6 @@ User report: saving Site Settings displays `[object Object]` instead of a useful
 - [x] Add intuitive parent-page, global visibility, and local sub-navigation controls to the Page Builder.
 - [x] Render nested URLs and responsive local sub-navigation while excluding hidden child pages from global header/footer links.
 - [x] Add regression coverage and run typecheck, tests, lint, production build, and diff checks.
-- [ ] Commit and push the hierarchical sub-navigation feature directly to GitHub main.
+- [x] Commit and push the hierarchical sub-navigation feature directly to GitHub main.
 
 User request: support child pages such as `/artist/blog`, allow pages to be hidden from the global header/footer, and optionally show child-page links as a local sub-navigation menu on their parent section.
