@@ -774,3 +774,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Audit page header action persistence, settings normalization, and active-page header rendering for explicit false values.
 - [x] Ensure an explicit `showVault: false` override is honored on every managed page, including Artist and nested pages.
 - [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
+
+## Unified Social-Link Editors and Expanded Platform Icons
+
+- [x] Audit Universal Settings and Page Settings social-link controls, data model, validation, and icon mapping.
+- [x] Make Page Settings use the same social-link editing controls and platform options as Universal Settings while preserving page scoping.
+- [x] Add more platform options and recognizable icons, including a cloud-style SoundCloud icon, in both editors and public rendering.
+- [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.

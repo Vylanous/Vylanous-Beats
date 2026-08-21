@@ -4,10 +4,14 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Apple,
+  AtSign,
   Bold,
   ChevronDown,
   ChevronUp,
+  Cloud,
   Copy,
+  Disc3,
   Eye,
   Facebook,
   History,
@@ -17,8 +21,10 @@ import {
   GripVertical,
   Italic,
   Instagram,
+  Linkedin,
   LayoutTemplate,
   Link2,
+  Send,
   Loader2,
   Monitor,
   Music2,
@@ -28,6 +34,7 @@ import {
   Smartphone,
   Tablet,
   Trash2,
+  Twitch,
   Underline,
   Video,
   Youtube,
@@ -68,9 +75,16 @@ const SOCIAL_PLATFORMS: {
   { value: "tiktok", label: "TikTok", Icon: Video },
   { value: "youtube", label: "YouTube", Icon: Youtube },
   { value: "spotify", label: "Spotify", Icon: Music2 },
-  { value: "soundcloud", label: "SoundCloud", Icon: Music2 },
+  { value: "soundcloud", label: "SoundCloud", Icon: Cloud },
   { value: "facebook", label: "Facebook", Icon: Facebook },
   { value: "x", label: "X", Icon: Link2 },
+  { value: "threads", label: "Threads", Icon: AtSign },
+  { value: "linkedin", label: "LinkedIn", Icon: Linkedin },
+  { value: "twitch", label: "Twitch", Icon: Twitch },
+  { value: "discord", label: "Discord", Icon: Disc3 },
+  { value: "telegram", label: "Telegram", Icon: Send },
+  { value: "bandcamp", label: "Bandcamp", Icon: Music2 },
+  { value: "appleMusic", label: "Apple Music", Icon: Apple },
   { value: "custom", label: "Custom link", Icon: Link2 },
 ];
 
@@ -2066,24 +2080,36 @@ function PagePropertiesEditor({
                   key={social.id}
                   className="grid gap-3 rounded-lg border border-white/[0.08] bg-vb-black/30 p-3 md:grid-cols-[10rem_1fr_1fr_auto] md:items-end"
                 >
-                  <label className="space-y-1 font-body text-xs text-vb-silver/60">
-                    <span>Platform</span>
-                    <select
-                      value={social.platform}
-                      onChange={(event) =>
-                        updatePageSocialLink(social.id, {
-                          platform: event.target.value as SocialPlatform,
-                        })
-                      }
-                      className="w-full rounded-lg border border-white/10 bg-vb-ink px-3 py-2 text-sm text-vb-silver-bright outline-none"
+                  <div>
+                    <span className="mb-1.5 block font-body text-xs uppercase tracking-wider text-vb-silver/50">
+                      Platform icon
+                    </span>
+                    <div
+                      className="grid grid-cols-5 gap-1.5"
+                      role="radiogroup"
+                      aria-label="Page social platform"
                     >
-                      {SOCIAL_PLATFORMS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      {SOCIAL_PLATFORMS.map(
+                        ({ value, label: platformLabel, Icon }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            aria-pressed={social.platform === value}
+                            aria-label={platformLabel}
+                            title={platformLabel}
+                            onClick={() =>
+                              updatePageSocialLink(social.id, {
+                                platform: value,
+                              })
+                            }
+                            className={`grid h-9 place-items-center rounded-md border transition ${social.platform === value ? "border-vb-purple-bright bg-vb-purple/20 text-vb-purple-bright" : "border-white/10 text-vb-silver/45 hover:border-white/25 hover:text-vb-silver"}`}
+                          >
+                            <Icon size={16} />
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </div>
                   <Field
                     label="Label"
                     value={social.label}

@@ -623,6 +623,13 @@ export type SocialPlatform =
   | "soundcloud"
   | "facebook"
   | "x"
+  | "threads"
+  | "linkedin"
+  | "twitch"
+  | "discord"
+  | "telegram"
+  | "bandcamp"
+  | "appleMusic"
   | "custom";
 
 export interface SocialLink {
