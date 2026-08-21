@@ -768,3 +768,9 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Restore the wordmark fallback and page-specific wordmark rendering on all pages.
 - [x] Repair the cart trigger/dropdown and checkout interaction so it opens reliably.
 - [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
+
+## Universal Beats Vault Visibility Override Repair
+
+- [x] Audit page header action persistence, settings normalization, and active-page header rendering for explicit false values.
+- [x] Ensure an explicit `showVault: false` override is honored on every managed page, including Artist and nested pages.
+- [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.

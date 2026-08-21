@@ -17,7 +17,7 @@ export function Nav() {
   const [loc] = useLocation();
   const { brand, header, pages, socials } = useSiteSettings();
   const activePath = normalizeManagedPath(
-    (typeof window !== "undefined" ? window.location.pathname : loc) || "/",
+    loc || (typeof window !== "undefined" ? window.location.pathname : "/"),
   );
   const activePage = useMemo(
     () => pages.find((page) => builderPagePath(page) === activePath),
