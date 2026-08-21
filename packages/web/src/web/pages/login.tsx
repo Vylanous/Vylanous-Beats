@@ -2,10 +2,21 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "../components/layout";
 import { useCustomer } from "../lib/customer";
+import { useSiteSettings } from "../lib/site-settings";
 
 export default function LoginPage() {
   const [, navigate] = useLocation();
   const { signIn, signUp } = useCustomer();
+  const { pages } = useSiteSettings();
+  const loginPage = pages.find((page) => page.path === "/login");
+  const loginHero = loginPage?.sections.find(
+    (section) => section.type === "hero",
+  );
+  const eyebrow = loginHero?.eyebrow || "Customer portal";
+  const title = loginHero?.title || "Keep every license in your vault.";
+  const body =
+    loginHero?.body ||
+    "Sign in to unlock the full beat catalog, purchase licenses, access secure downloads, and keep your order history across the website and mobile app.";
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +33,11 @@ export default function LoginPage() {
       else await signUp({ email, password, displayName, marketingOptIn });
       navigate("/dashboard");
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not complete your request.");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Could not complete your request.",
+      );
     } finally {
       setBusy(false);
     }
@@ -32,14 +47,13 @@ export default function LoginPage() {
       <main className="mx-auto grid min-h-screen max-w-6xl items-center gap-12 px-5 py-28 lg:grid-cols-[1fr_.85fr]">
         <section>
           <p className="font-sub text-xs uppercase tracking-[.24em] text-vb-purple-bright">
-            Customer portal
+            {eyebrow}
           </p>
           <h1 className="mt-4 font-display text-6xl uppercase leading-[.88] text-chrome sm:text-8xl">
-            Keep every license in your vault.
+            {title}
           </h1>
           <p className="mt-7 max-w-xl font-body leading-7 text-vb-silver/65">
-            Sign in to unlock the full beat catalog, purchase licenses, access secure downloads, and
-            keep your order history across the website and mobile app.
+            {body}
           </p>
         </section>
         <form
@@ -111,7 +125,11 @@ export default function LoginPage() {
             disabled={busy}
             className="mt-6 w-full rounded-xl bg-vb-purple py-4 font-sub text-sm uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
           >
-            {busy ? "Working…" : mode === "login" ? "Enter your vault" : "Create your vault"}
+            {busy
+              ? "Working…"
+              : mode === "login"
+                ? "Enter your vault"
+                : "Create your vault"}
           </button>
         </form>
       </main>

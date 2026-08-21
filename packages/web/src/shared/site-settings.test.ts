@@ -659,3 +659,22 @@ test("keeps Clear Licensing artwork through repeated settings normalization", ()
 
   expect(item?.imageUrl).toBe(uploadedKey);
 });
+
+describe("system Builder pages", () => {
+  test("includes the Sign In page with editable login hero content", () => {
+    const settings = mergeSettings({});
+    const loginPage = settings.pages.find((page) => page.path === "/login");
+
+    expect(loginPage).toMatchObject({
+      id: "page_login",
+      title: "Sign In",
+      isSystem: true,
+      showInNav: false,
+    });
+    expect(loginPage?.sections[0]).toMatchObject({
+      type: "hero",
+      eyebrow: "Customer portal",
+      title: "Keep every license in your vault.",
+    });
+  });
+});

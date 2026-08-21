@@ -1203,8 +1203,32 @@ export const DEFAULT_PAGES: BuilderPage[] = [
       }),
     ],
   }),
+  makePage({
+    id: "page_login",
+    slug: "login",
+    path: "/login",
+    title: "Sign In",
+    navLabel: "Sign In",
+    published: true,
+    showInNav: false,
+    showInFooter: false,
+    navOrder: 70,
+    isSystem: true,
+    seo: {
+      title: "Sign In | Vylanous Beats",
+      description: "Sign in or create a Vylanous Beats customer account.",
+      canonicalPath: "/login",
+    },
+    sections: [
+      makeSection("login_hero", "hero", {
+        eyebrow: "Customer portal",
+        title: "Keep every license in your vault.",
+        body: "Sign in to unlock the full beat catalog, purchase licenses, access secure downloads, and keep your order history across the website and mobile app.",
+        layout: { surface: "mesh", spacing: "cinematic" },
+      }),
+    ],
+  }),
 ];
-
 export const FONT_PAIRS: FontPair[] = [
   {
     id: "graffiti-chrome",

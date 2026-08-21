@@ -787,3 +787,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Audit the mobile header cart/menu structure and visibility rules.
 - [x] Keep the cart control independently visible and clickable beside the menu control.
 - [x] Validate desktop and mobile header behavior, tests, production build, and Render deployment.
+
+## Sign In Page and Full System-Page Customization
+
+- [x] Audit system-page definitions, `/login` route composition, Home sign-in content, and Page Builder section coverage.
+- [x] Add the `/login` Sign In page to Custom Page Settings without weakening authentication or redirect behavior.
+- [x] Expose the Home sign-in button/section and existing system-page sections for full content, layout, style, and SEO customization.
+- [x] Add regression coverage, validate routes and production build, commit/push, and verify Render deployment.
