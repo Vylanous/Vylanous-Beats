@@ -48,60 +48,310 @@ export type PageSectionType =
   | "licenseComparison";
 
 export const BUILDER_FONT_OPTIONS = [
-  { id: "anton", label: "Anton", family: "Anton, sans-serif", googleFamily: "Anton" },
-  { id: "archivo-black", label: "Archivo Black", family: "'Archivo Black', sans-serif", googleFamily: "Archivo Black" },
-  { id: "barlow", label: "Barlow", family: "Barlow, sans-serif", googleFamily: "Barlow" },
-  { id: "barlow-condensed", label: "Barlow Condensed", family: "'Barlow Condensed', sans-serif", googleFamily: "Barlow Condensed" },
-  { id: "bebas-neue", label: "Bebas Neue", family: "'Bebas Neue', sans-serif", googleFamily: "Bebas Neue" },
-  { id: "big-shoulders", label: "Big Shoulders Display", family: "'Big Shoulders Display', sans-serif", googleFamily: "Big Shoulders Display" },
-  { id: "black-ops-one", label: "Black Ops One", family: "'Black Ops One', sans-serif", googleFamily: "Black Ops One" },
-  { id: "bodoni-moda", label: "Bodoni Moda", family: "'Bodoni Moda', serif", googleFamily: "Bodoni Moda" },
-  { id: "cormorant-garamond", label: "Cormorant Garamond", family: "'Cormorant Garamond', serif", googleFamily: "Cormorant Garamond" },
-  { id: "dela-gothic-one", label: "Dela Gothic One", family: "'Dela Gothic One', sans-serif", googleFamily: "Dela Gothic One" },
-  { id: "dm-sans", label: "DM Sans", family: "'DM Sans', sans-serif", googleFamily: "DM Sans" },
-  { id: "dm-serif-display", label: "DM Serif Display", family: "'DM Serif Display', serif", googleFamily: "DM Serif Display" },
-  { id: "dosis", label: "Dosis", family: "Dosis, sans-serif", googleFamily: "Dosis" },
-  { id: "exo-2", label: "Exo 2", family: "'Exo 2', sans-serif", googleFamily: "Exo 2" },
-  { id: "fjalla-one", label: "Fjalla One", family: "'Fjalla One', sans-serif", googleFamily: "Fjalla One" },
-  { id: "futura", label: "Futura", family: "Futura, 'Trebuchet MS', sans-serif" },
-  { id: "ibm-plex-mono", label: "IBM Plex Mono", family: "'IBM Plex Mono', monospace", googleFamily: "IBM Plex Mono" },
-  { id: "ibm-plex-sans", label: "IBM Plex Sans", family: "'IBM Plex Sans', sans-serif", googleFamily: "IBM Plex Sans" },
-  { id: "inter", label: "Inter", family: "Inter, sans-serif", googleFamily: "Inter" },
-  { id: "jost", label: "Jost", family: "Jost, sans-serif", googleFamily: "Jost" },
-  { id: "josefin-sans", label: "Josefin Sans", family: "'Josefin Sans', sans-serif", googleFamily: "Josefin Sans" },
-  { id: "karla", label: "Karla", family: "Karla, sans-serif", googleFamily: "Karla" },
-  { id: "league-gothic", label: "League Gothic", family: "'League Gothic', sans-serif", googleFamily: "League Gothic" },
-  { id: "libre-baskerville", label: "Libre Baskerville", family: "'Libre Baskerville', serif", googleFamily: "Libre Baskerville" },
-  { id: "manrope", label: "Manrope", family: "Manrope, sans-serif", googleFamily: "Manrope" },
-  { id: "montserrat", label: "Montserrat", family: "Montserrat, sans-serif", googleFamily: "Montserrat" },
-  { id: "noto-sans", label: "Noto Sans", family: "'Noto Sans', sans-serif", googleFamily: "Noto Sans" },
-  { id: "nunito-sans", label: "Nunito Sans", family: "'Nunito Sans', sans-serif", googleFamily: "Nunito Sans" },
-  { id: "oswald", label: "Oswald", family: "Oswald, sans-serif", googleFamily: "Oswald" },
-  { id: "outfit", label: "Outfit", family: "Outfit, sans-serif", googleFamily: "Outfit" },
-  { id: "playfair-display", label: "Playfair Display", family: "'Playfair Display', serif", googleFamily: "Playfair Display" },
-  { id: "plus-jakarta-sans", label: "Plus Jakarta Sans", family: "'Plus Jakarta Sans', sans-serif", googleFamily: "Plus Jakarta Sans" },
-  { id: "poppins", label: "Poppins", family: "Poppins, sans-serif", googleFamily: "Poppins" },
-  { id: "press-start-2p", label: "Press Start 2P", family: "'Press Start 2P', monospace", googleFamily: "Press Start 2P" },
-  { id: "rajdhani", label: "Rajdhani", family: "Rajdhani, sans-serif", googleFamily: "Rajdhani" },
-  { id: "raleway", label: "Raleway", family: "Raleway, sans-serif", googleFamily: "Raleway" },
-  { id: "roboto-condensed", label: "Roboto Condensed", family: "'Roboto Condensed', sans-serif", googleFamily: "Roboto Condensed" },
-  { id: "roboto-slab", label: "Roboto Slab", family: "'Roboto Slab', serif", googleFamily: "Roboto Slab" },
-  { id: "rubik", label: "Rubik", family: "Rubik, sans-serif", googleFamily: "Rubik" },
-  { id: "russo-one", label: "Russo One", family: "'Russo One', sans-serif", googleFamily: "Russo One" },
-  { id: "space-grotesk", label: "Space Grotesk", family: "'Space Grotesk', sans-serif", googleFamily: "Space Grotesk" },
-  { id: "space-mono", label: "Space Mono", family: "'Space Mono', monospace", googleFamily: "Space Mono" },
-  { id: "spline-sans", label: "Spline Sans", family: "'Spline Sans', sans-serif", googleFamily: "Spline Sans" },
-  { id: "syne", label: "Syne", family: "Syne, sans-serif", googleFamily: "Syne" },
-  { id: "teko", label: "Teko", family: "Teko, sans-serif", googleFamily: "Teko" },
-  { id: "times-new-roman", label: "Times New Roman", family: "'Times New Roman', Times, serif" },
-  { id: "titillium-web", label: "Titillium Web", family: "'Titillium Web', sans-serif", googleFamily: "Titillium Web" },
-  { id: "urbanist", label: "Urbanist", family: "Urbanist, sans-serif", googleFamily: "Urbanist" },
-  { id: "work-sans", label: "Work Sans", family: "'Work Sans', sans-serif", googleFamily: "Work Sans" },
-  { id: "arial-narrow", label: "Arial Narrow", family: "'Arial Narrow', Arial, sans-serif" },
+  {
+    id: "anton",
+    label: "Anton",
+    family: "Anton, sans-serif",
+    googleFamily: "Anton",
+  },
+  {
+    id: "archivo-black",
+    label: "Archivo Black",
+    family: "'Archivo Black', sans-serif",
+    googleFamily: "Archivo Black",
+  },
+  {
+    id: "barlow",
+    label: "Barlow",
+    family: "Barlow, sans-serif",
+    googleFamily: "Barlow",
+  },
+  {
+    id: "barlow-condensed",
+    label: "Barlow Condensed",
+    family: "'Barlow Condensed', sans-serif",
+    googleFamily: "Barlow Condensed",
+  },
+  {
+    id: "bebas-neue",
+    label: "Bebas Neue",
+    family: "'Bebas Neue', sans-serif",
+    googleFamily: "Bebas Neue",
+  },
+  {
+    id: "big-shoulders",
+    label: "Big Shoulders Display",
+    family: "'Big Shoulders Display', sans-serif",
+    googleFamily: "Big Shoulders Display",
+  },
+  {
+    id: "black-ops-one",
+    label: "Black Ops One",
+    family: "'Black Ops One', sans-serif",
+    googleFamily: "Black Ops One",
+  },
+  {
+    id: "bodoni-moda",
+    label: "Bodoni Moda",
+    family: "'Bodoni Moda', serif",
+    googleFamily: "Bodoni Moda",
+  },
+  {
+    id: "cormorant-garamond",
+    label: "Cormorant Garamond",
+    family: "'Cormorant Garamond', serif",
+    googleFamily: "Cormorant Garamond",
+  },
+  {
+    id: "dela-gothic-one",
+    label: "Dela Gothic One",
+    family: "'Dela Gothic One', sans-serif",
+    googleFamily: "Dela Gothic One",
+  },
+  {
+    id: "dm-sans",
+    label: "DM Sans",
+    family: "'DM Sans', sans-serif",
+    googleFamily: "DM Sans",
+  },
+  {
+    id: "dm-serif-display",
+    label: "DM Serif Display",
+    family: "'DM Serif Display', serif",
+    googleFamily: "DM Serif Display",
+  },
+  {
+    id: "dosis",
+    label: "Dosis",
+    family: "Dosis, sans-serif",
+    googleFamily: "Dosis",
+  },
+  {
+    id: "exo-2",
+    label: "Exo 2",
+    family: "'Exo 2', sans-serif",
+    googleFamily: "Exo 2",
+  },
+  {
+    id: "fjalla-one",
+    label: "Fjalla One",
+    family: "'Fjalla One', sans-serif",
+    googleFamily: "Fjalla One",
+  },
+  {
+    id: "futura",
+    label: "Futura",
+    family: "Futura, 'Trebuchet MS', sans-serif",
+  },
+  {
+    id: "ibm-plex-mono",
+    label: "IBM Plex Mono",
+    family: "'IBM Plex Mono', monospace",
+    googleFamily: "IBM Plex Mono",
+  },
+  {
+    id: "ibm-plex-sans",
+    label: "IBM Plex Sans",
+    family: "'IBM Plex Sans', sans-serif",
+    googleFamily: "IBM Plex Sans",
+  },
+  {
+    id: "inter",
+    label: "Inter",
+    family: "Inter, sans-serif",
+    googleFamily: "Inter",
+  },
+  {
+    id: "jost",
+    label: "Jost",
+    family: "Jost, sans-serif",
+    googleFamily: "Jost",
+  },
+  {
+    id: "josefin-sans",
+    label: "Josefin Sans",
+    family: "'Josefin Sans', sans-serif",
+    googleFamily: "Josefin Sans",
+  },
+  {
+    id: "karla",
+    label: "Karla",
+    family: "Karla, sans-serif",
+    googleFamily: "Karla",
+  },
+  {
+    id: "league-gothic",
+    label: "League Gothic",
+    family: "'League Gothic', sans-serif",
+    googleFamily: "League Gothic",
+  },
+  {
+    id: "libre-baskerville",
+    label: "Libre Baskerville",
+    family: "'Libre Baskerville', serif",
+    googleFamily: "Libre Baskerville",
+  },
+  {
+    id: "manrope",
+    label: "Manrope",
+    family: "Manrope, sans-serif",
+    googleFamily: "Manrope",
+  },
+  {
+    id: "montserrat",
+    label: "Montserrat",
+    family: "Montserrat, sans-serif",
+    googleFamily: "Montserrat",
+  },
+  {
+    id: "noto-sans",
+    label: "Noto Sans",
+    family: "'Noto Sans', sans-serif",
+    googleFamily: "Noto Sans",
+  },
+  {
+    id: "nunito-sans",
+    label: "Nunito Sans",
+    family: "'Nunito Sans', sans-serif",
+    googleFamily: "Nunito Sans",
+  },
+  {
+    id: "oswald",
+    label: "Oswald",
+    family: "Oswald, sans-serif",
+    googleFamily: "Oswald",
+  },
+  {
+    id: "outfit",
+    label: "Outfit",
+    family: "Outfit, sans-serif",
+    googleFamily: "Outfit",
+  },
+  {
+    id: "playfair-display",
+    label: "Playfair Display",
+    family: "'Playfair Display', serif",
+    googleFamily: "Playfair Display",
+  },
+  {
+    id: "plus-jakarta-sans",
+    label: "Plus Jakarta Sans",
+    family: "'Plus Jakarta Sans', sans-serif",
+    googleFamily: "Plus Jakarta Sans",
+  },
+  {
+    id: "poppins",
+    label: "Poppins",
+    family: "Poppins, sans-serif",
+    googleFamily: "Poppins",
+  },
+  {
+    id: "press-start-2p",
+    label: "Press Start 2P",
+    family: "'Press Start 2P', monospace",
+    googleFamily: "Press Start 2P",
+  },
+  {
+    id: "rajdhani",
+    label: "Rajdhani",
+    family: "Rajdhani, sans-serif",
+    googleFamily: "Rajdhani",
+  },
+  {
+    id: "raleway",
+    label: "Raleway",
+    family: "Raleway, sans-serif",
+    googleFamily: "Raleway",
+  },
+  {
+    id: "roboto-condensed",
+    label: "Roboto Condensed",
+    family: "'Roboto Condensed', sans-serif",
+    googleFamily: "Roboto Condensed",
+  },
+  {
+    id: "roboto-slab",
+    label: "Roboto Slab",
+    family: "'Roboto Slab', serif",
+    googleFamily: "Roboto Slab",
+  },
+  {
+    id: "rubik",
+    label: "Rubik",
+    family: "Rubik, sans-serif",
+    googleFamily: "Rubik",
+  },
+  {
+    id: "russo-one",
+    label: "Russo One",
+    family: "'Russo One', sans-serif",
+    googleFamily: "Russo One",
+  },
+  {
+    id: "space-grotesk",
+    label: "Space Grotesk",
+    family: "'Space Grotesk', sans-serif",
+    googleFamily: "Space Grotesk",
+  },
+  {
+    id: "space-mono",
+    label: "Space Mono",
+    family: "'Space Mono', monospace",
+    googleFamily: "Space Mono",
+  },
+  {
+    id: "spline-sans",
+    label: "Spline Sans",
+    family: "'Spline Sans', sans-serif",
+    googleFamily: "Spline Sans",
+  },
+  {
+    id: "syne",
+    label: "Syne",
+    family: "Syne, sans-serif",
+    googleFamily: "Syne",
+  },
+  {
+    id: "teko",
+    label: "Teko",
+    family: "Teko, sans-serif",
+    googleFamily: "Teko",
+  },
+  {
+    id: "times-new-roman",
+    label: "Times New Roman",
+    family: "'Times New Roman', Times, serif",
+  },
+  {
+    id: "titillium-web",
+    label: "Titillium Web",
+    family: "'Titillium Web', sans-serif",
+    googleFamily: "Titillium Web",
+  },
+  {
+    id: "urbanist",
+    label: "Urbanist",
+    family: "Urbanist, sans-serif",
+    googleFamily: "Urbanist",
+  },
+  {
+    id: "work-sans",
+    label: "Work Sans",
+    family: "'Work Sans', sans-serif",
+    googleFamily: "Work Sans",
+  },
+  {
+    id: "arial-narrow",
+    label: "Arial Narrow",
+    family: "'Arial Narrow', Arial, sans-serif",
+  },
 ] as const;
 
 export type BuilderFontId = (typeof BUILDER_FONT_OPTIONS)[number]["id"];
-export const BUILDER_FONT_IDS = BUILDER_FONT_OPTIONS.map((font) => font.id) as [BuilderFontId, ...BuilderFontId[]];
+export const BUILDER_FONT_IDS = BUILDER_FONT_OPTIONS.map((font) => font.id) as [
+  BuilderFontId,
+  ...BuilderFontId[],
+];
 
 const LEGACY_SECTION_FONT_MAP: Record<string, BuilderFontId> = {
   brand: "anton",
@@ -115,18 +365,24 @@ const LEGACY_SECTION_FONT_MAP: Record<string, BuilderFontId> = {
 
 export function normalizeBuilderFont(value: unknown): BuilderFontId {
   const candidate = typeof value === "string" ? value : "";
-  if ((BUILDER_FONT_IDS as readonly string[]).includes(candidate)) return candidate as BuilderFontId;
+  if ((BUILDER_FONT_IDS as readonly string[]).includes(candidate))
+    return candidate as BuilderFontId;
   return LEGACY_SECTION_FONT_MAP[candidate] || "anton";
 }
 
 export function getBuilderFont(value: unknown) {
   const id = normalizeBuilderFont(value);
-  return BUILDER_FONT_OPTIONS.find((font) => font.id === id) || BUILDER_FONT_OPTIONS[0];
+  return (
+    BUILDER_FONT_OPTIONS.find((font) => font.id === id) ||
+    BUILDER_FONT_OPTIONS[0]
+  );
 }
 
 export type BuilderEyebrowSize = "12px" | "14px" | "16px" | "18px" | "20px";
-export type BuilderHeadingSize = "32px" | "40px" | "48px" | "56px" | "64px" | "72px" | "88px" | "104px";
-export type BuilderBodySize = "14px" | "16px" | "18px" | "20px" | "22px" | "24px";
+export type BuilderHeadingSize =
+  "32px" | "40px" | "48px" | "56px" | "64px" | "72px" | "88px" | "104px";
+export type BuilderBodySize =
+  "14px" | "16px" | "18px" | "20px" | "22px" | "24px";
 
 export interface SectionLayout {
   width?: "narrow" | "standard" | "wide" | "full";
@@ -251,6 +507,10 @@ export interface PageSection {
   customClass?: string;
   /** Optional accessible label for the rendered section landmark. */
   ariaLabel?: string;
+  /** Optional uploaded logo displayed at the top of this section. */
+  sectionLogoUrl?: string;
+  /** Accessible label for the section logo image. */
+  sectionLogoAlt?: string;
   items?: SectionItem[];
   pressKit?: PressKitData;
   layout?: SectionLayout;
@@ -268,6 +528,19 @@ export interface PageChromeLinkage {
   header?: boolean;
   navigation?: boolean;
   footer?: boolean;
+}
+
+export interface PageHeaderActions {
+  /** Optional visibility override for the authenticated Beats Vault action. */
+  showVault?: boolean;
+  vaultLabel?: string;
+  vaultHref?: string;
+  /** Optional visibility override for the unauthenticated Sign In action. */
+  showSignIn?: boolean;
+  signInLabel?: string;
+  signInHref?: string;
+  /** Optional visibility override for the shopping cart action. */
+  showCart?: boolean;
 }
 
 export interface PageLayout {
@@ -295,7 +568,23 @@ export interface PageLayout {
   sectionSpacing?: "tight" | "normal" | "relaxed" | "cinematic";
   eyebrowColor?: string;
   linkColor?: string;
+  /** Optional text wordmark shown in this page’s shared header. */
+  wordmark?: string;
+  /** Optional uploaded logo shown in this page’s shared header. */
+  headerLogoUrl?: string;
+  /** Optional label shown beside the page-specific header logo. */
+  headerLabel?: string;
+  /** Optional uploaded logo shown in this page’s shared footer. */
+  footerLogoUrl?: string;
+  /** Optional label shown beside the page-specific footer logo. */
+  footerLabel?: string;
+  /** Optional second word in the wordmark with its own accent color. */
+  wordmarkAccent?: string;
+  /** Optional wordmark accent color, independent from page links. */
+  wordmarkAccentColor?: string;
   chrome?: PageChromeLinkage;
+  /** Optional page-only header action overrides; omitted values inherit universal header settings. */
+  headerActions?: PageHeaderActions;
 }
 
 export interface BuilderPage {
@@ -535,11 +824,19 @@ function makeSection(
   type: PageSectionType,
   values: Omit<PageSection, "id" | "type">,
 ): PageSection {
-  return { id, type, ...values, layout: { ...DEFAULT_SECTION_LAYOUT, ...values.layout } };
+  return {
+    id,
+    type,
+    ...values,
+    layout: { ...DEFAULT_SECTION_LAYOUT, ...values.layout },
+  };
 }
 
 function makePage(
-  values: Omit<BuilderPage, "path" | "layout"> & { path: string; layout?: PageLayout },
+  values: Omit<BuilderPage, "path" | "layout"> & {
+    path: string;
+    layout?: PageLayout;
+  },
 ): BuilderPage {
   return {
     ...values,
@@ -554,6 +851,13 @@ function makePage(
       mutedColor: "",
       surfaceColor: "",
       borderColor: "",
+      wordmark: "",
+      headerLogoUrl: "",
+      headerLabel: "",
+      footerLogoUrl: "",
+      footerLabel: "",
+      wordmarkAccent: "",
+      wordmarkAccentColor: "",
       backgroundImage: "",
       backgroundImageFit: "cover",
       backgroundImagePosition: "center",
@@ -594,7 +898,11 @@ export const DEFAULT_PAGES: BuilderPage[] = [
         ctaHref: "/beats",
         secondaryCtaLabel: "View Licensing",
         secondaryCtaHref: "/licensing",
-        layout: { surface: "mesh", spacing: "cinematic", mediaPosition: "right" },
+        layout: {
+          surface: "mesh",
+          spacing: "cinematic",
+          mediaPosition: "right",
+        },
       }),
       makeSection("home_drops", "marquee", { title: "NEW DROPS" }),
       makeSection("home_featured", "featuredBeats", {
@@ -655,7 +963,9 @@ export const DEFAULT_PAGES: BuilderPage[] = [
         body: "Find the sound for your next release. Preview every beat, compare licenses, and move when the record feels right.",
         layout: { surface: "mesh", spacing: "relaxed" },
       }),
-      makeSection("beats_catalog", "beatCatalog", { title: "Browse the catalog" }),
+      makeSection("beats_catalog", "beatCatalog", {
+        title: "Browse the catalog",
+      }),
     ],
   }),
   makePage({
@@ -671,7 +981,8 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     isSystem: true,
     seo: {
       title: "Beat Licensing | Vylanous Beats",
-      description: "Compare simple beat licensing tiers from a free demo to exclusive ownership.",
+      description:
+        "Compare simple beat licensing tiers from a free demo to exclusive ownership.",
       canonicalPath: "/licensing",
     },
     sections: [
@@ -681,9 +992,13 @@ export const DEFAULT_PAGES: BuilderPage[] = [
         body: "From a free demo license to full exclusive ownership. Transparent terms, no hidden fees. All non-exclusive licenses require crediting Prod. Vylanous Beats.",
         layout: { surface: "mesh", spacing: "relaxed", alignment: "center" },
       }),
-      makeSection("licensing_tiers", "licenseTiers", { title: "Choose your license" }),
+      makeSection("licensing_tiers", "licenseTiers", {
+        title: "Choose your license",
+      }),
       makeSection("licensing_marquee", "marquee", { title: "LEASE OR OWN" }),
-      makeSection("licensing_compare", "licenseComparison", { title: "Compare Licenses" }),
+      makeSection("licensing_compare", "licenseComparison", {
+        title: "Compare Licenses",
+      }),
       makeSection("licensing_notes", "featureCards", {
         layout: { columns: 2 },
         items: [
@@ -734,7 +1049,9 @@ export const DEFAULT_PAGES: BuilderPage[] = [
           mediaAspect: "square",
         },
       }),
-      makeSection("about_marquee", "marquee", { title: "PROD. VYLANOUS BEATS" }),
+      makeSection("about_marquee", "marquee", {
+        title: "PROD. VYLANOUS BEATS",
+      }),
       makeSection("about_values", "featureCards", {
         items: [
           {
@@ -777,7 +1094,8 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     navOrder: 40,
     seo: {
       title: "Vylanous | Artist & Producer",
-      description: "Discover Vylanous: artist, producer, and the sound behind Vylanous Beats.",
+      description:
+        "Discover Vylanous: artist, producer, and the sound behind Vylanous Beats.",
       canonicalPath: "/artist",
     },
     layout: {
@@ -791,6 +1109,9 @@ export const DEFAULT_PAGES: BuilderPage[] = [
       borderColor: "#4A453E",
       eyebrowColor: "#E7E0D5",
       linkColor: "#D2B48C",
+      wordmark: "VYLANOUS ARTIST",
+      wordmarkAccent: "ARTIST",
+      wordmarkAccentColor: "#D94A4A",
       pageTreatment: "none",
     },
     sections: [
@@ -948,7 +1269,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 export function getFontPair(id: string | undefined): FontPair {
-  return FONT_PAIRS.find((font) => font.id === id) || FONT_PAIRS[0];
+  return FONT_PAIRS.find((font) => font.id === id) || FONT_PAIRS[0]!;
 }
 
 function pagePath(page: Pick<BuilderPage, "path" | "slug">): string {
@@ -960,7 +1281,9 @@ function mergeSectionItems(
   storedItems: SectionItem[] | undefined,
 ): SectionItem[] | undefined {
   if (!Array.isArray(storedItems)) return templateItems;
-  const templates = new Map((templateItems || []).map((item) => [item.id, item]));
+  const templates = new Map(
+    (templateItems || []).map((item) => [item.id, item]),
+  );
   return storedItems.map((storedItem, index) => ({
     ...templates.get(storedItem.id),
     ...storedItem,
@@ -972,11 +1295,16 @@ function mergePage(
   defaultPage: BuilderPage,
   storedPage: Partial<BuilderPage> | undefined,
 ): BuilderPage {
-  const sections = Array.isArray(storedPage?.sections) ? storedPage.sections : defaultPage.sections;
+  const sections = Array.isArray(storedPage?.sections)
+    ? storedPage.sections
+    : defaultPage.sections;
   return {
     ...defaultPage,
     ...storedPage,
-    path: pagePath({ path: storedPage?.path, slug: storedPage?.slug || defaultPage.slug }),
+    path: pagePath({
+      path: storedPage?.path,
+      slug: storedPage?.slug || defaultPage.slug,
+    }),
     seo: { ...defaultPage.seo, ...storedPage?.seo },
     layout: {
       ...defaultPage.layout,
@@ -984,7 +1312,9 @@ function mergePage(
       chrome: { ...defaultPage.layout?.chrome, ...storedPage?.layout?.chrome },
     },
     sections: sections.map((storedSection, index) => {
-      const template = defaultPage.sections.find((candidate) => candidate.id === storedSection.id);
+      const template = defaultPage.sections.find(
+        (candidate) => candidate.id === storedSection.id,
+      );
       return {
         ...template,
         ...storedSection,
@@ -1001,11 +1331,18 @@ function mergePage(
   };
 }
 
-function mergePages(storedPages: unknown, deletedPageIds: string[] = []): BuilderPage[] {
-  const saved = Array.isArray(storedPages) ? (storedPages as Partial<BuilderPage>[]) : [];
+function mergePages(
+  storedPages: unknown,
+  deletedPageIds: string[] = [],
+): BuilderPage[] {
+  const saved = Array.isArray(storedPages)
+    ? (storedPages as Partial<BuilderPage>[])
+    : [];
   const deleted = new Set(deletedPageIds);
   const matched = new Set<number>();
-  const core = DEFAULT_PAGES.filter((defaultPage) => !deleted.has(defaultPage.id)).map((defaultPage) => {
+  const core = DEFAULT_PAGES.filter(
+    (defaultPage) => !deleted.has(defaultPage.id),
+  ).map((defaultPage) => {
     const index = saved.findIndex(
       (candidate) =>
         candidate.id === defaultPage.id ||
@@ -1022,7 +1359,10 @@ function mergePages(storedPages: unknown, deletedPageIds: string[] = []): Builde
         {
           id: page.id || `page_custom_${index}`,
           slug: page.slug || `page-${index + 1}`,
-          path: pagePath({ path: page.path, slug: page.slug || `page-${index + 1}` }),
+          path: pagePath({
+            path: page.path,
+            slug: page.slug || `page-${index + 1}`,
+          }),
           title: page.title || "Untitled page",
           navLabel: page.navLabel || page.title || "Untitled",
           published: page.published ?? false,
@@ -1038,18 +1378,31 @@ function mergePages(storedPages: unknown, deletedPageIds: string[] = []): Builde
 }
 
 /** Merge stored settings over defaults so production data gains new builder controls safely. */
-type StoredSiteSettings = Omit<Partial<SiteSettings>, "newsletterPopup" | "announcementBanner"> & {
+type StoredSiteSettings = Omit<
+  Partial<SiteSettings>,
+  "newsletterPopup" | "announcementBanner"
+> & {
   newsletterPopup?: Partial<NewsletterPopupSettings>;
   announcementBanner?: Partial<AnnouncementBannerSettings>;
 };
 
-export function mergeSettings(stored: StoredSiteSettings | null | undefined): SiteSettings {
+export function mergeSettings(
+  stored: StoredSiteSettings | null | undefined,
+): SiteSettings {
   return {
-    theme: stored?.theme ? { ...DEFAULT_THEME, ...stored.theme } : { ...DEFAULT_THEME },
+    theme: stored?.theme
+      ? { ...DEFAULT_THEME, ...stored.theme }
+      : { ...DEFAULT_THEME },
     fontId: stored?.fontId || DEFAULT_SETTINGS.fontId,
-    brand: stored?.brand ? { ...DEFAULT_BRAND, ...stored.brand } : { ...DEFAULT_BRAND },
-    header: stored?.header ? { ...DEFAULT_HEADER, ...stored.header } : { ...DEFAULT_HEADER },
-    footer: stored?.footer ? { ...DEFAULT_FOOTER, ...stored.footer } : { ...DEFAULT_FOOTER },
+    brand: stored?.brand
+      ? { ...DEFAULT_BRAND, ...stored.brand }
+      : { ...DEFAULT_BRAND },
+    header: stored?.header
+      ? { ...DEFAULT_HEADER, ...stored.header }
+      : { ...DEFAULT_HEADER },
+    footer: stored?.footer
+      ? { ...DEFAULT_FOOTER, ...stored.footer }
+      : { ...DEFAULT_FOOTER },
     newsletterPopup: stored?.newsletterPopup
       ? { ...DEFAULT_NEWSLETTER_POPUP, ...stored.newsletterPopup }
       : { ...DEFAULT_NEWSLETTER_POPUP },
@@ -1063,7 +1416,9 @@ export function mergeSettings(stored: StoredSiteSettings | null | undefined): Si
         }
       : { ...DEFAULT_ANNOUNCEMENT_BANNER },
     socials: Array.isArray(stored?.socials) ? stored.socials : DEFAULT_SOCIALS,
-    deletedPageIds: Array.isArray(stored?.deletedPageIds) ? stored.deletedPageIds : [],
+    deletedPageIds: Array.isArray(stored?.deletedPageIds)
+      ? stored.deletedPageIds
+      : [],
     pages: mergePages(
       stored?.pages,
       Array.isArray(stored?.deletedPageIds) ? stored.deletedPageIds : [],
@@ -1072,9 +1427,15 @@ export function mergeSettings(stored: StoredSiteSettings | null | undefined): Si
       ? { ...DEFAULT_FOURTHWALL, ...stored.fourthwall }
       : { ...DEFAULT_FOURTHWALL },
     builder: {
-      drafts: Array.isArray(stored?.builder?.drafts) ? stored.builder.drafts : [],
-      templates: Array.isArray(stored?.builder?.templates) ? stored.builder.templates : [],
-      versions: Array.isArray(stored?.builder?.versions) ? stored.builder.versions : [],
+      drafts: Array.isArray(stored?.builder?.drafts)
+        ? stored.builder.drafts
+        : [],
+      templates: Array.isArray(stored?.builder?.templates)
+        ? stored.builder.templates
+        : [],
+      versions: Array.isArray(stored?.builder?.versions)
+        ? stored.builder.versions
+        : [],
     },
   };
 }

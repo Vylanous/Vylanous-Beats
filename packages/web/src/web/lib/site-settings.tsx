@@ -7,37 +7,10 @@ import {
 } from "../../shared/site-settings";
 
 const SiteSettingsContext = createContext<SiteSettings>(DEFAULT_SETTINGS);
-const SETTINGS_CACHE_KEY = "vb-site-settings";
-const SETTINGS_CACHE_TTL_MS = 60_000;
-
 function applySettings(settings: SiteSettings) {
   applyTheme(settings.theme);
   applyFont(settings.fontId);
   applyFavicon(settings.brand?.faviconUrl);
-}
-
-function readCachedSettings(): SiteSettings | null {
-  try {
-    const raw = sessionStorage.getItem(SETTINGS_CACHE_KEY);
-    if (!raw) return null;
-    const cached = JSON.parse(raw) as { expiresAt?: number; settings?: SiteSettings };
-    return cached.expiresAt && cached.expiresAt > Date.now() && cached.settings
-      ? mergeSettings(cached.settings)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function cacheSettings(settings: SiteSettings) {
-  try {
-    sessionStorage.setItem(
-      SETTINGS_CACHE_KEY,
-      JSON.stringify({ expiresAt: Date.now() + SETTINGS_CACHE_TTL_MS, settings }),
-    );
-  } catch {
-    /* Storage may be unavailable in private browsing contexts. */
-  }
 }
 
 /** Maps our named theme keys to the CSS custom properties every Tailwind
@@ -84,7 +57,9 @@ function applyFont(fontId: string) {
 
 function applyFavicon(faviconUrl: string) {
   if (!faviconUrl) return;
-  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+  let link = document.querySelector(
+    "link[rel~='icon']",
+  ) as HTMLLinkElement | null;
   if (!link) {
     link = document.createElement("link");
     link.rel = "icon";
@@ -93,27 +68,21 @@ function applyFavicon(faviconUrl: string) {
   link.href = faviconUrl;
 }
 
-export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
+export function SiteSettingsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     let cancelled = false;
-    const cached = readCachedSettings();
-    if (cached) {
-      setSettings(cached);
-      applySettings(cached);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    fetch("/api/settings")
+    fetch("/api/settings", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (cancelled || !data?.settings) return;
         const normalized = mergeSettings(data.settings);
         setSettings(normalized);
-        cacheSettings(normalized);
         applySettings(normalized);
       })
       .catch(() => {
@@ -124,7 +93,11 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
     };
   }, []);
 
-  return <SiteSettingsContext.Provider value={settings}>{children}</SiteSettingsContext.Provider>;
+  return (
+    <SiteSettingsContext.Provider value={settings}>
+      {children}
+    </SiteSettingsContext.Provider>
+  );
 }
 
 /** Read the live re-skin settings (theme colors, font, brand assets) anywhere in the app. */

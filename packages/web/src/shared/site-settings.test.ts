@@ -13,22 +13,42 @@ describe("Site Builder settings migration", () => {
           published: true,
           showInNav: true,
           sections: [
-            { id: "artist_story", type: "text", title: "Saved story", body: "Existing copy" },
+            {
+              id: "artist_story",
+              type: "text",
+              title: "Saved story",
+              body: "Existing copy",
+            },
           ],
         },
       ],
     });
 
     expect(settings.pages.map((page) => page.path)).toEqual(
-      expect.arrayContaining(["/", "/beats", "/licensing", "/about", "/artist", "/epk", "/merch"]),
+      expect.arrayContaining([
+        "/",
+        "/beats",
+        "/licensing",
+        "/about",
+        "/artist",
+        "/epk",
+        "/merch",
+      ]),
     );
-    expect(settings.pages.find((page) => page.path === "/artist")?.title).toBe("Saved Artist Page");
+    expect(settings.pages.find((page) => page.path === "/artist")?.title).toBe(
+      "Saved Artist Page",
+    );
     expect(
-      settings.pages.find((page) => page.path === "/artist")?.sections[0]?.layout?.surface,
+      settings.pages.find((page) => page.path === "/artist")?.sections[0]
+        ?.layout?.surface,
     ).toBe("transparent");
     expect(settings.header.showCart).toBe(true);
     expect(settings.footer.contactEmail).toBe("support@vylanous.com");
-    expect(settings.builder).toEqual({ drafts: [], templates: [], versions: [] });
+    expect(settings.builder).toEqual({
+      drafts: [],
+      templates: [],
+      versions: [],
+    });
   });
 
   test("adds newsletter popup defaults to legacy settings", () => {
@@ -92,8 +112,11 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    const section = settings.pages.find((page) => page.id === "home")?.sections[0];
-    expect(section?.items?.find((item) => item.id === "licensing")).toMatchObject({
+    const section = settings.pages.find((page) => page.id === "home")
+      ?.sections[0];
+    expect(
+      section?.items?.find((item) => item.id === "licensing"),
+    ).toMatchObject({
       id: "licensing",
       title: "Clear Licensing",
       imageUrl: "site-builder/images/clear-licensing-artwork.png",
@@ -122,7 +145,9 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    expect(settings.pages.find((page) => page.id === "page_brand")?.layout).toMatchObject({
+    expect(
+      settings.pages.find((page) => page.id === "page_brand")?.layout,
+    ).toMatchObject({
       primaryColor: "#22D3EE",
       backgroundColor: "#111827",
       eyebrowColor: "#F59E0B",
@@ -157,7 +182,9 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    expect(settings.pages.find((page) => page.id === "page_visual")?.layout).toMatchObject({
+    expect(
+      settings.pages.find((page) => page.id === "page_visual")?.layout,
+    ).toMatchObject({
       backgroundColor: "#090511",
       backgroundImage: "site-builder/backgrounds/visual-page.webp",
       backgroundImageFit: "cover",
@@ -192,7 +219,9 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    expect(settings.pages.find((page) => page.id === "page_copy")?.sections[0]).toMatchObject({
+    expect(
+      settings.pages.find((page) => page.id === "page_copy")?.sections[0],
+    ).toMatchObject({
       body: "**Bold** _italic_ [u]underlined[/u] copy.",
       bodyFormat: "inline",
     });
@@ -248,7 +277,13 @@ describe("Site Builder settings migration", () => {
           navLabel: "Font Test",
           published: true,
           showInNav: false,
-          sections: [{ id: "font_section", type: "text", layout: { fontFamily: "mono" as never } }],
+          sections: [
+            {
+              id: "font_section",
+              type: "text",
+              layout: { fontFamily: "mono" as never },
+            },
+          ],
         },
       ],
     });
@@ -257,9 +292,10 @@ describe("Site Builder settings migration", () => {
     expect(BUILDER_FONT_OPTIONS.map((font) => font.label)).toEqual(
       expect.arrayContaining(["Anton", "Barlow Condensed", "Arial Narrow"]),
     );
-    expect(settings.pages.find((page) => page.id === "page_font_test")?.sections[0].layout?.fontFamily).toBe(
-      "space-mono",
-    );
+    expect(
+      settings.pages.find((page) => page.id === "page_font_test")?.sections[0]
+        .layout?.fontFamily,
+    ).toBe("space-mono");
   });
 
   test("preserves independent heading and body fonts with direct text sizes", () => {
@@ -289,7 +325,10 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    expect(settings.pages.find((page) => page.id === "page_typography")?.sections[0].layout).toMatchObject({
+    expect(
+      settings.pages.find((page) => page.id === "page_typography")?.sections[0]
+        .layout,
+    ).toMatchObject({
       fontFamily: "anton",
       bodyFontFamily: "inter",
       eyebrowSize: "14px",
@@ -326,11 +365,18 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    expect(settings.pages.find((page) => page.id === "page_visual_treatments")?.sections[0]).toMatchObject({
+    expect(
+      settings.pages.find((page) => page.id === "page_visual_treatments")
+        ?.sections[0],
+    ).toMatchObject({
       coverImageUrl: "site-builder/images/cover.webp",
       coverVideoUrl: "site-builder/videos/cover.webm",
       coverOverlay: "strong",
-      layout: { borderStyle: "neon", glowColor: "#22D3EE", glowAnimation: "slowFlash" },
+      layout: {
+        borderStyle: "neon",
+        glowColor: "#22D3EE",
+        glowAnimation: "slowFlash",
+      },
     });
   });
 
@@ -348,7 +394,9 @@ describe("Site Builder settings migration", () => {
       },
     });
 
-    expect(settings.pages.find((page) => page.id === "page_epk")).toBeUndefined();
+    expect(
+      settings.pages.find((page) => page.id === "page_epk"),
+    ).toBeUndefined();
     expect(settings.announcementBanner).toMatchObject({
       enabled: true,
       tone: "sale",
@@ -402,7 +450,9 @@ describe("Site Builder settings migration", () => {
       ?.sections.find((section) => section.id === "epk_press")?.pressKit;
     expect(pressKit).toMatchObject({
       updatedAt: "August 2026",
-      metrics: [{ platform: "youtube", subscribers: 12500, videos: 42, views: 240000 }],
+      metrics: [
+        { platform: "youtube", subscribers: 12500, videos: 42, views: 240000 },
+      ],
       audience: {
         gender: [{ label: "Women", value: 42 }],
         locations: [{ label: "United States", value: 61 }],
@@ -434,11 +484,120 @@ describe("Site Builder settings migration", () => {
       ],
     });
 
-    expect(settings.pages.find((page) => page.id === "page_custom")?.sections[0]).toMatchObject({
+    expect(
+      settings.pages.find((page) => page.id === "page_custom")?.sections[0],
+    ).toMatchObject({
       anchorId: "custom-copy",
       customClass: "artist-intro",
       ariaLabel: "Artist introduction",
     });
+  });
+
+  test("preserves page wordmarks and section logos through settings migration", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_custom",
+          slug: "custom",
+          title: "Custom",
+          navLabel: "Custom",
+          published: true,
+          showInNav: true,
+          layout: {
+            wordmark: "VYLANOUS CUSTOM",
+            headerLogoUrl: "site-builder/chrome/custom-header.png",
+            headerLabel: "VYLANOUS CUSTOM",
+            footerLogoUrl: "site-builder/chrome/custom-footer.png",
+            footerLabel: "Custom footer",
+            headerActions: {
+              showVault: false,
+              vaultLabel: "Beats Vault",
+              vaultHref: "/dashboard",
+              showSignIn: true,
+              signInLabel: "Join Vylanous",
+              signInHref: "/login",
+              showCart: false,
+            },
+            wordmarkAccent: "CUSTOM",
+            wordmarkAccentColor: "#D94A4A",
+          },
+          sections: [
+            {
+              id: "custom_intro",
+              type: "text",
+              sectionLogoUrl: "site-builder/section-logos/custom.png",
+              sectionLogoAlt: "Custom section logo",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(
+      settings.pages.find((page) => page.id === "page_custom")?.layout,
+    ).toMatchObject({
+      wordmark: "VYLANOUS CUSTOM",
+      headerLogoUrl: "site-builder/chrome/custom-header.png",
+      headerLabel: "VYLANOUS CUSTOM",
+      footerLogoUrl: "site-builder/chrome/custom-footer.png",
+      footerLabel: "Custom footer",
+      headerActions: {
+        showVault: false,
+        vaultLabel: "Beats Vault",
+        vaultHref: "/dashboard",
+        showSignIn: true,
+        signInLabel: "Join Vylanous",
+        signInHref: "/login",
+        showCart: false,
+      },
+      wordmarkAccent: "CUSTOM",
+      wordmarkAccentColor: "#D94A4A",
+    });
+    expect(
+      settings.pages.find((page) => page.id === "page_custom")?.sections[0],
+    ).toMatchObject({
+      sectionLogoUrl: "site-builder/section-logos/custom.png",
+      sectionLogoAlt: "Custom section logo",
+    });
+
+    expect(
+      settings.pages.find((page) => page.id === "page_artist")?.layout,
+    ).toMatchObject({
+      wordmark: "VYLANOUS ARTIST",
+      wordmarkAccent: "ARTIST",
+      wordmarkAccentColor: "#D94A4A",
+    });
+  });
+
+  test("keeps custom border glow colors instead of reintroducing purple defaults", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_glow",
+          slug: "glow",
+          title: "Glow",
+          navLabel: "Glow",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "glow_section",
+              type: "text",
+              layout: { borderStyle: "neon", glowColor: "#22D3EE" },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(
+      settings.pages.find((page) => page.id === "page_glow")?.sections[0]
+        ?.layout?.glowColor,
+    ).toBe("#22D3EE");
+    expect(
+      settings.pages.find((page) => page.id === "page_glow")?.sections[0]
+        ?.layout?.borderStyle,
+    ).toBe("neon");
   });
 
   test("preserves private builder metadata when it is present", () => {
@@ -461,4 +620,38 @@ describe("Site Builder settings migration", () => {
     expect(settings.builder.templates[0]?.name).toBe("Artist launch");
     expect(settings.builder.templates[0]?.sections[0]?.type).toBe("hero");
   });
+});
+
+test("keeps Clear Licensing artwork through repeated settings normalization", () => {
+  const uploadedKey = "site-builder/images/clear-licensing-persistent.webp";
+  const first = mergeSettings({
+    pages: [
+      {
+        id: "home",
+        slug: "home",
+        path: "/",
+        sections: [
+          {
+            id: "home_values",
+            type: "featureCards",
+            items: [
+              {
+                id: "licensing",
+                title: "Clear Licensing",
+                body: "Clear terms.",
+                imageUrl: uploadedKey,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+  const second = mergeSettings(first);
+  const item = second.pages
+    .find((page) => page.id === "home")
+    ?.sections.find((section) => section.id === "home_values")
+    ?.items?.find((candidate) => candidate.id === "licensing");
+
+  expect(item?.imageUrl).toBe(uploadedKey);
 });

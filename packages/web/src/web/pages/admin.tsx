@@ -12,6 +12,7 @@ import {
   Palette,
   PanelsTopLeft,
   Mail,
+  HeartPulse,
 } from "lucide-react";
 import {
   adminApi,
@@ -27,6 +28,7 @@ import { BeatTable } from "../components/admin/beat-table";
 import CustomizationPanel from "../components/admin/customization";
 import PageBuilderPanel from "../components/admin/page-builder";
 import EmailInboxPanel from "../components/admin/email-inbox";
+import MediaHealthPanel from "../components/admin/media-health";
 import { BulkUpload } from "../components/admin/bulk-upload";
 
 type Tab =
@@ -37,6 +39,7 @@ type Tab =
   | "subscribers"
   | "customization"
   | "builder"
+  | "media-health"
   | "inbox";
 
 export default function AdminPage() {
@@ -132,7 +135,11 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
             disabled={loading || !pw}
             className="w-full bg-vb-purple hover:bg-vb-purple-bright disabled:opacity-50 text-white font-sub uppercase tracking-wider py-3.5 rounded-xl transition flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : "Enter Studio"}
+            {loading ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              "Enter Studio"
+            )}
           </button>
         </form>
       </div>
@@ -156,6 +163,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "subscribers", label: "Fan List", icon: Users },
     { id: "customization", label: "Customization", icon: Palette },
     { id: "builder", label: "Page Builder", icon: PanelsTopLeft },
+    { id: "media-health", label: "Media Health", icon: HeartPulse },
     { id: "inbox", label: "Email Inbox", icon: Mail },
   ];
 
@@ -169,8 +177,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       {/* Sidebar */}
       <aside className="w-60 shrink-0 border-r border-white/[0.06] bg-vb-black/60 hidden md:flex flex-col fixed inset-y-0">
         <div className="px-5 h-16 flex items-center gap-2.5 border-b border-white/[0.06]">
-          <img src="/brand/skull-mark.png" alt="" className="h-8 w-8 object-contain" />
-          <span className="font-display uppercase tracking-wide text-lg">Studio</span>
+          <img
+            src="/brand/skull-mark.png"
+            alt=""
+            className="h-8 w-8 object-contain"
+          />
+          <span className="font-display uppercase tracking-wide text-lg">
+            Studio
+          </span>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {nav.map((n) => (
@@ -224,7 +238,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               <n.icon size={18} />
             </button>
           ))}
-          <button aria-label="Log out" onClick={onLogout} className="p-2 text-vb-silver/60">
+          <button
+            aria-label="Log out"
+            onClick={onLogout}
+            className="p-2 text-vb-silver/60"
+          >
             <LogOut size={18} />
           </button>
         </div>
@@ -242,15 +260,21 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           />
         ) : (
           <>
-            {tab === "overview" && <Overview onAdd={() => setCreating(true)} onTab={setTab} />}
+            {tab === "overview" && (
+              <Overview onAdd={() => setCreating(true)} onTab={setTab} />
+            )}
             {tab === "beats" && (
-              <BeatsTab onAdd={() => setCreating(true)} onEdit={(b) => setEditing(b)} />
+              <BeatsTab
+                onAdd={() => setCreating(true)}
+                onEdit={(b) => setEditing(b)}
+              />
             )}
             {tab === "bulk" && <BulkUpload onDone={() => setTab("beats")} />}
             {tab === "orders" && <OrdersTab />}
             {tab === "subscribers" && <SubscribersTab />}
             {tab === "customization" && <CustomizationPanel />}
             {tab === "builder" && <PageBuilderPanel />}
+            {tab === "media-health" && <MediaHealthPanel />}
             {tab === "inbox" && <EmailInboxPanel />}
           </>
         )}
@@ -262,8 +286,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 /* ------------------------------------------------------------------ */
 /* Overview                                                            */
 /* ------------------------------------------------------------------ */
-function Overview({ onAdd, onTab }: { onAdd: () => void; onTab: (t: Tab) => void }) {
-  const [stats, setStats] = useState<Awaited<ReturnType<typeof adminApi.stats>> | null>(null);
+function Overview({
+  onAdd,
+  onTab,
+}: {
+  onAdd: () => void;
+  onTab: (t: Tab) => void;
+}) {
+  const [stats, setStats] = useState<Awaited<
+    ReturnType<typeof adminApi.stats>
+  > | null>(null);
   useEffect(() => {
     adminApi
       .stats()
@@ -272,8 +304,16 @@ function Overview({ onAdd, onTab }: { onAdd: () => void; onTab: (t: Tab) => void
   }, []);
 
   const cards = [
-    { label: "Total Beats", value: stats?.beats ?? "—", sub: `${stats?.published ?? 0} live` },
-    { label: "Orders", value: stats?.orders ?? "—", sub: `${stats?.paidOrders ?? 0} paid` },
+    {
+      label: "Total Beats",
+      value: stats?.beats ?? "—",
+      sub: `${stats?.published ?? 0} live`,
+    },
+    {
+      label: "Orders",
+      value: stats?.orders ?? "—",
+      sub: `${stats?.paidOrders ?? 0} paid`,
+    },
     {
       label: "Revenue",
       value: stats ? "$" + (stats.revenueCents / 100).toFixed(0) : "—",
@@ -287,12 +327,19 @@ function Overview({ onAdd, onTab }: { onAdd: () => void; onTab: (t: Tab) => void
       <Header title="Overview" action={<AddBtn onClick={onAdd} />} />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((c) => (
-          <div key={c.label} className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
+          <div
+            key={c.label}
+            className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5"
+          >
             <div className="font-body text-xs uppercase tracking-wider text-vb-silver/50">
               {c.label}
             </div>
-            <div className="font-display text-4xl text-chrome mt-2 leading-none">{c.value}</div>
-            <div className="font-body text-xs text-vb-silver/40 mt-1.5">{c.sub}</div>
+            <div className="font-display text-4xl text-chrome mt-2 leading-none">
+              {c.value}
+            </div>
+            <div className="font-body text-xs text-vb-silver/40 mt-1.5">
+              {c.sub}
+            </div>
           </div>
         ))}
       </div>
@@ -340,7 +387,9 @@ function QuickCard({
         <span className="h-9 w-9 rounded-lg bg-vb-purple/20 grid place-items-center text-purple-glow group-hover:scale-105 transition">
           <Icon size={18} />
         </span>
-        <span className="font-sub uppercase tracking-wide text-vb-silver-bright">{title}</span>
+        <span className="font-sub uppercase tracking-wide text-vb-silver-bright">
+          {title}
+        </span>
       </div>
       <p className="font-body text-sm text-vb-silver/50">{desc}</p>
     </button>
@@ -350,7 +399,13 @@ function QuickCard({
 /* ------------------------------------------------------------------ */
 /* Beats tab                                                           */
 /* ------------------------------------------------------------------ */
-function BeatsTab({ onAdd, onEdit }: { onAdd: () => void; onEdit: (b: AdminBeat) => void }) {
+function BeatsTab({
+  onAdd,
+  onEdit,
+}: {
+  onAdd: () => void;
+  onEdit: (b: AdminBeat) => void;
+}) {
   const [beats, setBeats] = useState<AdminBeat[] | null>(null);
   const [err, setErr] = useState("");
 
@@ -382,7 +437,12 @@ function BeatsTab({ onAdd, onEdit }: { onAdd: () => void; onEdit: (b: AdminBeat)
       ) : beats.length === 0 ? (
         <Empty label="No beats yet. Upload your first one." onAdd={onAdd} />
       ) : (
-        <BeatTable beats={beats} onEdit={onEdit} onDelete={remove} onToggle={toggle} />
+        <BeatTable
+          beats={beats}
+          onEdit={onEdit}
+          onDelete={remove}
+          onToggle={toggle}
+        />
       )}
     </div>
   );
@@ -410,11 +470,18 @@ function OrdersTab() {
       ) : (
         <div className="space-y-3">
           {orders.map((o) => (
-            <div key={o.id} className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+            <div
+              key={o.id}
+              className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4"
+            >
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <div className="font-body text-vb-silver-bright">{o.name || o.email}</div>
-                  <div className="font-body text-xs text-vb-silver/50">{o.email}</div>
+                  <div className="font-body text-vb-silver-bright">
+                    {o.name || o.email}
+                  </div>
+                  <div className="font-body text-xs text-vb-silver/50">
+                    {o.email}
+                  </div>
                 </div>
                 <div className="text-right">
                   <span
@@ -452,7 +519,9 @@ function OrdersTab() {
 /* Subscribers tab                                                     */
 /* ------------------------------------------------------------------ */
 function SubscribersTab() {
-  const [subs, setSubs] = useState<{ id: string; email: string; createdAt: string }[] | null>(null);
+  const [subs, setSubs] = useState<
+    { id: string; email: string; createdAt: string }[] | null
+  >(null);
   useEffect(() => {
     adminApi
       .listSubscribers()
@@ -461,7 +530,8 @@ function SubscribersTab() {
   }, []);
 
   const copyAll = () => {
-    if (subs) navigator.clipboard.writeText(subs.map((s) => s.email).join(", "));
+    if (subs)
+      navigator.clipboard.writeText(subs.map((s) => s.email).join(", "));
   };
 
   return (
@@ -486,8 +556,13 @@ function SubscribersTab() {
       ) : (
         <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl divide-y divide-white/[0.05]">
           {subs.map((s) => (
-            <div key={s.id} className="flex items-center justify-between px-4 py-3">
-              <span className="font-body text-sm text-vb-silver-bright">{s.email}</span>
+            <div
+              key={s.id}
+              className="flex items-center justify-between px-4 py-3"
+            >
+              <span className="font-body text-sm text-vb-silver-bright">
+                {s.email}
+              </span>
               <span className="font-body text-xs text-vb-silver/40">
                 {new Date(s.createdAt).toLocaleDateString()}
               </span>
@@ -502,10 +577,18 @@ function SubscribersTab() {
 /* ------------------------------------------------------------------ */
 /* Shared bits                                                         */
 /* ------------------------------------------------------------------ */
-function Header({ title, action }: { title: string; action?: React.ReactNode }) {
+function Header({
+  title,
+  action,
+}: {
+  title: string;
+  action?: React.ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between mb-6 gap-4">
-      <h1 className="font-display text-4xl uppercase tracking-wide text-chrome">{title}</h1>
+      <h1 className="font-display text-4xl uppercase tracking-wide text-chrome">
+        {title}
+      </h1>
       {action}
     </div>
   );

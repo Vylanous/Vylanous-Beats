@@ -1,14 +1,22 @@
 /** Vylanous footer: global chrome rendered from Site Builder footer, page, and social settings. */
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Mail, Check } from "lucide-react";
 import { useSiteSettings } from "../lib/site-settings";
 import { SocialIcon } from "./social-icon";
+import { builderPagePath, normalizeManagedPath } from "../lib/page-routes";
 
 export function Footer() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const { brand, footer, pages, socials } = useSiteSettings();
+  const [loc] = useLocation();
+  const activePage = pages.find(
+    (page) => builderPagePath(page) === normalizeManagedPath(loc),
+  );
+  const footerLogoUrl =
+    activePage?.layout?.footerLogoUrl?.trim() || brand.fullLogoUrl;
+  const footerLabel = activePage?.layout?.footerLabel?.trim() || "";
   const links = useMemo(
     () =>
       [...pages]
@@ -38,11 +46,27 @@ export function Footer() {
     <footer className="page-footer relative mt-24 border-t border-white/[0.06] bg-vb-black">
       <div className="grid max-w-7xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-4 mx-auto">
         <div className="md:col-span-2">
-          <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="-ml-2 h-24 w-auto" />
-          <p className="mt-3 max-w-sm font-body text-vb-muted">{footer.description}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <img
+              src={footerLogoUrl}
+              alt={footerLabel || "Vylanous Beats"}
+              className="-ml-2 h-24 w-auto max-w-full object-contain"
+            />
+            {footerLabel && (
+              <span className="font-display text-2xl uppercase tracking-wide text-chrome">
+                {footerLabel}
+              </span>
+            )}
+          </div>
+          <p className="mt-3 max-w-sm font-body text-vb-muted">
+            {footer.description}
+          </p>
           <p className="mt-4 flex items-center gap-2 font-body text-sm text-vb-muted">
             <Mail size={15} className="text-vb-purple-bright" />
-            <a href={`mailto:${footer.contactEmail}`} className="hover:text-vb-purple-bright">
+            <a
+              href={`mailto:${footer.contactEmail}`}
+              className="hover:text-vb-purple-bright"
+            >
               {footer.contactEmail}
             </a>
           </p>
@@ -56,7 +80,10 @@ export function Footer() {
             <ul className="space-y-2.5 font-body text-vb-muted">
               {links.map((page) => (
                 <li key={page.id}>
-                  <Link to={page.path || `/${page.slug}`} className="hover:text-vb-purple-bright">
+                  <Link
+                    to={page.path || `/${page.slug}`}
+                    className="hover:text-vb-purple-bright"
+                  >
                     {page.navLabel}
                   </Link>
                 </li>
@@ -95,7 +122,9 @@ export function Footer() {
       </div>
       <div className="border-t border-white/[0.06]">
         <div className="flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-5 font-body text-sm text-vb-muted sm:flex-row sm:px-8 mx-auto">
-          <p>© {new Date().getFullYear()} Vylanous Beats. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Vylanous Beats. All rights reserved.
+          </p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             {footerSocials.map((social) => (
               <a
@@ -110,7 +139,9 @@ export function Footer() {
                 <span>{social.label}</span>
               </a>
             ))}
-            <p className="font-sub uppercase tracking-wider">{footer.legalLine}</p>
+            <p className="font-sub uppercase tracking-wider">
+              {footer.legalLine}
+            </p>
           </div>
         </div>
       </div>

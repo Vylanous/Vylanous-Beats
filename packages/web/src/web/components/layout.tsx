@@ -24,28 +24,48 @@ export function Layout({
 }) {
   const { current } = usePlayer();
   const settings = useSiteSettings();
-  const activePath = typeof window === "undefined" ? "/" : normalizeManagedPath(window.location.pathname);
-  const activePage = settings.pages.find((page) => builderPagePath(page) === activePath);
+  const activePath =
+    typeof window === "undefined"
+      ? "/"
+      : normalizeManagedPath(window.location.pathname);
+  const activePage = settings.pages.find(
+    (page) => builderPagePath(page) === activePath,
+  );
   const announcement = settings.announcementBanner;
   const showAnnouncement =
     announcement.enabled &&
     Boolean(announcement.message.trim()) &&
-    (announcement.target === "all" || Boolean(activePage && announcement.pageIds.includes(activePage.id)));
+    (announcement.target === "all" ||
+      Boolean(activePage && announcement.pageIds.includes(activePage.id)));
   const background =
-    pageBackground === "mesh" ? "bg-mesh" : pageBackground === "ink" ? "bg-vb-ink" : "";
+    pageBackground === "mesh"
+      ? "bg-mesh"
+      : pageBackground === "ink"
+        ? "bg-vb-ink"
+        : "";
   const pageVars = {
-    ...(pageStyle?.primaryColor ? { "--page-primary": pageStyle.primaryColor } : {}),
-    ...(pageStyle?.backgroundColor ? { "--page-background": pageStyle.backgroundColor } : {}),
+    ...(pageStyle?.primaryColor
+      ? { "--page-primary": pageStyle.primaryColor }
+      : {}),
+    ...(pageStyle?.backgroundColor
+      ? { "--page-background": pageStyle.backgroundColor }
+      : {}),
     ...(pageStyle?.textColor ? { "--page-text": pageStyle.textColor } : {}),
     ...(pageStyle?.mutedColor ? { "--page-muted": pageStyle.mutedColor } : {}),
-    ...(pageStyle?.surfaceColor ? { "--page-surface": pageStyle.surfaceColor } : {}),
-    ...(pageStyle?.borderColor ? { "--page-border": pageStyle.borderColor } : {}),
+    ...(pageStyle?.surfaceColor
+      ? { "--page-surface": pageStyle.surfaceColor }
+      : {}),
+    ...(pageStyle?.borderColor
+      ? { "--page-border": pageStyle.borderColor }
+      : {}),
     ...(pageStyle?.backgroundImage
       ? {
           "--page-background-image": `url("${pageStyle.backgroundImage.replace(/"/g, "%22")}")`,
         }
       : {}),
-    ...(pageStyle?.eyebrowColor ? { "--page-eyebrow": pageStyle.eyebrowColor } : {}),
+    ...(pageStyle?.eyebrowColor
+      ? { "--page-eyebrow": pageStyle.eyebrowColor }
+      : {}),
     ...(pageStyle?.linkColor ? { "--page-link": pageStyle.linkColor } : {}),
     "--page-background-overlay":
       pageStyle?.backgroundOverlay === "strong"
@@ -60,7 +80,9 @@ export function Layout({
     pageStyle?.chrome?.header ? "page-chrome-header" : "",
     pageStyle?.chrome?.navigation ? "page-chrome-navigation" : "",
     pageStyle?.chrome?.footer ? "page-chrome-footer" : "",
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <div
       style={pageVars}
@@ -75,7 +97,9 @@ export function Layout({
       )}
       {showHeader && <Nav />}
       {showAnnouncement && <AnnouncementBanner {...announcement} />}
-      <main className={`flex-1 ${current ? "pb-20" : ""}`}>{children}</main>
+      <main className={`min-w-0 w-full flex-1 ${current ? "pb-20" : ""}`}>
+        {children}
+      </main>
       {showFooter && <Footer />}
       <CartDrawer />
       <PlayerBar />
@@ -101,11 +125,19 @@ function AnnouncementBanner({
     notice: "border-cyan-300/30 bg-cyan-300/[0.1] text-cyan-50",
   };
   return (
-    <aside className={`relative z-10 border-y px-5 py-3 ${tones[tone]}`} aria-label="Site announcement">
+    <aside
+      className={`relative z-10 border-y px-5 py-3 ${tones[tone]}`}
+      aria-label="Site announcement"
+    >
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
-        <p className="font-sub text-xs uppercase tracking-[0.14em]">{message}</p>
+        <p className="font-sub text-xs uppercase tracking-[0.14em]">
+          {message}
+        </p>
         {ctaLabel && ctaHref && (
-          <a href={ctaHref} className="shrink-0 rounded-full border border-current/40 px-3 py-1 font-sub text-[10px] uppercase tracking-[0.14em] transition hover:bg-white/15">
+          <a
+            href={ctaHref}
+            className="shrink-0 rounded-full border border-current/40 px-3 py-1 font-sub text-[10px] uppercase tracking-[0.14em] transition hover:bg-white/15"
+          >
             {ctaLabel} →
           </a>
         )}

@@ -2,11 +2,17 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { eq, desc } from "drizzle-orm";
 import type { Hono } from "hono";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { db } from "../database";
-import { beats, orders, orderItems, subscribers, settings } from "../database/schema";
+import {
+  beats,
+  orders,
+  orderItems,
+  subscribers,
+  settings,
+} from "../database/schema";
 import { requireAdmin, checkPassword, makeAdminToken } from "../lib/admin-auth";
 import {
   loadSettings,
@@ -18,6 +24,78 @@ import { BUILDER_FONT_IDS, mergeSettings } from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
+
+type MediaHealthStatus =
+  "healthy" | "missing" | "broken" | "external" | "public" | "unavailable";
+type MediaHealthEntry = {
+  id: string;
+  source: string;
+  kind: "image" | "video" | "audio" | "file";
+  reference: string;
+  normalizedKey?: string;
+  status: MediaHealthStatus;
+  detail: string;
+};
+
+function addMediaReference(
+  entries: Omit<MediaHealthEntry, "status" | "detail">[],
+  id: string,
+  source: string,
+  kind: MediaHealthEntry["kind"],
+  reference: unknown,
+) {
+  if (typeof reference !== "string" || !reference.trim()) return;
+  entries.push({ id, source, kind, reference: reference.trim() });
+}
+
+async function probeMediaReference(
+  entry: Omit<MediaHealthEntry, "status" | "detail">,
+): Promise<MediaHealthEntry> {
+  const reference = entry.reference;
+  if (/^https?:\/\//i.test(reference)) {
+    return {
+      ...entry,
+      status: "external",
+      detail: "External URL; not probed by the server.",
+    };
+  }
+  if (reference.startsWith("/")) {
+    return { ...entry, status: "public", detail: "Public site asset path." };
+  }
+  const normalizedKey = normalizeKey(reference);
+  if (!normalizedKey) {
+    return {
+      ...entry,
+      status: "missing",
+      detail: "The stored media reference is empty.",
+    };
+  }
+  if (!S3_CONFIGURED) {
+    return {
+      ...entry,
+      normalizedKey,
+      status: "unavailable",
+      detail: "Object storage is not configured in this environment.",
+    };
+  }
+  try {
+    await s3.send(
+      new HeadObjectCommand({ Bucket: S3_BUCKET, Key: normalizedKey }),
+    );
+    return {
+      ...entry,
+      normalizedKey,
+      status: "healthy",
+      detail: "Object exists in storage.",
+    };
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "$metadata" in error
+        ? "Storage HEAD request failed."
+        : "Object was not found in storage.";
+    return { ...entry, normalizedKey, status: "broken", detail: code };
+  }
+}
 
 const beatInputSchema = z.object({
   title: z.string().min(1),
@@ -65,7 +143,11 @@ const PAGE_BUILDER_IMAGE_TYPES = new Set([
   "image/gif",
   "image/avif",
 ]);
-const PAGE_BUILDER_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+const PAGE_BUILDER_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+]);
 const uploadPresignSchema = z.object({
   filename: z.string().min(1).max(180),
   contentType: z.string().min(1).max(120),
@@ -196,29 +278,82 @@ const settingsSchema = z.object({
             showFooter: z.boolean().optional(),
             background: z.enum(["default", "mesh", "ink"]).optional(),
             inheritTheme: z.boolean().optional(),
-            primaryColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-            backgroundColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-            textColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-            mutedColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-            surfaceColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-            borderColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            primaryColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            backgroundColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            textColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            mutedColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            surfaceColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            borderColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
             backgroundImage: z.string().max(2000).optional(),
             backgroundImageFit: z.enum(["cover", "contain", "tile"]).optional(),
             backgroundImagePosition: z
               .enum(["center", "top", "bottom", "left", "right"])
               .optional(),
-            backgroundOverlay: z.enum(["none", "soft", "medium", "strong"]).optional(),
-            pageTreatment: z.enum(["none", "grain", "grid", "spotlight"]).optional(),
+            backgroundOverlay: z
+              .enum(["none", "soft", "medium", "strong"])
+              .optional(),
+            pageTreatment: z
+              .enum(["none", "grain", "grid", "spotlight"])
+              .optional(),
             pageFont: z.enum(BUILDER_FONT_IDS).optional(),
-            contentWidth: z.enum(["narrow", "standard", "wide", "full"]).optional(),
-            sectionSpacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
-            eyebrowColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-            linkColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+            contentWidth: z
+              .enum(["narrow", "standard", "wide", "full"])
+              .optional(),
+            sectionSpacing: z
+              .enum(["tight", "normal", "relaxed", "cinematic"])
+              .optional(),
+            eyebrowColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            linkColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            wordmark: z.string().max(120).optional(),
+            headerLogoUrl: z.string().max(2000).optional(),
+            headerLabel: z.string().max(120).optional(),
+            footerLogoUrl: z.string().max(2000).optional(),
+            footerLabel: z.string().max(120).optional(),
+            wordmarkAccent: z.string().max(80).optional(),
+            wordmarkAccentColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
             chrome: z
               .object({
                 header: z.boolean().optional(),
                 navigation: z.boolean().optional(),
                 footer: z.boolean().optional(),
+              })
+              .optional(),
+            headerActions: z
+              .object({
+                showVault: z.boolean().optional(),
+                vaultLabel: z.string().max(80).optional(),
+                vaultHref: z.string().max(500).optional(),
+                showSignIn: z.boolean().optional(),
+                signInLabel: z.string().max(80).optional(),
+                signInHref: z.string().max(500).optional(),
+                showCart: z.boolean().optional(),
               })
               .optional(),
           })
@@ -267,9 +402,15 @@ const settingsSchema = z.object({
             secondaryCtaLabel: z.string().optional(),
             secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
-            anchorId: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/).max(80).optional(),
+            anchorId: z
+              .string()
+              .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
+              .max(80)
+              .optional(),
             customClass: z.string().max(120).optional(),
             ariaLabel: z.string().max(120).optional(),
+            sectionLogoUrl: z.string().max(2000).optional(),
+            sectionLogoAlt: z.string().max(160).optional(),
             items: z
               .array(
                 z.object({
@@ -291,56 +432,167 @@ const settingsSchema = z.object({
                   .array(
                     z.object({
                       id: z.string().max(80),
-                      platform: z.enum(["youtube", "tiktok", "instagram", "facebook", "spotify", "soundcloud", "x", "website", "other"]),
+                      platform: z.enum([
+                        "youtube",
+                        "tiktok",
+                        "instagram",
+                        "facebook",
+                        "spotify",
+                        "soundcloud",
+                        "x",
+                        "website",
+                        "other",
+                      ]),
                       label: z.string().max(80).optional(),
                       handle: z.string().max(120).optional(),
-                      followers: z.number().min(0).max(10_000_000_000).optional(),
-                      subscribers: z.number().min(0).max(10_000_000_000).optional(),
-                      videos: z.number().int().min(0).max(10_000_000).optional(),
+                      followers: z
+                        .number()
+                        .min(0)
+                        .max(10_000_000_000)
+                        .optional(),
+                      subscribers: z
+                        .number()
+                        .min(0)
+                        .max(10_000_000_000)
+                        .optional(),
+                      videos: z
+                        .number()
+                        .int()
+                        .min(0)
+                        .max(10_000_000)
+                        .optional(),
                       posts: z.number().int().min(0).max(10_000_000).optional(),
-                      views: z.number().min(0).max(10_000_000_000_000).optional(),
-                      likes: z.number().min(0).max(10_000_000_000_000).optional(),
+                      views: z
+                        .number()
+                        .min(0)
+                        .max(10_000_000_000_000)
+                        .optional(),
+                      likes: z
+                        .number()
+                        .min(0)
+                        .max(10_000_000_000_000)
+                        .optional(),
                       engagementRate: z.number().min(0).max(100).optional(),
                       url: z.string().max(2000).optional(),
                     }),
                   )
                   .max(24),
                 audience: z.object({
-                  gender: z.array(z.object({ label: z.string().max(80), value: z.number().min(0).max(100) })).max(12).optional(),
-                  age: z.array(z.object({ label: z.string().max(80), value: z.number().min(0).max(100) })).max(12).optional(),
-                  locations: z.array(z.object({ label: z.string().max(120), value: z.number().min(0).max(100) })).max(24).optional(),
+                  gender: z
+                    .array(
+                      z.object({
+                        label: z.string().max(80),
+                        value: z.number().min(0).max(100),
+                      }),
+                    )
+                    .max(12)
+                    .optional(),
+                  age: z
+                    .array(
+                      z.object({
+                        label: z.string().max(80),
+                        value: z.number().min(0).max(100),
+                      }),
+                    )
+                    .max(12)
+                    .optional(),
+                  locations: z
+                    .array(
+                      z.object({
+                        label: z.string().max(120),
+                        value: z.number().min(0).max(100),
+                      }),
+                    )
+                    .max(24)
+                    .optional(),
                   note: z.string().max(240).optional(),
                 }),
               })
               .optional(),
             layout: z
               .object({
-                width: z.enum(["narrow", "standard", "wide", "full"]).optional(),
-                spacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
-                alignment: z.enum(["left", "center", "right"]).optional(),
-                surface: z.enum(["transparent", "ink", "mesh", "accent", "bordered"]).optional(),
-                columns: z
-                  .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)])
+                width: z
+                  .enum(["narrow", "standard", "wide", "full"])
                   .optional(),
-                mediaPosition: z.enum(["none", "left", "right", "background", "top"]).optional(),
+                spacing: z
+                  .enum(["tight", "normal", "relaxed", "cinematic"])
+                  .optional(),
+                alignment: z.enum(["left", "center", "right"]).optional(),
+                surface: z
+                  .enum(["transparent", "ink", "mesh", "accent", "bordered"])
+                  .optional(),
+                columns: z
+                  .union([
+                    z.literal(1),
+                    z.literal(2),
+                    z.literal(3),
+                    z.literal(4),
+                  ])
+                  .optional(),
+                mediaPosition: z
+                  .enum(["none", "left", "right", "background", "top"])
+                  .optional(),
                 mediaFit: z.enum(["cover", "contain"]).optional(),
-                mediaAspect: z.enum(["auto", "square", "wide", "portrait", "cinema"]).optional(),
+                mediaAspect: z
+                  .enum(["auto", "square", "wide", "portrait", "cinema"])
+                  .optional(),
                 imageOverlay: z.enum(["none", "soft", "strong"]).optional(),
                 borderRadius: z.enum(["none", "soft", "rounded"]).optional(),
                 emphasis: z.enum(["standard", "accent", "muted"]).optional(),
-                palette: z.enum(["brand", "mono", "electric", "sunset", "forest"]).optional(),
-                headingScale: z.enum(["compact", "standard", "display", "hero"]).optional(),
-                paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
+                palette: z
+                  .enum(["brand", "mono", "electric", "sunset", "forest"])
+                  .optional(),
+                headingScale: z
+                  .enum(["compact", "standard", "display", "hero"])
+                  .optional(),
+                paddingX: z
+                  .enum(["none", "tight", "normal", "wide"])
+                  .optional(),
                 shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
-                borderStyle: z.enum(["none", "subtle", "accent", "chrome", "thin", "double", "dashed", "gradient", "neon"]).optional(),
-                glowColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
-                glowAnimation: z.enum(["none", "move", "pulse", "slowFlash"]).optional(),
-                customColor: z.string().regex(/^(?:|#[0-9A-Fa-f]{6})$/).optional(),
+                borderStyle: z
+                  .enum([
+                    "none",
+                    "subtle",
+                    "accent",
+                    "chrome",
+                    "thin",
+                    "double",
+                    "dashed",
+                    "gradient",
+                    "neon",
+                  ])
+                  .optional(),
+                glowColor: z
+                  .string()
+                  .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+                  .optional(),
+                glowAnimation: z
+                  .enum(["none", "move", "pulse", "slowFlash"])
+                  .optional(),
+                customColor: z
+                  .string()
+                  .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+                  .optional(),
                 fontFamily: z.enum(BUILDER_FONT_IDS).optional(),
                 bodyFontFamily: z.enum(BUILDER_FONT_IDS).optional(),
-                eyebrowSize: z.enum(["12px", "14px", "16px", "18px", "20px"]).optional(),
-                headingSize: z.enum(["32px", "40px", "48px", "56px", "64px", "72px", "88px", "104px"]).optional(),
-                bodySize: z.enum(["14px", "16px", "18px", "20px", "22px", "24px"]).optional(),
+                eyebrowSize: z
+                  .enum(["12px", "14px", "16px", "18px", "20px"])
+                  .optional(),
+                headingSize: z
+                  .enum([
+                    "32px",
+                    "40px",
+                    "48px",
+                    "56px",
+                    "64px",
+                    "72px",
+                    "88px",
+                    "104px",
+                  ])
+                  .optional(),
+                bodySize: z
+                  .enum(["14px", "16px", "18px", "20px", "22px", "24px"])
+                  .optional(),
               })
               .optional(),
           }),
@@ -400,7 +652,9 @@ const settingsSchema = z.object({
     .optional(),
 });
 
-function normalizeFileUrls(files: Record<string, string> | undefined): Record<string, string> {
+function normalizeFileUrls(
+  files: Record<string, string> | undefined,
+): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(files || {})) {
     const normalized = normalizeKey(v);
@@ -409,12 +663,22 @@ function normalizeFileUrls(files: Record<string, string> | undefined): Record<st
   return out;
 }
 
-function normalizeText(value: string | null | undefined, fallback = ""): string {
+function normalizeText(
+  value: string | null | undefined,
+  fallback = "",
+): string {
   return (value || "").trim() || fallback;
 }
 
 function normalizeTags(value: string | null | undefined): string {
-  return [...new Set((value || "").split(",").map((tag) => tag.trim()).filter(Boolean))].join(", ");
+  return [
+    ...new Set(
+      (value || "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    ),
+  ].join(", ");
 }
 
 function normalizeBpm(value: number | null | undefined): number {
@@ -427,12 +691,17 @@ function normalizePrice(value: number | null | undefined): number {
   return Math.max(0, cents);
 }
 
-function parseStoredFileUrls(raw: string | null | undefined): Record<string, string> {
+function parseStoredFileUrls(
+  raw: string | null | undefined,
+): Record<string, string> {
   try {
     const parsed = JSON.parse(raw || "{}");
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      return {};
     return Object.fromEntries(
-      Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+      Object.entries(parsed).filter(
+        (entry): entry is [string, string] => typeof entry[1] === "string",
+      ),
     );
   } catch {
     return {};
@@ -466,13 +735,17 @@ function normalizeBeatMetadata(input: {
 }
 
 export function adminRoutes(app: Hono) {
-  app.post("/admin/login", zValidator("json", z.object({ password: z.string() })), async (c) => {
-    const { password } = c.req.valid("json");
-    if (!checkPassword(password)) {
-      return c.json({ error: "invalid_password" }, 401);
-    }
-    return c.json({ token: makeAdminToken() }, 200);
-  });
+  app.post(
+    "/admin/login",
+    zValidator("json", z.object({ password: z.string() })),
+    async (c) => {
+      const { password } = c.req.valid("json");
+      if (!checkPassword(password)) {
+        return c.json({ error: "invalid_password" }, 401);
+      }
+      return c.json({ token: makeAdminToken() }, 200);
+    },
+  );
 
   app.get("/admin/me", requireAdmin, (c) => c.json({ ok: true }, 200));
 
@@ -491,21 +764,34 @@ export function adminRoutes(app: Hono) {
     const uploaded = body.file;
     const file = uploaded instanceof File ? uploaded : null;
     const folder = typeof body.folder === "string" ? body.folder : "uploads";
-    if (!file) return c.json({ error: "missing_file", message: "Choose a file to upload." }, 400);
+    if (!file)
+      return c.json(
+        { error: "missing_file", message: "Choose a file to upload." },
+        400,
+      );
     if (!/^[a-zA-Z0-9/_-]+$/.test(folder) || folder.includes("..")) {
-      return c.json({ error: "invalid_folder", message: "Invalid upload folder." }, 400);
+      return c.json(
+        { error: "invalid_folder", message: "Invalid upload folder." },
+        400,
+      );
     }
     const contentType = file.type || "application/octet-stream";
     if (folder === PAGE_BUILDER_IMAGE_FOLDER) {
       if (!PAGE_BUILDER_IMAGE_TYPES.has(contentType.toLowerCase())) {
         return c.json(
-          { error: "unsupported_image_type", message: "Use a JPG, PNG, WebP, GIF, or AVIF image." },
+          {
+            error: "unsupported_image_type",
+            message: "Use a JPG, PNG, WebP, GIF, or AVIF image.",
+          },
           415,
         );
       }
       if (file.size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
         return c.json(
-          { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+          {
+            error: "image_too_large",
+            message: "Page Builder images must be 10 MB or smaller.",
+          },
           413,
         );
       }
@@ -513,13 +799,19 @@ export function adminRoutes(app: Hono) {
     if (folder === PAGE_BUILDER_VIDEO_FOLDER) {
       if (!PAGE_BUILDER_VIDEO_TYPES.has(contentType.toLowerCase())) {
         return c.json(
-          { error: "unsupported_video_type", message: "Use an MP4, WebM, or MOV video." },
+          {
+            error: "unsupported_video_type",
+            message: "Use an MP4, WebM, or MOV video.",
+          },
           415,
         );
       }
       if (file.size > PAGE_BUILDER_VIDEO_MAX_BYTES) {
         return c.json(
-          { error: "video_too_large", message: "Page Builder cover videos must be 50 MB or smaller." },
+          {
+            error: "video_too_large",
+            message: "Page Builder cover videos must be 50 MB or smaller.",
+          },
           413,
         );
       }
@@ -555,7 +847,10 @@ export function adminRoutes(app: Hono) {
         }
         if (!size || size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
           return c.json(
-            { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+            {
+              error: "image_too_large",
+              message: "Page Builder images must be 10 MB or smaller.",
+            },
             413,
           );
         }
@@ -563,13 +858,19 @@ export function adminRoutes(app: Hono) {
       if (folder === PAGE_BUILDER_VIDEO_FOLDER) {
         if (!PAGE_BUILDER_VIDEO_TYPES.has(contentType.toLowerCase())) {
           return c.json(
-            { error: "unsupported_video_type", message: "Use an MP4, WebM, or MOV video." },
+            {
+              error: "unsupported_video_type",
+              message: "Use an MP4, WebM, or MOV video.",
+            },
             415,
           );
         }
         if (!size || size > PAGE_BUILDER_VIDEO_MAX_BYTES) {
           return c.json(
-            { error: "video_too_large", message: "Page Builder cover videos must be 50 MB or smaller." },
+            {
+              error: "video_too_large",
+              message: "Page Builder cover videos must be 50 MB or smaller.",
+            },
             413,
           );
         }
@@ -588,7 +889,11 @@ export function adminRoutes(app: Hono) {
       const key = `${folder || "uploads"}/${Date.now()}-${randomUUID()}-${safe}`;
       const url = await getSignedUrl(
         s3,
-        new PutObjectCommand({ Bucket: S3_BUCKET, Key: key, ContentType: contentType }),
+        new PutObjectCommand({
+          Bucket: S3_BUCKET,
+          Key: key,
+          ContentType: contentType,
+        }),
         { expiresIn: 600 },
       );
       return c.json({ url, key }, 200);
@@ -599,7 +904,10 @@ export function adminRoutes(app: Hono) {
     const all = await db.select().from(beats).orderBy(desc(beats.createdAt));
     const withUrls = await Promise.all(
       all.map(async (b) => {
-        const metadata = normalizeBeatMetadata({ ...b, fileUrls: parseStoredFileUrls(b.fileUrls) });
+        const metadata = normalizeBeatMetadata({
+          ...b,
+          fileUrls: parseStoredFileUrls(b.fileUrls),
+        });
         const fileUrls = JSON.stringify(metadata.fileUrls);
         const needsRepair =
           b.title !== metadata.title ||
@@ -613,7 +921,10 @@ export function adminRoutes(app: Hono) {
           b.fileUrls !== fileUrls ||
           b.priceFrom !== metadata.priceFrom;
         if (needsRepair) {
-          await db.update(beats).set({ ...metadata, fileUrls }).where(eq(beats.id, b.id));
+          await db
+            .update(beats)
+            .set({ ...metadata, fileUrls })
+            .where(eq(beats.id, b.id));
         }
         return {
           ...b,
@@ -634,7 +945,10 @@ export function adminRoutes(app: Hono) {
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
-    const metadata = normalizeBeatMetadata({ ...b, fileUrls: parseStoredFileUrls(b.fileUrls) });
+    const metadata = normalizeBeatMetadata({
+      ...b,
+      fileUrls: parseStoredFileUrls(b.fileUrls),
+    });
     const fileUrls = JSON.stringify(metadata.fileUrls);
     const needsRepair =
       b.title !== metadata.title ||
@@ -647,7 +961,11 @@ export function adminRoutes(app: Hono) {
       b.audioUrl !== metadata.audioUrl ||
       b.fileUrls !== fileUrls ||
       b.priceFrom !== metadata.priceFrom;
-    if (needsRepair) await db.update(beats).set({ ...metadata, fileUrls }).where(eq(beats.id, id));
+    if (needsRepair)
+      await db
+        .update(beats)
+        .set({ ...metadata, fileUrls })
+        .where(eq(beats.id, id));
     return c.json(
       {
         beat: {
@@ -662,51 +980,77 @@ export function adminRoutes(app: Hono) {
     );
   });
 
-  app.post("/admin/beats", requireAdmin, zValidator("json", beatInputSchema), async (c) => {
-    const input = c.req.valid("json");
-    const metadata = normalizeBeatMetadata(input);
-    if (!metadata.title) return c.json({ error: "title_required", message: "Give the beat a title." }, 400);
-    const id = rid("beat");
-    const slug = makeSlug(metadata.title, id);
-    await db.insert(beats).values({
-      id,
-      ...metadata,
-      fileUrls: JSON.stringify(metadata.fileUrls),
-      slug,
-      soldExclusive: input.soldExclusive ?? false,
-      featured: input.featured ?? false,
-      published: input.published ?? true,
-    });
-    return c.json({ id, slug }, 200);
-  });
+  app.post(
+    "/admin/beats",
+    requireAdmin,
+    zValidator("json", beatInputSchema),
+    async (c) => {
+      const input = c.req.valid("json");
+      const metadata = normalizeBeatMetadata(input);
+      if (!metadata.title)
+        return c.json(
+          { error: "title_required", message: "Give the beat a title." },
+          400,
+        );
+      const id = rid("beat");
+      const slug = makeSlug(metadata.title, id);
+      await db.insert(beats).values({
+        id,
+        ...metadata,
+        fileUrls: JSON.stringify(metadata.fileUrls),
+        slug,
+        soldExclusive: input.soldExclusive ?? false,
+        featured: input.featured ?? false,
+        published: input.published ?? true,
+      });
+      return c.json({ id, slug }, 200);
+    },
+  );
 
-  app.put("/admin/beats/:id", requireAdmin, zValidator("json", beatUpdateSchema), async (c) => {
-    const id = c.req.param("id");
-    if (!id) return c.json({ error: "invalid_beat_id" }, 400);
-    const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
-    if (rows.length === 0) return c.json({ error: "Not found" }, 404);
-    const input = c.req.valid("json");
-    const patch: Record<string, unknown> = {};
-    const metadata = normalizeBeatMetadata(input);
-    if (input.title !== undefined) {
-      if (!metadata.title) return c.json({ error: "title_required", message: "Give the beat a title." }, 400);
-      patch.title = metadata.title;
-    }
-    if (input.bpm !== undefined) patch.bpm = metadata.bpm;
-    if (input.musicalKey !== undefined) patch.musicalKey = metadata.musicalKey;
-    if (input.genre !== undefined) patch.genre = metadata.genre;
-    if (input.mood !== undefined) patch.mood = metadata.mood;
-    if (input.tags !== undefined) patch.tags = metadata.tags;
-    if (input.artworkUrl !== undefined) patch.artworkUrl = metadata.artworkUrl;
-    if (input.audioUrl !== undefined) patch.audioUrl = metadata.audioUrl;
-    if (input.fileUrls !== undefined) patch.fileUrls = JSON.stringify(metadata.fileUrls);
-    if (input.priceFrom !== undefined) patch.priceFrom = metadata.priceFrom;
-    if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
-    if (input.featured !== undefined) patch.featured = input.featured;
-    if (input.published !== undefined) patch.published = input.published;
-    await db.update(beats).set(patch).where(eq(beats.id, id));
-    return c.json({ ok: true }, 200);
-  });
+  app.put(
+    "/admin/beats/:id",
+    requireAdmin,
+    zValidator("json", beatUpdateSchema),
+    async (c) => {
+      const id = c.req.param("id");
+      if (!id) return c.json({ error: "invalid_beat_id" }, 400);
+      const rows = await db
+        .select()
+        .from(beats)
+        .where(eq(beats.id, id))
+        .limit(1);
+      if (rows.length === 0) return c.json({ error: "Not found" }, 404);
+      const input = c.req.valid("json");
+      const patch: Record<string, unknown> = {};
+      const metadata = normalizeBeatMetadata(input);
+      if (input.title !== undefined) {
+        if (!metadata.title)
+          return c.json(
+            { error: "title_required", message: "Give the beat a title." },
+            400,
+          );
+        patch.title = metadata.title;
+      }
+      if (input.bpm !== undefined) patch.bpm = metadata.bpm;
+      if (input.musicalKey !== undefined)
+        patch.musicalKey = metadata.musicalKey;
+      if (input.genre !== undefined) patch.genre = metadata.genre;
+      if (input.mood !== undefined) patch.mood = metadata.mood;
+      if (input.tags !== undefined) patch.tags = metadata.tags;
+      if (input.artworkUrl !== undefined)
+        patch.artworkUrl = metadata.artworkUrl;
+      if (input.audioUrl !== undefined) patch.audioUrl = metadata.audioUrl;
+      if (input.fileUrls !== undefined)
+        patch.fileUrls = JSON.stringify(metadata.fileUrls);
+      if (input.priceFrom !== undefined) patch.priceFrom = metadata.priceFrom;
+      if (input.soldExclusive !== undefined)
+        patch.soldExclusive = input.soldExclusive;
+      if (input.featured !== undefined) patch.featured = input.featured;
+      if (input.published !== undefined) patch.published = input.published;
+      await db.update(beats).set(patch).where(eq(beats.id, id));
+      return c.json({ ok: true }, 200);
+    },
+  );
 
   app.delete("/admin/beats/:id", requireAdmin, async (c) => {
     const id = c.req.param("id");
@@ -738,8 +1082,179 @@ export function adminRoutes(app: Hono) {
   });
 
   app.get("/admin/subscribers", requireAdmin, async (c) => {
-    const all = await db.select().from(subscribers).orderBy(desc(subscribers.createdAt));
+    const all = await db
+      .select()
+      .from(subscribers)
+      .orderBy(desc(subscribers.createdAt));
     return c.json({ subscribers: all }, 200);
+  });
+
+  app.get("/admin/media-health", requireAdmin, async (c) => {
+    const site = await loadSettings();
+    const references: Omit<MediaHealthEntry, "status" | "detail">[] = [];
+    addMediaReference(
+      references,
+      "brand-square",
+      "Global brand",
+      "image",
+      site.brand.squareLogoUrl,
+    );
+    addMediaReference(
+      references,
+      "brand-full",
+      "Global brand",
+      "image",
+      site.brand.fullLogoUrl,
+    );
+    addMediaReference(
+      references,
+      "brand-favicon",
+      "Global brand",
+      "image",
+      site.brand.faviconUrl,
+    );
+    for (const page of site.pages) {
+      const prefix = `page:${page.id}`;
+      addMediaReference(
+        references,
+        `${prefix}:background`,
+        `${page.title} background`,
+        "image",
+        page.layout?.backgroundImage,
+      );
+      addMediaReference(
+        references,
+        `${prefix}:header-logo`,
+        `${page.title} header logo`,
+        "image",
+        page.layout?.headerLogoUrl,
+      );
+      addMediaReference(
+        references,
+        `${prefix}:footer-logo`,
+        `${page.title} footer logo`,
+        "image",
+        page.layout?.footerLogoUrl,
+      );
+      addMediaReference(
+        references,
+        `${prefix}:og-image`,
+        `${page.title} OpenGraph image`,
+        "image",
+        page.seo?.ogImageUrl,
+      );
+      for (const section of page.sections) {
+        const sectionPrefix = `${prefix}:section:${section.id}`;
+        addMediaReference(
+          references,
+          `${sectionPrefix}:image`,
+          `${page.title} / ${section.title || section.type}`,
+          "image",
+          section.imageUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:video`,
+          `${page.title} / ${section.title || section.type}`,
+          "video",
+          section.videoUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:cover-image`,
+          `${page.title} / ${section.title || section.type}`,
+          "image",
+          section.coverImageUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:cover-video`,
+          `${page.title} / ${section.title || section.type}`,
+          "video",
+          section.coverVideoUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:logo`,
+          `${page.title} / ${section.title || section.type}`,
+          "image",
+          section.sectionLogoUrl,
+        );
+        for (const item of section.items || []) {
+          addMediaReference(
+            references,
+            `${sectionPrefix}:item:${item.id}`,
+            `${page.title} / ${item.title}`,
+            "image",
+            item.imageUrl,
+          );
+        }
+      }
+    }
+    const beatRows = await db
+      .select({
+        id: beats.id,
+        title: beats.title,
+        artworkUrl: beats.artworkUrl,
+        audioUrl: beats.audioUrl,
+        fileUrls: beats.fileUrls,
+      })
+      .from(beats);
+    for (const beat of beatRows) {
+      addMediaReference(
+        references,
+        `beat:${beat.id}:artwork`,
+        `Beat: ${beat.title}`,
+        "image",
+        beat.artworkUrl,
+      );
+      addMediaReference(
+        references,
+        `beat:${beat.id}:audio`,
+        `Beat: ${beat.title}`,
+        "audio",
+        beat.audioUrl,
+      );
+      try {
+        const files = JSON.parse(beat.fileUrls || "{}") as Record<
+          string,
+          unknown
+        >;
+        for (const [name, value] of Object.entries(files))
+          addMediaReference(
+            references,
+            `beat:${beat.id}:file:${name}`,
+            `Beat: ${beat.title} / ${name}`,
+            "file",
+            value,
+          );
+      } catch {
+        if (beat.fileUrls)
+          addMediaReference(
+            references,
+            `beat:${beat.id}:files`,
+            `Beat: ${beat.title} / files`,
+            "file",
+            beat.fileUrls,
+          );
+      }
+    }
+    const items = await Promise.all(references.map(probeMediaReference));
+    const summary = items.reduce<Record<MediaHealthStatus, number>>(
+      (counts, item) => {
+        counts[item.status] += 1;
+        return counts;
+      },
+      {
+        healthy: 0,
+        missing: 0,
+        broken: 0,
+        external: 0,
+        public: 0,
+        unavailable: 0,
+      },
+    );
+    return c.json({ checkedAt: new Date().toISOString(), summary, items }, 200);
   });
 
   app.get("/admin/settings", requireAdmin, async (c) => {
@@ -748,53 +1263,71 @@ export function adminRoutes(app: Hono) {
     return c.json({ settings: s, preview }, 200);
   });
 
-  app.put("/admin/settings", requireAdmin, zValidator("json", settingsSchema), async (c) => {
-    const input = c.req.valid("json");
-    const current = await loadSettings();
-    const merged = mergeSettings({
-      theme: { ...current.theme, ...input.theme },
-      fontId: input.fontId ?? current.fontId,
-      brand: { ...current.brand, ...input.brand },
-      header: { ...current.header, ...input.header },
-      footer: { ...current.footer, ...input.footer },
-      newsletterPopup: { ...current.newsletterPopup, ...input.newsletterPopup },
-      announcementBanner: input.announcementBanner
-        ? {
-            ...current.announcementBanner,
-            ...input.announcementBanner,
-            pageIds: input.announcementBanner.pageIds ?? current.announcementBanner.pageIds,
-          }
-        : current.announcementBanner,
-      socials: input.socials ?? current.socials,
-      pages: input.pages ?? current.pages,
-      deletedPageIds: input.deletedPageIds ?? current.deletedPageIds,
-      fourthwall: { ...current.fourthwall, ...input.fourthwall },
-      builder: input.builder
-        ? {
-            drafts: input.builder.drafts ?? current.builder.drafts,
-            templates: input.builder.templates ?? current.builder.templates,
-            versions: input.builder.versions ?? current.builder.versions,
-          }
-        : current.builder,
-    });
-    const json = JSON.stringify(merged);
-    const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
-    if (existing.length === 0) {
-      await db.insert(settings).values({ id: SETTINGS_ID, json });
-    } else {
-      await db
-        .update(settings)
-        .set({ json, updatedAt: new Date().toISOString() })
-        .where(eq(settings.id, SETTINGS_ID));
-    }
-    invalidateSettingsCache();
-    return c.json({ settings: merged }, 200);
-  });
+  app.put(
+    "/admin/settings",
+    requireAdmin,
+    zValidator("json", settingsSchema),
+    async (c) => {
+      const input = c.req.valid("json");
+      const current = await loadSettings();
+      const merged = mergeSettings({
+        theme: { ...current.theme, ...input.theme },
+        fontId: input.fontId ?? current.fontId,
+        brand: { ...current.brand, ...input.brand },
+        header: { ...current.header, ...input.header },
+        footer: { ...current.footer, ...input.footer },
+        newsletterPopup: {
+          ...current.newsletterPopup,
+          ...input.newsletterPopup,
+        },
+        announcementBanner: input.announcementBanner
+          ? {
+              ...current.announcementBanner,
+              ...input.announcementBanner,
+              pageIds:
+                input.announcementBanner.pageIds ??
+                current.announcementBanner.pageIds,
+            }
+          : current.announcementBanner,
+        socials: input.socials ?? current.socials,
+        pages: input.pages ?? current.pages,
+        deletedPageIds: input.deletedPageIds ?? current.deletedPageIds,
+        fourthwall: { ...current.fourthwall, ...input.fourthwall },
+        builder: input.builder
+          ? {
+              drafts: input.builder.drafts ?? current.builder.drafts,
+              templates: input.builder.templates ?? current.builder.templates,
+              versions: input.builder.versions ?? current.builder.versions,
+            }
+          : current.builder,
+      });
+      const json = JSON.stringify(merged);
+      const existing = await db
+        .select()
+        .from(settings)
+        .where(eq(settings.id, SETTINGS_ID))
+        .limit(1);
+      if (existing.length === 0) {
+        await db.insert(settings).values({ id: SETTINGS_ID, json });
+      } else {
+        await db
+          .update(settings)
+          .set({ json, updatedAt: new Date().toISOString() })
+          .where(eq(settings.id, SETTINGS_ID));
+      }
+      invalidateSettingsCache();
+      return c.json({ settings: merged }, 200);
+    },
+  );
 
   app.post("/admin/settings/reset", requireAdmin, async (c) => {
     const merged = mergeSettings(null);
     const json = JSON.stringify(merged);
-    const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
+    const existing = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.id, SETTINGS_ID))
+      .limit(1);
     if (existing.length === 0) {
       await db.insert(settings).values({ id: SETTINGS_ID, json });
     } else {

@@ -21,20 +21,29 @@ export function formatAdminError(value: unknown, fallback: string): string {
   if (typeof value === "string" && value.trim()) return value;
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
-    const issues = Array.isArray(record.issues) ? record.issues : Array.isArray(record.errors) ? record.errors : [];
+    const issues = Array.isArray(record.issues)
+      ? record.issues
+      : Array.isArray(record.errors)
+        ? record.errors
+        : [];
     const details = issues
       .map((issue) => {
         if (typeof issue === "string") return issue;
         if (!issue || typeof issue !== "object") return "";
         const item = issue as Record<string, unknown>;
-        const path = Array.isArray(item.path) ? item.path.filter((part) => part !== "").join(".") : "";
-        const message = typeof item.message === "string" ? item.message : "Invalid value";
+        const path = Array.isArray(item.path)
+          ? item.path.filter((part) => part !== "").join(".")
+          : "";
+        const message =
+          typeof item.message === "string" ? item.message : "Invalid value";
         return path ? `${path}: ${message}` : message;
       })
       .filter(Boolean);
     if (details.length) return details.join("; ");
-    if (typeof record.message === "string" && record.message.trim()) return record.message;
-    if (typeof record.error === "string" && record.error.trim()) return record.error;
+    if (typeof record.message === "string" && record.message.trim())
+      return record.message;
+    if (typeof record.error === "string" && record.error.trim())
+      return record.error;
     try {
       const serialized = JSON.stringify(value);
       if (serialized && serialized !== "{}") return serialized;
@@ -74,7 +83,10 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 
 export const adminApi = {
   login: (password: string) =>
-    req<{ token: string }>("/admin/login", { method: "POST", body: JSON.stringify({ password }) }),
+    req<{ token: string }>("/admin/login", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
   me: () => req<{ ok: true }>("/admin/me"),
   stats: () =>
     req<{
@@ -93,25 +105,41 @@ export const adminApi = {
       body: JSON.stringify(data),
     }),
   updateBeat: (id: string, data: Partial<BeatInput>) =>
-    req<{ ok: true }>(`/admin/beats/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  deleteBeat: (id: string) => req<{ ok: true }>(`/admin/beats/${id}`, { method: "DELETE" }),
+    req<{ ok: true }>(`/admin/beats/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteBeat: (id: string) =>
+    req<{ ok: true }>(`/admin/beats/${id}`, { method: "DELETE" }),
   listOrders: () => req<{ orders: AdminOrder[] }>("/admin/orders"),
   listSubscribers: () =>
-    req<{ subscribers: { id: string; email: string; createdAt: string }[] }>("/admin/subscribers"),
-  listInbox: () => req<{ messages: InboundEmail[]; events: EmailEvent[] }>("/admin/inbox"),
+    req<{ subscribers: { id: string; email: string; createdAt: string }[] }>(
+      "/admin/subscribers",
+    ),
+  listInbox: () =>
+    req<{ messages: InboundEmail[]; events: EmailEvent[] }>("/admin/inbox"),
   updateInboxStatus: (id: string, status: InboundEmail["status"]) =>
     req<{ ok: true }>(`/admin/inbox/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
-  getInboxContent: (id: string) => req<{ text: string }>(`/admin/inbox/${id}/content`),
+  getInboxContent: (id: string) =>
+    req<{ text: string }>(`/admin/inbox/${id}/content`),
   sendEmailTest: () =>
-    req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", { method: "POST" }),
-  presign: (filename: string, contentType: string, folder: string, size?: number) =>
+    req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", {
+      method: "POST",
+    }),
+  presign: (
+    filename: string,
+    contentType: string,
+    folder: string,
+    size?: number,
+  ) =>
     req<{ url: string; key: string }>("/admin/upload/presign", {
       method: "POST",
       body: JSON.stringify({ filename, contentType, folder, size }),
     }),
+  mediaHealth: () => req<MediaHealthReport>("/admin/media-health"),
 };
 
 /** Fetch the site customization settings (admin-authenticated).
@@ -121,7 +149,9 @@ export async function getAdminSettings(): Promise<{
   settings: SiteSettings;
   preview: SiteSettings;
 }> {
-  return req<{ settings: SiteSettings; preview: SiteSettings }>("/admin/settings");
+  return req<{ settings: SiteSettings; preview: SiteSettings }>(
+    "/admin/settings",
+  );
 }
 
 /** Persist a partial patch of the site customization settings (merged server-side). */
@@ -135,8 +165,12 @@ export async function saveAdminSettings(
 }
 
 /** Reset site customization back to brand defaults. */
-export async function resetAdminSettings(): Promise<{ settings: SiteSettings }> {
-  return req<{ settings: SiteSettings }>("/admin/settings/reset", { method: "POST" });
+export async function resetAdminSettings(): Promise<{
+  settings: SiteSettings;
+}> {
+  return req<{ settings: SiteSettings }>("/admin/settings/reset", {
+    method: "POST",
+  });
 }
 
 /** Upload a file through the same-origin server endpoint and return its durable storage key. */
@@ -153,16 +187,23 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
   } catch {
-    throw new Error("The upload request could not reach the site server. Check your connection and try again.");
+    throw new Error(
+      "The upload request could not reach the site server. Check your connection and try again.",
+    );
   }
   if (response.status === 401) {
     clearToken();
-    throw new Error("Your admin session expired. Sign in again before uploading.");
+    throw new Error(
+      "Your admin session expired. Sign in again before uploading.",
+    );
   }
   if (!response.ok) {
     let message = `Upload failed (${response.status})`;
     try {
-      const body = (await response.json()) as { message?: string; error?: string };
+      const body = (await response.json()) as {
+        message?: string;
+        error?: string;
+      };
       message = body.message || body.error || message;
     } catch {
       /* noop */
@@ -210,6 +251,23 @@ export interface BeatInput {
   soldExclusive: boolean;
   featured: boolean;
   published: boolean;
+}
+
+export type MediaHealthStatus =
+  "healthy" | "missing" | "broken" | "external" | "public" | "unavailable";
+export interface MediaHealthEntry {
+  id: string;
+  source: string;
+  kind: "image" | "video" | "audio" | "file";
+  reference: string;
+  normalizedKey?: string;
+  status: MediaHealthStatus;
+  detail: string;
+}
+export interface MediaHealthReport {
+  checkedAt: string;
+  summary: Record<MediaHealthStatus, number>;
+  items: MediaHealthEntry[];
 }
 
 export interface AdminOrder {

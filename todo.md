@@ -635,3 +635,86 @@ User report: the EPK page does not delete correctly from the Page Builder after 
 - [x] Commit and push the verified page customization and deletion repair directly to GitHub main.
 
 User report: the Artist page must not inherit purple or other shared accents; Color Mood is unwanted; and page deletion remains unfixed.
+
+## Universal Border Colors, Artist Wordmark, and Section Logos
+
+- [x] Audit border/glow CSS mappings, page color variables, Artist wordmark rendering, and section logo data paths.
+- [x] Make configured page glow and border colors apply to every border style across all Builder pages.
+- [x] Change the Artist page wordmark to VYLANOUS ARTIST with ARTIST rendered in red.
+- [x] Add an upload option for a custom logo on each Page Section and render it publicly.
+- [x] Add regression coverage and run focused tests and formatting checks; full typecheck remains blocked by pre-existing monorepo errors.
+- [ ] Commit and push the verified universal color and logo update directly to GitHub main.
+
+User request: border glow colors remain purple for other border styles; change the Artist wordmark to VYLANOUS ARTIST with Artist in red; and allow a different logo upload for each page section.
+
+## Per-Page Wordmark Control
+
+- [x] Add a Builder page-level wordmark field with global-wordmark fallback.
+- [x] Render the configured wordmark in the page header and support the Artist page value "VYLANOUS ARTIST".
+- [x] Add regression coverage and include per-page wordmarks in final validation.
+
+## Responsive Layout Simplification
+
+- [ ] Audit the blank side-space issue and identify desktop/mobile viewport and section-width causes.
+- [ ] Remove manual standard/wide/full-width section sizing controls from the Builder UI and normalize saved legacy values.
+- [ ] Make public sections fluid and device-native across mobile, tablet, and desktop without horizontal overflow or blank side rails.
+- [ ] Validate responsive rendering at mobile, tablet, and desktop widths and add regression coverage.
+- [ ] Save a checkpoint for the responsive layout repair.
+
+## Universal and Page Settings Builder Workspaces
+
+- [x] Audit the current Page Builder workspace, global settings, page settings, and renderer merge behavior.
+- [x] Add Universal Settings and Page Settings tabs without removing existing Builder capabilities.
+- [x] Make page-specific settings explicitly override universal defaults while preserving inherited values when unset.
+- [x] Condense repeated controls into simpler grouped sections and clarify setting scope in labels.
+- [x] Validate page creation, universal settings, page overrides, responsive rendering, and existing Builder features.
+- [ ] Save a checkpoint for the reorganized Page Builder.
+
+## Clear Licensing Artwork Persistence Repair
+
+- [x] Trace Clear Licensing artwork upload, settings save, migration, and public rendering paths.
+- [x] Fix the confirmed persistence or rendering defect without removing existing artwork.
+- [x] Add regression coverage proving Clear Licensing artwork survives save, reload, and settings migration.
+- [x] Validate the web package and save a checkpoint for the permanent artwork repair.
+
+## Admin Media Health Check and Per-Page Chrome Branding
+
+- [x] Audit stored media references, storage signing, page layout models, admin APIs, and header/footer renderers.
+- [x] Add an admin Media Health Check that reports broken, missing, external, and healthy media references with actionable context.
+- [x] Add per-page header logo, footer logo, header label, and footer label settings to Custom Page Settings and persist them safely.
+- [x] Render page-specific header/footer branding with universal fallback, including the Artist page example.
+- [x] Add regression coverage and validate health reporting, uploads, persistence, and public rendering.
+- [x] Save a checkpoint for the Media Health Check and page chrome branding work.
+
+## Per-Page Header Actions and Cart Visibility
+
+- [x] Audit the universal header action settings, public header renderer, mobile menu, and Custom Page Settings structure.
+- [x] Add page-level optional overrides for Beats Vault, Sign In, and shopping cart visibility with universal inheritance.
+- [x] Add compact controls for action visibility, labels, and links in Custom Page Settings.
+- [x] Render page-specific header action overrides consistently on desktop and mobile navigation.
+- [x] Add regression coverage and validate inheritance, visibility combinations, and production build.
+- [x] Save a checkpoint for the per-page header action controls.
+
+## Header Cart Dropdown and Buy Now
+
+- [x] Audit current cart state, header trigger, cart drawer, and checkout behavior.
+- [x] Add a header cart dropdown showing current items, remove controls, totals, and a Buy Now action.
+- [x] Keep cart state synchronized with the existing cart drawer and checkout flow.
+- [x] Validate desktop, mobile, accessibility, empty-cart, removal, and checkout behavior.
+- [x] Save a checkpoint for the header cart dropdown.
+
+## GitHub-Only Release and Workspace Cleanup
+
+- [ ] Audit the Vylanous/Vylanous-beats checkout, branch state, uncommitted changes, and commits from the past two days.
+- [ ] Reconcile and validate the requested Builder, media, branding, header action, and cart changes directly in the GitHub repository.
+- [ ] Commit the verified past-two-days changes to the repository and push them to `main`.
+- [ ] Verify the configured live deployment workflow and production revision.
+- [x] Preserve all Manus workspace files; do not delete the Manus workspace or its contents.
+- [ ] Stop using the Manus workspace for implementation and report whether workspace deletion is available or requires manual action.
+
+## Manus-to-GitHub Synchronization
+
+- [x] Compare the Manus workspace product files against the GitHub checkout without modifying or deleting Manus workspace files.
+- [x] Transfer only changes missing from GitHub into the Vylanous/Vylanous-Beats checkout; no additional product files were present in Manus.
+- [x] Validate the consolidated GitHub working tree and inspect the final diff for unintended files.
+- [ ] Commit and push the consolidated changes to `main`.
