@@ -801,3 +801,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Replace fragile cart state/UI paths with one reliable implementation if the current split behavior is the root cause.
 - [x] Validate desktop and mobile add/remove/totals/navigation/checkout behavior with regression coverage and production build.
 - [x] Commit, push, and verify Render deployment.
+
+## Cart Removal and Clean Rebuild
+
+- [x] Inventory every cart dependency, route, persistence key, header control, product action, and checkout integration.
+- [x] Remove the existing cart provider, dropdown, cart page implementation, stale local storage key, and related UI paths.
+- [x] Build a clean replacement cart flow with fresh state, add/remove/totals behavior, header access, cart page, and checkout.
+- [x] Add regression coverage, validate responsive behavior and production build, commit/push, and verify Render deployment.

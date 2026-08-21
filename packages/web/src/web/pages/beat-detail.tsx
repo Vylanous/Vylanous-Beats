@@ -5,16 +5,21 @@ import { Play, Pause, ShoppingCart, Check, ArrowLeft } from "lucide-react";
 import { Layout } from "../components/layout";
 import { Waveform } from "../components/waveform";
 import { usePlayer } from "../lib/player";
-import { useCart } from "../lib/cart";
+import { useCart } from "../lib/cart-store";
 import { api } from "../lib/api";
-import { LICENSE_TIERS, formatCad, type LicenseTierId } from "../../shared/licenses";
+import {
+  LICENSE_TIERS,
+  formatCad,
+  type LicenseTierId,
+} from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
 
 export default function BeatDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data, isLoading } = useQuery({
     queryKey: ["beat", slug],
-    queryFn: async () => (await api.beats[":slug"].$get({ param: { slug } })).json(),
+    queryFn: async () =>
+      (await api.beats[":slug"].$get({ param: { slug } })).json(),
   });
   const beat = (data && "beat" in data ? data.beat : null) as Beat | null;
 
@@ -42,7 +47,9 @@ export default function BeatDetail() {
     return (
       <Layout>
         <div className="max-w-3xl mx-auto px-5 pt-40 pb-20 text-center">
-          <h1 className="font-display uppercase text-5xl text-chrome">Beat Not Found</h1>
+          <h1 className="font-display uppercase text-5xl text-chrome">
+            Beat Not Found
+          </h1>
           <Link
             to="/beats"
             className="inline-block mt-6 font-sub uppercase tracking-wider text-vb-purple-bright"
@@ -173,12 +180,16 @@ export default function BeatDetail() {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-display uppercase text-xl">{t.name}</span>
+                        <span className="font-display uppercase text-xl">
+                          {t.name}
+                        </span>
                         <span className="font-display text-xl text-chrome">
                           {formatCad(t.priceCents)}
                         </span>
                       </div>
-                      <span className="font-body text-sm text-vb-muted">{t.fileFormat}</span>
+                      <span className="font-body text-sm text-vb-muted">
+                        {t.fileFormat}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -191,7 +202,11 @@ export default function BeatDetail() {
                     key={f}
                     className="flex items-start gap-2 font-body text-vb-silver/80 text-sm"
                   >
-                    <Check size={15} className="text-vb-purple-bright mt-0.5 shrink-0" /> {f}
+                    <Check
+                      size={15}
+                      className="text-vb-purple-bright mt-0.5 shrink-0"
+                    />{" "}
+                    {f}
                   </li>
                 ))}
               </ul>

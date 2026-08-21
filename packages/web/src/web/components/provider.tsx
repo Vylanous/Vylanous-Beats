@@ -1,4 +1,4 @@
-import { CartProvider } from "../lib/cart";
+import { CartProvider } from "../lib/cart-store";
 import { PlayerProvider } from "../lib/player";
 import { SiteSettingsProvider } from "../lib/site-settings";
 import { CustomerProvider } from "../lib/customer";

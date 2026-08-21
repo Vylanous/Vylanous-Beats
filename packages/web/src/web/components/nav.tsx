@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ShoppingCart, Menu, X, UserRound, LogOut, Trash2 } from "lucide-react";
-import { useCart } from "../lib/cart";
+import { useCart } from "../lib/cart-store";
 import { useSiteSettings } from "../lib/site-settings";
 import { useCustomer } from "../lib/customer";
 import { SocialIcon } from "./social-icon";
@@ -12,7 +12,7 @@ import { formatCad } from "../../shared/licenses";
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const { count, open: cartOpen, setOpen: setCartOpen } = useCart();
+  const { count } = useCart();
   const { customer, signOut } = useCustomer();
   const [loc] = useLocation();
   const { brand, header, pages, socials } = useSiteSettings();
@@ -182,9 +182,7 @@ export function Nav() {
           ) : showSignIn ? (
             <HeaderAction href={signInHref} label={signInLabel} />
           ) : null}
-          {showCart && (
-            <CartDropdown count={count} open={cartOpen} setOpen={setCartOpen} />
-          )}
+          {showCart && <CartDropdown count={count} />}
           <button
             onClick={() => setMobile((value) => !value)}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
@@ -237,31 +235,20 @@ export function Nav() {
   );
 }
 
-function CartDropdown({
-  count,
-  open,
-  setOpen,
-}: {
-  count: number;
-  open: boolean;
-  setOpen: (value: boolean) => void;
-}) {
+function CartDropdown({ count }: { count: number }) {
   const { items, remove, totalCents } = useCart();
-  const [localOpen, setLocalOpen] = useState(false);
-  const visible = localOpen || open;
+  const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setLocalOpen(false);
         setOpen(false);
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setLocalOpen(false);
         setOpen(false);
       }
     };
@@ -271,20 +258,18 @@ function CartDropdown({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [visible, setOpen]);
+  }, [open]);
 
   return (
     <div ref={rootRef} className="relative z-[60] shrink-0">
       <button
         type="button"
         onClick={() => {
-          const next = !visible;
-          setLocalOpen(next);
-          setOpen(next);
+          setOpen((current) => !current);
         }}
         className="relative grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink hover:border-vb-purple/60"
         aria-label={`Cart${count ? `, ${count} item${count === 1 ? "" : "s"}` : ", empty"}`}
-        aria-expanded={visible}
+        aria-expanded={open}
         aria-haspopup="dialog"
       >
         <ShoppingCart size={18} className="text-vb-silver-bright" />
@@ -294,7 +279,7 @@ function CartDropdown({
           </span>
         )}
       </button>
-      {visible && (
+      {open && (
         <section
           aria-label="Cart contents"
           className="fixed right-4 top-20 z-[9999] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50 md:right-8"
@@ -315,7 +300,6 @@ function CartDropdown({
               <Link
                 to="/beats"
                 onClick={() => {
-                  setLocalOpen(false);
                   setOpen(false);
                 }}
                 className="mt-2 inline-block font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:underline"
@@ -372,7 +356,7 @@ function CartDropdown({
                 <Link
                   to="/cart"
                   onClick={() => {
-                    setLocalOpen(false);
+                    setOpen(false);
                     setOpen(false);
                   }}
                   className="block w-full rounded-lg bg-vb-purple px-4 py-3 text-center font-sub text-sm uppercase tracking-widest text-white transition hover:bg-vb-purple-bright"
