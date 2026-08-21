@@ -712,11 +712,11 @@ User request: border glow colors remain purple for other border styles; change t
 
 ## Automatic Vercel Deployment Configuration
 
-- [ ] Confirm Vercel project `prj_EHMEyY9jzAh8Q2mo73FaCwPiCi0j` is connected to Vylanous/Vylanous-Beats and tracks `main` for production.
-- [ ] Choose between native Vercel-GitHub automatic deployments and a GitHub Action using Vercel credentials.
-- [ ] Configure the selected automatic deployment path without exposing secrets using GitHub Actions secrets.
+- [x] Confirm Vercel project `prj_EHMEyY9jzAh8Q2mo73FaCwPiCi0j` is not the live hosting target; live hosting is Render.
+- [x] Retire the incorrect Vercel deployment approach and switch the plan to Render.
+- [x] Configure the selected automatic deployment path without exposing secrets using the masked `RENDER_DEPLOY_HOOK_URL` GitHub secret.
 - [x] Native Vercel access remains unavailable; use a non-browser token-based deployment path with the confirmed GitHub secret names and values.
-- [ ] Validate a future-push deployment trigger and document the production status check.
+- [ ] Validate the Render future-push deployment trigger and document the production status check.
 - [x] Preserve all Manus workspace files; do not delete the Manus workspace or its contents.
 - [ ] Stop using the Manus workspace for implementation and report whether workspace deletion is available or requires manual action.
 
