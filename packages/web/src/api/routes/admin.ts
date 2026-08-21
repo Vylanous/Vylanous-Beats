@@ -358,6 +358,28 @@ const settingsSchema = z.object({
               .optional(),
             headerSocialIds: z.array(z.string().max(120)).max(32).optional(),
             footerSocialIds: z.array(z.string().max(120)).max(32).optional(),
+            pageSocialLinks: z
+              .array(
+                z.object({
+                  id: z.string().max(120),
+                  platform: z.enum([
+                    "instagram",
+                    "tiktok",
+                    "youtube",
+                    "spotify",
+                    "soundcloud",
+                    "facebook",
+                    "x",
+                    "custom",
+                  ]),
+                  label: z.string().max(80),
+                  url: z.string().max(2000),
+                  showInHeader: z.boolean().optional(),
+                  showInFooter: z.boolean().optional(),
+                }),
+              )
+              .max(32)
+              .optional(),
           })
           .optional(),
         seo: z

@@ -25,12 +25,17 @@ export function Footer() {
     [pages],
   );
   const pageFooterSocialIds = activePage?.layout?.footerSocialIds;
-  const footerSocials = socials.filter(
+  const universalFooterSocials = socials.filter(
     (social) =>
       social.showInFooter &&
       (pageFooterSocialIds === undefined ||
         pageFooterSocialIds.includes(social.id)),
   );
+  const pageFooterSocials =
+    activePage?.layout?.pageSocialLinks?.filter(
+      (social) => social.showInFooter !== false && social.url.trim(),
+    ) || [];
+  const footerSocials = [...universalFooterSocials, ...pageFooterSocials];
 
   const subscribe = async (event: React.FormEvent) => {
     event.preventDefault();

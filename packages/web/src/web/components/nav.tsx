@@ -65,12 +65,17 @@ export function Nav() {
     [pages],
   );
   const pageHeaderSocialIds = activePage?.layout?.headerSocialIds;
-  const headerSocials = socials.filter(
+  const universalHeaderSocials = socials.filter(
     (social) =>
       social.showInHeader &&
       (pageHeaderSocialIds === undefined ||
         pageHeaderSocialIds.includes(social.id)),
   );
+  const pageHeaderSocials =
+    activePage?.layout?.pageSocialLinks?.filter(
+      (social) => social.showInHeader !== false && social.url.trim(),
+    ) || [];
+  const headerSocials = [...universalHeaderSocials, ...pageHeaderSocials];
   const opaque = !header.transparentAtTop || scrolled;
 
   useEffect(() => {
@@ -171,11 +176,7 @@ export function Nav() {
             <HeaderAction href={signInHref} label={signInLabel} />
           ) : null}
           {showCart && (
-            <CartDropdown
-              count={count}
-              open={cartOpen}
-              setOpen={setCartOpen}
-            />
+            <CartDropdown count={count} open={cartOpen} setOpen={setCartOpen} />
           )}
           <button
             onClick={() => setMobile((value) => !value)}

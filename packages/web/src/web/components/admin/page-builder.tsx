@@ -1777,6 +1777,31 @@ function PagePropertiesEditor({
   };
   const resetPageSocials = () =>
     updateLayout({ headerSocialIds: undefined, footerSocialIds: undefined });
+  const pageSocialLinks = page.layout?.pageSocialLinks || [];
+  const updatePageSocialLink = (id: string, patch: Partial<SocialLink>) =>
+    updateLayout({
+      pageSocialLinks: pageSocialLinks.map((social) =>
+        social.id === id ? { ...social, ...patch } : social,
+      ),
+    });
+  const addPageSocialLink = () =>
+    updateLayout({
+      pageSocialLinks: [
+        ...pageSocialLinks,
+        {
+          id: newId("page_social"),
+          platform: "custom",
+          label: "New page link",
+          url: "",
+          showInHeader: true,
+          showInFooter: true,
+        },
+      ],
+    });
+  const removePageSocialLink = (id: string) =>
+    updateLayout({
+      pageSocialLinks: pageSocialLinks.filter((social) => social.id !== id),
+    });
   const eligibleParents = pages.filter(
     (candidate) =>
       candidate.id !== page.id && candidate.parentPageId !== page.id,
@@ -1986,6 +2011,111 @@ function PagePropertiesEditor({
               );
             })}
           </div>
+        </div>
+        <div className="sm:col-span-2 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.06] p-4">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-sub text-sm uppercase tracking-[0.16em] text-vb-silver-bright">
+                Page-only social links
+              </h3>
+              <p className="mt-1 font-body text-xs text-vb-silver/50">
+                Create links used only on this page. They do not change
+                Universal Settings.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addPageSocialLink}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-vb-purple/30 px-3 py-2 font-sub text-[10px] uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10"
+            >
+              <Plus size={13} /> Add page link
+            </button>
+          </div>
+          {pageSocialLinks.length === 0 ? (
+            <p className="font-body text-xs text-vb-silver/45">
+              No page-only links yet. Add one to create a social link for this
+              page.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {pageSocialLinks.map((social) => (
+                <div
+                  key={social.id}
+                  className="grid gap-3 rounded-lg border border-white/[0.08] bg-vb-black/30 p-3 md:grid-cols-[10rem_1fr_1fr_auto] md:items-end"
+                >
+                  <label className="space-y-1 font-body text-xs text-vb-silver/60">
+                    <span>Platform</span>
+                    <select
+                      value={social.platform}
+                      onChange={(event) =>
+                        updatePageSocialLink(social.id, {
+                          platform: event.target.value as SocialPlatform,
+                        })
+                      }
+                      className="w-full rounded-lg border border-white/10 bg-vb-ink px-3 py-2 text-sm text-vb-silver-bright outline-none"
+                    >
+                      {SOCIAL_PLATFORMS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <Field
+                    label="Label"
+                    value={social.label}
+                    onChange={(value) =>
+                      updatePageSocialLink(social.id, { label: value })
+                    }
+                  />
+                  <Field
+                    label="URL"
+                    value={social.url}
+                    placeholder="https://..."
+                    onChange={(value) =>
+                      updatePageSocialLink(social.id, { url: value })
+                    }
+                  />
+                  <div className="flex flex-wrap items-center gap-3 md:pb-1">
+                    <label className="flex items-center gap-1.5 font-body text-xs text-vb-silver/70">
+                      <input
+                        type="checkbox"
+                        checked={social.showInHeader !== false}
+                        onChange={(event) =>
+                          updatePageSocialLink(social.id, {
+                            showInHeader: event.target.checked,
+                          })
+                        }
+                        className="accent-vb-purple"
+                      />{" "}
+                      Header
+                    </label>
+                    <label className="flex items-center gap-1.5 font-body text-xs text-vb-silver/70">
+                      <input
+                        type="checkbox"
+                        checked={social.showInFooter !== false}
+                        onChange={(event) =>
+                          updatePageSocialLink(social.id, {
+                            showInFooter: event.target.checked,
+                          })
+                        }
+                        className="accent-vb-purple"
+                      />{" "}
+                      Footer
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removePageSocialLink(social.id)}
+                      aria-label={`Remove ${social.label || "page link"}`}
+                      className="text-red-300/75 hover:text-red-200"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="sm:col-span-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
           <div className="mb-3 flex flex-wrap items-start justify-between gap-3">

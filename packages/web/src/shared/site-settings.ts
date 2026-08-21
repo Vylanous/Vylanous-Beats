@@ -589,6 +589,8 @@ export interface PageLayout {
   headerSocialIds?: string[];
   /** Global social-link IDs selected for this page footer; omitted means inherit. */
   footerSocialIds?: string[];
+  /** Social links created only for this page; never added to Universal Settings. */
+  pageSocialLinks?: SocialLink[];
 }
 
 export interface BuilderPage {

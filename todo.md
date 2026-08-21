@@ -743,3 +743,12 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Transfer only changes missing from GitHub into the Vylanous/Vylanous-Beats checkout; no additional product files were present in Manus.
 - [x] Validate the consolidated GitHub working tree and inspect the final diff for unintended files.
 - [x] Commit and push the consolidated changes to `main`.
+
+## Live Render Verification and Page-Specific Social Links
+
+- [ ] Verify the latest Render deployment and test live homepage, Artist page, navigation, header cart, and API health.
+- [ ] Audit the social-link model and Page Settings editor for per-page customization and creation workflows.
+- [ ] Allow each page to select/customize social links and create new links scoped only to that page.
+- [ ] Render page-scoped social links correctly in that page’s header and footer with universal fallback.
+- [ ] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
+
