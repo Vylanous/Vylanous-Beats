@@ -794,3 +794,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Add the `/login` Sign In page to Custom Page Settings without weakening authentication or redirect behavior.
 - [x] Expose the Home sign-in button/section and existing system-page sections for full content, layout, style, and SEO customization.
 - [x] Add regression coverage, validate routes and production build, commit/push, and verify Render deployment.
+
+## End-to-End Cart Replacement
+
+- [x] Audit product add-to-cart, shared cart persistence, header visibility/dropdown, cart page, removal, totals, and checkout flow.
+- [x] Replace fragile cart state/UI paths with one reliable implementation if the current split behavior is the root cause.
+- [x] Validate desktop and mobile add/remove/totals/navigation/checkout behavior with regression coverage and production build.
+- [x] Commit, push, and verify Render deployment.

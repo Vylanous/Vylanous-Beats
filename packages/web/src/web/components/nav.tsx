@@ -40,7 +40,10 @@ export function Nav() {
   const showSignIn = headerActions?.showSignIn !== false;
   const signInLabel = headerActions?.signInLabel?.trim() || "Sign in";
   const signInHref = headerActions?.signInHref?.trim() || "/login";
-  const showCart = headerActions?.showCart ?? header.showCart;
+  // Keep one reliable cart entry point on every page. Historical page settings
+  // could persist `showCart: false` and make the cart appear broken by removing
+  // the only trigger, so the header cart is intentionally always available.
+  const showCart = true;
   const wordmarkAccentIndex =
     pageWordmark && pageWordmarkAccent
       ? pageWordmark.lastIndexOf(pageWordmarkAccent)
