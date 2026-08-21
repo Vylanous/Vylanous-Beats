@@ -246,7 +246,7 @@ function LocalSubNavigation({
   return (
     <nav
       aria-label={`${root.navLabel} sub-navigation`}
-      className="border-b border-vb-purple/20 bg-vb-black/70 backdrop-blur-sm"
+      className="page-sub-navigation border-b bg-vb-black/70 backdrop-blur-sm"
     >
       <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 sm:px-8 no-scrollbar">
         {links.map((link) => {
@@ -257,7 +257,14 @@ function LocalSubNavigation({
               key={link.id}
               to={href}
               aria-current={active ? "page" : undefined}
-              className={`shrink-0 rounded-full border px-4 py-2 font-sub text-xs uppercase tracking-[0.16em] transition ${active ? "border-vb-purple/70 bg-vb-purple/20 text-vb-purple-bright" : "border-white/[0.08] text-vb-silver/65 hover:border-vb-purple/40 hover:text-vb-silver-bright"}`}
+              onClick={() =>
+                window.scrollTo({
+                  top: 0,
+                  left: 0,
+                  behavior: "instant" as ScrollBehavior,
+                })
+              }
+              className={`page-sub-navigation-button shrink-0 rounded-full border px-4 py-2 font-sub text-xs uppercase tracking-[0.16em] transition ${active ? "is-active" : ""}`}
             >
               {link.navLabel}
             </Link>

@@ -44,9 +44,9 @@ export function Layout({
         ? "bg-vb-ink"
         : "";
   const pageVars = {
-    ...(pageStyle?.primaryColor
-      ? { "--page-primary": pageStyle.primaryColor }
-      : {}),
+    "--page-primary":
+      pageStyle?.primaryColor ||
+      (pageStyle?.inheritTheme === false ? "#D94A4A" : undefined),
     ...(pageStyle?.backgroundColor
       ? { "--page-background": pageStyle.backgroundColor }
       : {}),

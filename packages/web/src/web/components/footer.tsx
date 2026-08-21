@@ -24,7 +24,13 @@ export function Footer() {
         .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000)),
     [pages],
   );
-  const footerSocials = socials.filter((social) => social.showInFooter);
+  const pageFooterSocialIds = activePage?.layout?.footerSocialIds;
+  const footerSocials = socials.filter(
+    (social) =>
+      social.showInFooter &&
+      (pageFooterSocialIds === undefined ||
+        pageFooterSocialIds.includes(social.id)),
+  );
 
   const subscribe = async (event: React.FormEvent) => {
     event.preventDefault();

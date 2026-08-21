@@ -356,6 +356,8 @@ const settingsSchema = z.object({
                 showCart: z.boolean().optional(),
               })
               .optional(),
+            headerSocialIds: z.array(z.string().max(120)).max(32).optional(),
+            footerSocialIds: z.array(z.string().max(120)).max(32).optional(),
           })
           .optional(),
         seo: z

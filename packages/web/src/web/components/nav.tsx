@@ -62,7 +62,13 @@ export function Nav() {
         })),
     [pages],
   );
-  const headerSocials = socials.filter((social) => social.showInHeader);
+  const pageHeaderSocialIds = activePage?.layout?.headerSocialIds;
+  const headerSocials = socials.filter(
+    (social) =>
+      social.showInHeader &&
+      (pageHeaderSocialIds === undefined ||
+        pageHeaderSocialIds.includes(social.id)),
+  );
   const opaque = !header.transparentAtTop || scrolled;
 
   useEffect(() => {
@@ -255,8 +261,7 @@ function CartDropdown({ count }: { count: number }) {
         )}
       </button>
       {open && (
-        <dialog
-          open
+        <section
           aria-label="Cart contents"
           className="absolute right-0 top-12 z-[70] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50"
         >
@@ -337,7 +342,7 @@ function CartDropdown({ count }: { count: number }) {
               </div>
             </>
           )}
-        </dialog>
+        </section>
       )}
     </div>
   );

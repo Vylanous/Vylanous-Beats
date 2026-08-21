@@ -520,6 +520,8 @@ describe("Site Builder settings migration", () => {
             },
             wordmarkAccent: "CUSTOM",
             wordmarkAccentColor: "#D94A4A",
+            headerSocialIds: ["instagram", "youtube"],
+            footerSocialIds: [],
           },
           sections: [
             {
@@ -552,6 +554,8 @@ describe("Site Builder settings migration", () => {
       },
       wordmarkAccent: "CUSTOM",
       wordmarkAccentColor: "#D94A4A",
+      headerSocialIds: ["instagram", "youtube"],
+      footerSocialIds: [],
     });
     expect(
       settings.pages.find((page) => page.id === "page_custom")?.sections[0],

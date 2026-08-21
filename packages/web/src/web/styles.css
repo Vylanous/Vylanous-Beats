@@ -691,6 +691,35 @@ main {
   }
 }
 
+/* Local Builder navigation uses the active page color instead of storefront purple. */
+.page-sub-navigation {
+  border-color: color-mix(
+    in srgb,
+    var(--page-primary, #7c2fcb) 25%,
+    transparent
+  );
+}
+.page-sub-navigation-button {
+  border-color: color-mix(
+    in srgb,
+    var(--page-border, var(--page-primary, #7c2fcb)) 35%,
+    transparent
+  );
+  color: color-mix(in srgb, var(--page-text, #d8d8d8) 68%, transparent);
+}
+.page-sub-navigation-button:hover,
+.page-sub-navigation-button.is-active {
+  border-color: color-mix(
+    in srgb,
+    var(--page-primary, #7c2fcb) 75%,
+    transparent
+  );
+  color: var(--page-primary, #7c2fcb);
+}
+.page-sub-navigation-button.is-active {
+  background: color-mix(in srgb, var(--page-primary, #7c2fcb) 20%, transparent);
+}
+
 /* Fully isolated Builder pages opt out of the storefront purple aesthetic. */
 .page-style.page-theme-isolated main {
   color: var(--page-text, inherit);

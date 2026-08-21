@@ -716,9 +716,18 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Retire the incorrect Vercel deployment approach and switch the plan to Render.
 - [x] Configure the selected automatic deployment path without exposing secrets using the masked `RENDER_DEPLOY_HOOK_URL` GitHub secret.
 - [x] Native Vercel access remains unavailable; use a non-browser token-based deployment path with the confirmed GitHub secret names and values.
-- [ ] Validate the Render future-push deployment trigger and document the production status check.
+- [x] Validate the Render future-push deployment trigger and document the production status check; GitHub Actions run 32480327511 passed and Render accepted the deploy hook.
 - [x] Preserve all Manus workspace files; do not delete the Manus workspace or its contents.
-- [ ] Stop using the Manus workspace for implementation and report whether workspace deletion is available or requires manual action.
+- [x] Stop using the Manus workspace for implementation; no Manus workspace files were changed or deleted.
+
+## Cart, Social Links, Artist Colors, and Sub-Navigation Repairs
+
+- [x] Audit cart dropdown trigger/state, page social-link models, Artist glow/button variables, and sub-navigation URL behavior.
+- [x] Repair the cart dropdown interaction and keep it synchronized with cart state and checkout.
+- [x] Add per-page Header/Footer social-link controls with universal fallback.
+- [x] Remove purple Artist glow and sub-navigation button fallbacks so configured red values apply consistently.
+- [x] Make sub-navigation links reset the target page scroll position to the top.
+- [ ] Add regression coverage, validate the web build, commit/push, and verify Render deployment.
 
 ## Manus-to-GitHub Synchronization
 

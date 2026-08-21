@@ -936,6 +936,7 @@ export default function PageBuilderPanel() {
                 page={page}
                 preview={previewPage}
                 pages={settings.pages}
+                socials={settings.socials}
                 onChange={updatePage}
                 onDelete={() => deletePage(page)}
               />
@@ -1731,12 +1732,14 @@ function PagePropertiesEditor({
   page,
   preview,
   pages,
+  socials,
   onChange,
   onDelete,
 }: {
   page: BuilderPage;
   preview?: BuilderPage;
   pages: BuilderPage[];
+  socials: SocialLink[];
   onChange: (page: BuilderPage) => void;
   onDelete: () => void;
 }) {
@@ -1755,6 +1758,25 @@ function PagePropertiesEditor({
       headerActions: { ...page.layout?.headerActions, ...patch },
     });
   const resetHeaderActions = () => updateLayout({ headerActions: undefined });
+  const updatePageSocialIds = (
+    area: "headerSocialIds" | "footerSocialIds",
+    socialId: string,
+    checked: boolean,
+  ) => {
+    const available = socials
+      .filter((social) =>
+        area === "headerSocialIds" ? social.showInHeader : social.showInFooter,
+      )
+      .map((social) => social.id);
+    const current = page.layout?.[area] ?? available;
+    updateLayout({
+      [area]: checked
+        ? Array.from(new Set([...current, socialId]))
+        : current.filter((id) => id !== socialId),
+    });
+  };
+  const resetPageSocials = () =>
+    updateLayout({ headerSocialIds: undefined, footerSocialIds: undefined });
   const eligibleParents = pages.filter(
     (candidate) =>
       candidate.id !== page.id && candidate.parentPageId !== page.id,
@@ -1885,6 +1907,84 @@ function PagePropertiesEditor({
               placeholder="Page footer label"
               onChange={(value) => updateLayout({ footerLabel: value })}
             />
+          </div>
+        </div>
+        <div className="sm:col-span-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="font-sub text-sm uppercase tracking-[0.16em] text-vb-silver-bright">
+                Page social links
+              </h3>
+              <p className="mt-1 font-body text-xs text-vb-silver/50">
+                Choose which Universal social links appear in this page’s Header
+                and Footer. Leave each area untouched to inherit Universal
+                Settings; uncheck all to hide them.
+              </p>
+            </div>
+            {(page.layout?.headerSocialIds !== undefined ||
+              page.layout?.footerSocialIds !== undefined) && (
+              <button
+                type="button"
+                onClick={resetPageSocials}
+                className="font-sub text-[10px] uppercase tracking-wide text-vb-purple-bright hover:text-white"
+              >
+                Use Universal defaults
+              </button>
+            )}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {(["headerSocialIds", "footerSocialIds"] as const).map((area) => {
+              const available = socials.filter((social) =>
+                area === "headerSocialIds"
+                  ? social.showInHeader
+                  : social.showInFooter,
+              );
+              const selected = page.layout?.[area];
+              return (
+                <div
+                  key={area}
+                  className="rounded-lg border border-white/[0.06] p-3"
+                >
+                  <p className="mb-2 font-sub text-xs uppercase tracking-[0.16em] text-vb-silver-bright">
+                    {area === "headerSocialIds"
+                      ? "Header social links"
+                      : "Footer social links"}
+                  </p>
+                  {available.length === 0 ? (
+                    <p className="font-body text-xs text-vb-silver/45">
+                      Add links in Universal Settings first.
+                    </p>
+                  ) : (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {available.map((social) => (
+                        <label
+                          key={social.id}
+                          className="flex items-center gap-2 font-body text-xs text-vb-silver/75"
+                        >
+                          <input
+                            type="checkbox"
+                            aria-label={`${area === "headerSocialIds" ? "Header" : "Footer"} social link: ${social.label}`}
+                            checked={
+                              selected === undefined ||
+                              selected.includes(social.id)
+                            }
+                            onChange={(event) =>
+                              updatePageSocialIds(
+                                area,
+                                social.id,
+                                event.target.checked,
+                              )
+                            }
+                            className="accent-vb-purple"
+                          />
+                          {social.label}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         <div className="sm:col-span-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">

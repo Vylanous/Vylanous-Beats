@@ -585,6 +585,10 @@ export interface PageLayout {
   chrome?: PageChromeLinkage;
   /** Optional page-only header action overrides; omitted values inherit universal header settings. */
   headerActions?: PageHeaderActions;
+  /** Global social-link IDs selected for this page header; omitted means inherit. */
+  headerSocialIds?: string[];
+  /** Global social-link IDs selected for this page footer; omitted means inherit. */
+  footerSocialIds?: string[];
 }
 
 export interface BuilderPage {
