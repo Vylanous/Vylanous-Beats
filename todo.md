@@ -746,9 +746,18 @@ User request: border glow colors remain purple for other border styles; change t
 
 ## Live Render Verification and Page-Specific Social Links
 
-- [ ] Verify the latest Render deployment and test live homepage, Artist page, navigation, header cart, and API health.
-- [ ] Audit the social-link model and Page Settings editor for per-page customization and creation workflows.
-- [ ] Allow each page to select/customize social links and create new links scoped only to that page.
-- [ ] Render page-scoped social links correctly in that page’s header and footer with universal fallback.
-- [ ] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
+- [x] Verify the latest Render deployment and test live homepage, Artist page, navigation, header cart, and API health; all live probes returned 200.
+- [x] Audit the social-link model and Page Settings editor for per-page customization and creation workflows.
+- [x] Allow each page to select/customize social links and create new links scoped only to that page.
+- [x] Render page-scoped social links correctly in that page’s header and footer with universal fallback.
+- [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment; 45 tests passed and Render workflow 32513163977 succeeded.
 
+
+## Page Settings Branding, Cart Dropdown, and Nested Pages
+
+- [x] Audit current page branding destination, cart dropdown rendering/state/stacking, and Pages column ordering.
+- [x] Remove per-page Rename Header and Rename Footer controls and persisted fields from the Page Settings UI/model usage.
+- [x] Add a configurable URL path for the page header logo and wordmark click target.
+- [x] Make the header cart dropdown visibly open and usable when clicked, including responsive stacking and shared state.
+- [x] Nest child pages beneath their parent pages in the Pages column.
+- [x] Add regression coverage, validate, commit/push, and verify the Render deployment.

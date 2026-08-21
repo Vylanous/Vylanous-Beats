@@ -574,6 +574,8 @@ export interface PageLayout {
   headerLogoUrl?: string;
   /** Optional label shown beside the page-specific header logo. */
   headerLabel?: string;
+  /** Optional destination used when the shared header logo or wordmark is clicked. */
+  headerLogoHref?: string;
   /** Optional uploaded logo shown in this page’s shared footer. */
   footerLogoUrl?: string;
   /** Optional label shown beside the page-specific footer logo. */

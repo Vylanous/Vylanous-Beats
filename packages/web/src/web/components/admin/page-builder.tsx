@@ -202,6 +202,32 @@ function sortedPages(pages: BuilderPage[]) {
   return [...pages].sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000));
 }
 
+function sortedPageTree(pages: BuilderPage[]) {
+  const ordered = sortedPages(pages);
+  const children = new Map<string, BuilderPage[]>();
+  for (const candidate of ordered) {
+    const parentId = candidate.parentPageId || "__root__";
+    const list = children.get(parentId) || [];
+    list.push(candidate);
+    children.set(parentId, list);
+  }
+  const result: { page: BuilderPage; depth: number }[] = [];
+  const visited = new Set<string>();
+  const visit = (parentId: string, depth: number) => {
+    for (const candidate of children.get(parentId) || []) {
+      if (visited.has(candidate.id)) continue;
+      visited.add(candidate.id);
+      result.push({ page: candidate, depth });
+      visit(candidate.id, depth + 1);
+    }
+  };
+  visit("__root__", 0);
+  for (const candidate of ordered) {
+    if (!visited.has(candidate.id)) result.push({ page: candidate, depth: 0 });
+  }
+  return result;
+}
+
 export default function PageBuilderPanel() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [previews, setPreviews] = useState<SiteSettings | null>(null);
@@ -906,18 +932,24 @@ export default function PageBuilderPanel() {
                 Pages
               </div>
               <div className="space-y-1">
-                {sortedPages(settings.pages).map((candidate) => (
-                  <button
-                    key={candidate.id}
-                    onClick={() => setSelectedId(candidate.id)}
-                    className={`w-full rounded-lg px-3 py-2.5 text-left font-body text-sm transition ${page.id === candidate.id ? "bg-vb-purple/20 text-vb-silver-bright" : "text-vb-silver/65 hover:bg-white/[0.05]"}`}
-                  >
-                    <span className="block truncate">{candidate.title}</span>
-                    <span className="block text-xs opacity-55">
-                      {candidate.path || `/${candidate.slug}`}
-                    </span>
-                  </button>
-                ))}
+                {sortedPageTree(settings.pages).map(
+                  ({ page: candidate, depth }) => (
+                    <button
+                      key={candidate.id}
+                      onClick={() => setSelectedId(candidate.id)}
+                      style={{ paddingLeft: `${12 + depth * 16}px` }}
+                      className={`w-full rounded-lg py-2.5 pr-3 text-left font-body text-sm transition ${page.id === candidate.id ? "bg-vb-purple/20 text-vb-silver-bright" : "text-vb-silver/65 hover:bg-white/[0.05]"}`}
+                    >
+                      <span className="block truncate">
+                        {depth > 0 ? "↳ " : ""}
+                        {candidate.title}
+                      </span>
+                      <span className="block text-xs opacity-55">
+                        {candidate.path || `/${candidate.slug}`}
+                      </span>
+                    </button>
+                  ),
+                )}
               </div>
               <button
                 onClick={() => {
@@ -1910,14 +1942,11 @@ function PagePropertiesEditor({
               onChange={(value) => updateLayout({ headerLogoUrl: value })}
             />
             <Field
-              label="Rename header"
-              value={page.layout?.headerLabel || ""}
-              placeholder={
-                page.id === "page_artist"
-                  ? "VYLANOUS ARTIST"
-                  : "Page header label"
-              }
-              onChange={(value) => updateLayout({ headerLabel: value })}
+              label="Header logo and wordmark link"
+              value={page.layout?.headerLogoHref || ""}
+              placeholder="/"
+              hint="Internal path opened when this page’s header logo or wordmark is clicked."
+              onChange={(value) => updateLayout({ headerLogoHref: value })}
             />
             <ImageAssetField
               label="Upload footer logo"
@@ -1925,12 +1954,6 @@ function PagePropertiesEditor({
               value={page.layout?.footerLogoUrl || ""}
               previewUrl={preview?.layout?.footerLogoUrl}
               onChange={(value) => updateLayout({ footerLogoUrl: value })}
-            />
-            <Field
-              label="Rename footer"
-              value={page.layout?.footerLabel || ""}
-              placeholder="Page footer label"
-              onChange={(value) => updateLayout({ footerLabel: value })}
             />
           </div>
         </div>

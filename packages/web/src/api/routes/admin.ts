@@ -331,6 +331,7 @@ const settingsSchema = z.object({
             wordmark: z.string().max(120).optional(),
             headerLogoUrl: z.string().max(2000).optional(),
             headerLabel: z.string().max(120).optional(),
+            headerLogoHref: z.string().max(500).optional(),
             footerLogoUrl: z.string().max(2000).optional(),
             footerLabel: z.string().max(120).optional(),
             wordmarkAccent: z.string().max(80).optional(),

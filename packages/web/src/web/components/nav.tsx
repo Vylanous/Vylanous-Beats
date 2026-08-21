@@ -27,6 +27,7 @@ export function Nav() {
   const headerLogoUrl = pageHeaderLogo || brand.squareLogoUrl;
   const pageHeaderLabel = activePage?.layout?.headerLabel?.trim() || "";
   const pageWordmark = activePage?.layout?.wordmark?.trim() || "";
+  const headerLogoHref = activePage?.layout?.headerLogoHref?.trim() || "/";
   const pageWordmarkAccent = activePage?.layout?.wordmarkAccent?.trim() || "";
   const pageWordmarkAccentColor =
     activePage?.layout?.wordmarkAccentColor ||
@@ -94,7 +95,10 @@ export function Nav() {
       className={`page-header ${chromeClass} transition-all duration-300 ${opaque ? "bg-vb-black/85 backdrop-blur-xl border-b border-white/[0.06]" : "bg-transparent"}`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5">
+        <Link
+          to={headerLogoHref}
+          className="flex shrink-0 items-center gap-2.5"
+        >
           <img
             src={headerLogoUrl}
             alt={pageHeaderLabel || pageWordmark || "Vylanous Beats"}
@@ -279,7 +283,7 @@ function CartDropdown({
       {open && (
         <section
           aria-label="Cart contents"
-          className="absolute right-0 top-12 z-[70] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50"
+          className="fixed right-4 top-20 z-[9999] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50 md:right-8"
         >
           <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
             <h2 className="font-sub text-sm uppercase tracking-[0.16em] text-vb-silver-bright">
