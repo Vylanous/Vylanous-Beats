@@ -107,7 +107,7 @@ export function Nav() {
             className="h-9 w-9 object-contain"
           />
           {header.showWordmark && (
-            <span className="hidden font-display text-xl uppercase leading-none tracking-wide sm:block">
+            <span className="font-display text-lg uppercase leading-none tracking-wide sm:text-xl">
               {pageHeaderLabel ? (
                 <span className="text-vb-silver-bright">{pageHeaderLabel}</span>
               ) : pageWordmark ? (
@@ -244,16 +244,23 @@ function CartDropdown({
   setOpen: (value: boolean) => void;
 }) {
   const { items, remove, totalCents } = useCart();
+  const [localOpen, setLocalOpen] = useState(false);
+  const visible = localOpen || open;
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node))
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setLocalOpen(false);
         setOpen(false);
+      }
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setLocalOpen(false);
+        setOpen(false);
+      }
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -261,16 +268,20 @@ function CartDropdown({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [visible, setOpen]);
 
   return (
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          const next = !visible;
+          setLocalOpen(next);
+          setOpen(next);
+        }}
         className="relative grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-vb-ink hover:border-vb-purple/60"
         aria-label={`Cart${count ? `, ${count} item${count === 1 ? "" : "s"}` : ", empty"}`}
-        aria-expanded={open}
+        aria-expanded={visible}
         aria-haspopup="dialog"
       >
         <ShoppingCart size={18} className="text-vb-silver-bright" />
@@ -280,7 +291,7 @@ function CartDropdown({
           </span>
         )}
       </button>
-      {open && (
+      {visible && (
         <section
           aria-label="Cart contents"
           className="fixed right-4 top-20 z-[9999] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50 md:right-8"
@@ -300,7 +311,10 @@ function CartDropdown({
               </p>
               <Link
                 to="/beats"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setLocalOpen(false);
+                  setOpen(false);
+                }}
                 className="mt-2 inline-block font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:underline"
               >
                 Browse beats
@@ -354,7 +368,10 @@ function CartDropdown({
                 </div>
                 <Link
                   to="/cart"
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    setLocalOpen(false);
+                    setOpen(false);
+                  }}
                   className="block w-full rounded-lg bg-vb-purple px-4 py-3 text-center font-sub text-sm uppercase tracking-widest text-white transition hover:bg-vb-purple-bright"
                 >
                   Buy Now

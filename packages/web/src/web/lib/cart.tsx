@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import type { LicenseTierId } from "../../shared/licenses";
 
 export interface CartLine {
@@ -19,7 +27,7 @@ interface CartCtx {
   count: number;
   totalCents: number;
   open: boolean;
-  setOpen: (v: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -42,14 +50,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const add = useCallback((line: CartLine) => {
     setItems((prev) => {
-      if (prev.some((i) => i.beatId === line.beatId && i.tier === line.tier)) return prev;
+      if (prev.some((i) => i.beatId === line.beatId && i.tier === line.tier))
+        return prev;
       return [...prev, line];
     });
     setOpen(true);
   }, []);
 
   const remove = useCallback((beatId: string, tier: LicenseTierId) => {
-    setItems((prev) => prev.filter((i) => !(i.beatId === beatId && i.tier === tier)));
+    setItems((prev) =>
+      prev.filter((i) => !(i.beatId === beatId && i.tier === tier)),
+    );
   }, []);
 
   const clear = useCallback(() => setItems([]), []);
@@ -63,7 +74,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <Ctx.Provider
-      value={{ items, add, remove, clear, has, count: items.length, totalCents, open, setOpen }}
+      value={{
+        items,
+        add,
+        remove,
+        clear,
+        has,
+        count: items.length,
+        totalCents,
+        open,
+        setOpen,
+      }}
     >
       {children}
     </Ctx.Provider>

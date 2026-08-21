@@ -761,3 +761,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Make the header cart dropdown visibly open and usable when clicked, including responsive stacking and shared state.
 - [x] Nest child pages beneath their parent pages in the Pages column.
 - [x] Add regression coverage, validate, commit/push, and verify the Render deployment.
+
+## Wordmark and Cart Regression Repair
+
+- [x] Audit public header wordmark rendering and cart click/open state across desktop and mobile routes.
+- [x] Restore the wordmark fallback and page-specific wordmark rendering on all pages.
+- [x] Repair the cart trigger/dropdown and checkout interaction so it opens reliably.
+- [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
