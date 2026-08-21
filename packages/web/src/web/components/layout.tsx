@@ -1,7 +1,6 @@
 /** Vylanous shared chrome: dark industrial foundation with optional page-level builder controls. */
 import { Nav } from "./nav";
 import { Footer } from "./footer";
-import { CartDrawer } from "./cart-drawer";
 import { PlayerBar } from "./player-bar";
 import { NewsletterPopup } from "./newsletter-popup";
 import { usePlayer } from "../lib/player";
@@ -101,7 +100,6 @@ export function Layout({
         {children}
       </main>
       {showFooter && <Footer />}
-      <CartDrawer />
       <PlayerBar />
       <NewsletterPopup />
     </div>

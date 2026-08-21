@@ -12,14 +12,16 @@ import { formatCad } from "../../shared/licenses";
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const { count } = useCart();
+  const { count, open: cartOpen, setOpen: setCartOpen } = useCart();
   const { customer, signOut } = useCustomer();
   const [loc] = useLocation();
   const { brand, header, pages, socials } = useSiteSettings();
+  const activePath = normalizeManagedPath(
+    (typeof window !== "undefined" ? window.location.pathname : loc) || "/",
+  );
   const activePage = useMemo(
-    () =>
-      pages.find((page) => builderPagePath(page) === normalizeManagedPath(loc)),
-    [pages, loc],
+    () => pages.find((page) => builderPagePath(page) === activePath),
+    [pages, activePath],
   );
   const pageHeaderLogo = activePage?.layout?.headerLogoUrl?.trim() || "";
   const headerLogoUrl = pageHeaderLogo || brand.squareLogoUrl;
@@ -168,7 +170,13 @@ export function Nav() {
           ) : showSignIn ? (
             <HeaderAction href={signInHref} label={signInLabel} />
           ) : null}
-          {showCart && <CartDropdown count={count} />}
+          {showCart && (
+            <CartDropdown
+              count={count}
+              open={cartOpen}
+              setOpen={setCartOpen}
+            />
+          )}
           <button
             onClick={() => setMobile((value) => !value)}
             className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
@@ -221,9 +229,16 @@ export function Nav() {
   );
 }
 
-function CartDropdown({ count }: { count: number }) {
+function CartDropdown({
+  count,
+  open,
+  setOpen,
+}: {
+  count: number;
+  open: boolean;
+  setOpen: (value: boolean) => void;
+}) {
   const { items, remove, totalCents } = useCart();
-  const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

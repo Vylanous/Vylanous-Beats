@@ -727,7 +727,15 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Add per-page Header/Footer social-link controls with universal fallback.
 - [x] Remove purple Artist glow and sub-navigation button fallbacks so configured red values apply consistently.
 - [x] Make sub-navigation links reset the target page scroll position to the top.
-- [ ] Add regression coverage, validate the web build, commit/push, and verify Render deployment.
+- [x] Add regression coverage, validate the web build, commit/push, and verify Render deployment; 18 tests passed and Render workflow 32481705519 succeeded.
+
+## All-Page Header Actions and Header-Only Cart Repair
+
+- [x] Audit header action page lookup and inheritance for every managed route, the cart dropdown trigger/state, and all bottom cart drawer mounts.
+- [x] Make page-specific Beats Vault visibility overrides apply correctly on every page, with universal fallback only when unset.
+- [x] Repair the header cart dropdown so clicking it reliably opens current cart contents and actions.
+- [x] Remove every universal bottom cart drawer mount and keep only the header cart dropdown.
+- [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
 
 ## Manus-to-GitHub Synchronization
 
