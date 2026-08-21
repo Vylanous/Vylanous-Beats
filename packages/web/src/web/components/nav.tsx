@@ -139,7 +139,7 @@ export function Nav() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 shrink-0 items-center gap-2">
           {header.showSocialLinks &&
             headerSocials.slice(0, 3).map((social) => (
               <a
@@ -184,7 +184,7 @@ export function Nav() {
           )}
           <button
             onClick={() => setMobile((value) => !value)}
-            className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
             aria-label="Menu"
           >
             {mobile ? <X size={18} /> : <Menu size={18} />}
@@ -271,7 +271,7 @@ function CartDropdown({
   }, [visible, setOpen]);
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative z-[60] shrink-0">
       <button
         type="button"
         onClick={() => {
@@ -279,7 +279,7 @@ function CartDropdown({
           setLocalOpen(next);
           setOpen(next);
         }}
-        className="relative grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-vb-ink hover:border-vb-purple/60"
+        className="relative grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink hover:border-vb-purple/60"
         aria-label={`Cart${count ? `, ${count} item${count === 1 ? "" : "s"}` : ", empty"}`}
         aria-expanded={visible}
         aria-haspopup="dialog"

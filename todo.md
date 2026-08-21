@@ -781,3 +781,9 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Make Page Settings use the same social-link editing controls and platform options as Universal Settings while preserving page scoping.
 - [x] Add more platform options and recognizable icons, including a cloud-style SoundCloud icon, in both editors and public rendering.
 - [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment.
+
+## Independent Responsive Cart Control
+
+- [x] Audit the mobile header cart/menu structure and visibility rules.
+- [x] Keep the cart control independently visible and clickable beside the menu control.
+- [x] Validate desktop and mobile header behavior, tests, production build, and Render deployment.
