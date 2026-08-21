@@ -707,8 +707,16 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [ ] Audit the Vylanous/Vylanous-beats checkout, branch state, uncommitted changes, and commits from the past two days.
 - [ ] Reconcile and validate the requested Builder, media, branding, header action, and cart changes directly in the GitHub repository.
-- [ ] Commit the verified past-two-days changes to the repository and push them to `main`.
+- [x] Commit the verified past-two-days changes to the repository and push them to `main`.
 - [ ] Verify the configured live deployment workflow and production revision.
+
+## Automatic Vercel Deployment Configuration
+
+- [ ] Confirm Vercel project `prj_EHMEyY9jzAh8Q2mo73FaCwPiCi0j` is connected to Vylanous/Vylanous-Beats and tracks `main` for production.
+- [ ] Choose between native Vercel-GitHub automatic deployments and a GitHub Action using Vercel credentials.
+- [ ] Configure the selected automatic deployment path without exposing secrets using GitHub Actions secrets.
+- [x] Native Vercel access remains unavailable; use a non-browser token-based deployment path with the confirmed GitHub secret names and values.
+- [ ] Validate a future-push deployment trigger and document the production status check.
 - [x] Preserve all Manus workspace files; do not delete the Manus workspace or its contents.
 - [ ] Stop using the Manus workspace for implementation and report whether workspace deletion is available or requires manual action.
 
@@ -717,4 +725,4 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Compare the Manus workspace product files against the GitHub checkout without modifying or deleting Manus workspace files.
 - [x] Transfer only changes missing from GitHub into the Vylanous/Vylanous-Beats checkout; no additional product files were present in Manus.
 - [x] Validate the consolidated GitHub working tree and inspect the final diff for unintended files.
-- [ ] Commit and push the consolidated changes to `main`.
+- [x] Commit and push the consolidated changes to `main`.
