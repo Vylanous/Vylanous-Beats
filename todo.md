@@ -824,3 +824,11 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Audit page header visibility persistence, merge precedence, and cart/menu rendering after the global cart fix.
 - [x] Honor explicit per-page cart and menu visibility settings independently, including Artist.
 - [x] Validate enabled and disabled states across routes, tests, production build, and Render deployment.
+
+## Controlled Cart Reset After Repeated Regression
+
+- [x] Reproduce the cart failure on production and inventory every cart/menu render, state, and event path.
+- [x] Remove competing cart visibility guards, duplicate controls, stale state, and menu coupling.
+- [x] Implement one minimal deterministic cart trigger/dropdown path.
+- [ ] Interactively verify add, view, remove, and empty states on production at desktop and mobile sizes.
+- [x] Run tests/build, commit/push, and verify Render deployment before reporting completion.
