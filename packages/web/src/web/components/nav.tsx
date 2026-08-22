@@ -142,7 +142,7 @@ export function Nav() {
             </Link>
           ))}
         </nav>
-        <div className="flex min-w-0 shrink-0 items-center gap-2">
+        <div className="relative z-[100] flex min-w-0 shrink-0 items-center gap-2 overflow-visible isolate">
           {header.showSocialLinks &&
             headerSocials.slice(0, 3).map((social) => (
               <a
@@ -182,7 +182,7 @@ export function Nav() {
           ) : showSignIn ? (
             <HeaderAction href={signInHref} label={signInLabel} />
           ) : null}
-          {showCart && <CartDropdown count={count} />}
+          <CartDropdown count={count} />
           <button
             onClick={() => setMobile((value) => !value)}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
@@ -261,7 +261,10 @@ function CartDropdown({ count }: { count: number }) {
   }, [open]);
 
   return (
-    <div ref={rootRef} className="relative z-[60] shrink-0">
+    <div
+      ref={rootRef}
+      className="relative z-[110] shrink-0 pointer-events-auto"
+    >
       <button
         type="button"
         onClick={() => {
@@ -356,7 +359,6 @@ function CartDropdown({ count }: { count: number }) {
                 <Link
                   to="/cart"
                   onClick={() => {
-                    setOpen(false);
                     setOpen(false);
                   }}
                   className="block w-full rounded-lg bg-vb-purple px-4 py-3 text-center font-sub text-sm uppercase tracking-widest text-white transition hover:bg-vb-purple-bright"

@@ -808,3 +808,13 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Remove the existing cart provider, dropdown, cart page implementation, stale local storage key, and related UI paths.
 - [x] Build a clean replacement cart flow with fresh state, add/remove/totals behavior, header access, cart page, and checkout.
 - [x] Add regression coverage, validate responsive behavior and production build, commit/push, and verify Render deployment.
+
+## Live Cart Dropdown Verification
+
+- [x] Test adding a beat and license on production, viewing it in the header dropdown, removing it, and confirming the empty state.
+
+## Repeated Cart/Menu Independence Regression
+
+- [x] Reproduce the cart-only click failure at mobile and desktop breakpoints and audit menu event boundaries.
+- [x] Decouple cart and menu controls structurally and prevent menu state from controlling cart visibility or click handling.
+- [x] Validate independent cart opening, menu behavior, responsive layout, tests, production build, and Render deployment.
