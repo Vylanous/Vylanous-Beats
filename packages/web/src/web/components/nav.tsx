@@ -43,7 +43,9 @@ export function Nav() {
   // Page Settings override Universal Settings only when an explicit value is saved.
   // Cart and mobile-menu visibility remain independent controls.
   const showCart = headerActions?.showCart ?? header.showCart;
-  const showMenu = headerActions?.showMenu ?? header.showMenu;
+  const showMenu =
+    headerActions?.showMenu ??
+    (activePage?.layout?.chrome?.navigation !== false && header.showMenu);
   const wordmarkAccentIndex =
     pageWordmark && pageWordmarkAccent
       ? pageWordmark.lastIndexOf(pageWordmarkAccent)
@@ -131,17 +133,19 @@ export function Nav() {
             </span>
           )}
         </Link>
-        <nav className="page-navigation hidden items-center gap-6 lg:flex">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={`font-sub text-base uppercase tracking-wider transition-colors ${loc === link.href ? "text-purple-glow" : "text-vb-silver hover:text-vb-silver-bright"}`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {showMenu && (
+          <nav className="page-navigation hidden items-center gap-6 lg:flex">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={`font-sub text-base uppercase tracking-wider transition-colors ${loc === link.href ? "text-purple-glow" : "text-vb-silver hover:text-vb-silver-bright"}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
         <div className="relative z-[100] flex min-w-0 shrink-0 items-center gap-2 overflow-visible isolate">
           {header.showSocialLinks &&
             headerSocials.slice(0, 3).map((social) => (
