@@ -40,10 +40,10 @@ export function Nav() {
   const showSignIn = headerActions?.showSignIn !== false;
   const signInLabel = headerActions?.signInLabel?.trim() || "Sign in";
   const signInHref = headerActions?.signInHref?.trim() || "/login";
-  // Keep one reliable cart entry point on every page. Historical page settings
-  // could persist `showCart: false` and make the cart appear broken by removing
-  // the only trigger, so the header cart is intentionally always available.
-  const showCart = true;
+  // Page Settings override Universal Settings only when an explicit value is saved.
+  // Cart and mobile-menu visibility remain independent controls.
+  const showCart = headerActions?.showCart ?? header.showCart;
+  const showMenu = headerActions?.showMenu ?? header.showMenu;
   const wordmarkAccentIndex =
     pageWordmark && pageWordmarkAccent
       ? pageWordmark.lastIndexOf(pageWordmarkAccent)
@@ -182,17 +182,19 @@ export function Nav() {
           ) : showSignIn ? (
             <HeaderAction href={signInHref} label={signInLabel} />
           ) : null}
-          <CartDropdown count={count} />
-          <button
-            onClick={() => setMobile((value) => !value)}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
-            aria-label="Menu"
-          >
-            {mobile ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          {showCart && <CartDropdown count={count} />}
+          {showMenu && (
+            <button
+              onClick={() => setMobile((value) => !value)}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-vb-ink lg:hidden"
+              aria-label="Menu"
+            >
+              {mobile ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          )}
         </div>
       </div>
-      {mobile && (
+      {showMenu && mobile && (
         <div className="border-b border-white/[0.06] bg-vb-black/95 backdrop-blur-xl lg:hidden">
           <nav className="page-navigation flex flex-col gap-1 px-5 py-4">
             {links.map((link) => (

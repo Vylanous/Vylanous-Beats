@@ -817,4 +817,10 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Reproduce the cart-only click failure at mobile and desktop breakpoints and audit menu event boundaries.
 - [x] Decouple cart and menu controls structurally and prevent menu state from controlling cart visibility or click handling.
-- [x] Validate independent cart opening, menu behavior, responsive layout, tests, production build, and Render deployment.
+- [x] Validate independent cart opening, menu behavior, responsive layout, tests, production build, Render deployment, and live cart opening with the menu closed.
+
+## Page-Specific Cart and Menu Visibility Regression
+
+- [x] Audit page header visibility persistence, merge precedence, and cart/menu rendering after the global cart fix.
+- [x] Honor explicit per-page cart and menu visibility settings independently, including Artist.
+- [x] Validate enabled and disabled states across routes, tests, production build, and Render deployment.

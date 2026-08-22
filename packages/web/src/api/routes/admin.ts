@@ -355,6 +355,7 @@ const settingsSchema = z.object({
                 signInLabel: z.string().max(80).optional(),
                 signInHref: z.string().max(500).optional(),
                 showCart: z.boolean().optional(),
+                showMenu: z.boolean().optional(),
               })
               .optional(),
             headerSocialIds: z.array(z.string().max(120)).max(32).optional(),

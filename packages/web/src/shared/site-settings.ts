@@ -541,6 +541,8 @@ export interface PageHeaderActions {
   signInHref?: string;
   /** Optional visibility override for the shopping cart action. */
   showCart?: boolean;
+  /** Optional visibility override for the responsive menu action. */
+  showMenu?: boolean;
 }
 
 export interface PageLayout {
@@ -646,6 +648,7 @@ export interface HeaderSettings {
   sticky: boolean;
   transparentAtTop: boolean;
   showCart: boolean;
+  showMenu: boolean;
   showSocialLinks: boolean;
   ctaLabel?: string;
   ctaHref?: string;
@@ -759,6 +762,7 @@ export const DEFAULT_HEADER: HeaderSettings = {
   sticky: true,
   transparentAtTop: true,
   showCart: true,
+  showMenu: true,
   showSocialLinks: false,
   ctaLabel: "",
   ctaHref: "",

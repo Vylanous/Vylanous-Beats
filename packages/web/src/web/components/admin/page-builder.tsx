@@ -1433,6 +1433,11 @@ function GlobalChromeEditor({
             onChange={(checked) => updateHeader({ showCart: checked })}
           />
           <Toggle
+            label="Show mobile menu button"
+            checked={settings.header.showMenu}
+            onChange={(checked) => updateHeader({ showMenu: checked })}
+          />
+          <Toggle
             label="Show header social icons"
             checked={settings.header.showSocialLinks}
             onChange={(checked) => updateHeader({ showSocialLinks: checked })}
@@ -2232,7 +2237,7 @@ function PagePropertiesEditor({
                 onChange={(value) => updateHeaderActions({ signInHref: value })}
               />
             </div>
-            <div className="rounded-lg border border-white/[0.06] p-3">
+            <div className="space-y-3 rounded-lg border border-white/[0.06] p-3">
               <Toggle
                 label="Show shopping cart"
                 checked={page.layout?.headerActions?.showCart !== false}
@@ -2240,9 +2245,16 @@ function PagePropertiesEditor({
                   updateHeaderActions({ showCart: checked })
                 }
               />
-              <p className="mt-3 font-body text-xs leading-5 text-vb-silver/45">
-                This controls the cart icon on this page. Leave it inherited to
-                follow Universal Settings.
+              <Toggle
+                label="Show mobile menu button"
+                checked={page.layout?.headerActions?.showMenu !== false}
+                onChange={(checked) =>
+                  updateHeaderActions({ showMenu: checked })
+                }
+              />
+              <p className="font-body text-xs leading-5 text-vb-silver/45">
+                These controls override Universal Settings for this page. Reset
+                them to inherit the universal visibility choices.
               </p>
             </div>
           </div>
