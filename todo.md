@@ -858,3 +858,9 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Add several non-purple texture treatments that layer safely with a selected page color or background image.
 - [x] Ensure page-level background choices fully override inherited purple backgrounds, including the Artist page and its sections.
 - [x] Add regression coverage and validate the public renderer across desktop and mobile layouts.
+
+## Transitive Dependency Security Review
+
+- [x] Inventory the remaining transitive dependency advisories with severity, affected versions, and dependency paths.
+- [x] Determine which advisories are reachable from the deployed web/API production path versus desktop, mobile, or development-only tooling.
+- [x] Identify safe remediation options and prioritize any materially exposed critical paths.
