@@ -829,7 +829,7 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Reproduce the cart failure on production and inventory every cart/menu render, state, and event path.
 - [x] Remove competing cart visibility guards, duplicate controls, stale state, and menu coupling.
 - [x] Implement one minimal deterministic cart trigger/dropdown path.
-- [ ] Interactively verify add, view, remove, and empty states on production at desktop and mobile sizes.
+- [x] Interactively verify add, view, remove, and empty states on production at desktop and mobile sizes.
 - [x] Run tests/build, commit/push, and verify Render deployment before reporting completion.
 
 ## Repository-Wide Production Hardening
@@ -843,7 +843,7 @@ User request: border glow colors remain purple for other border styles; change t
 
 ## Cross-Viewport Cart Regression Test
 
-- [ ] Test desktop cart visibility, independent opening, add/view/total/remove/empty states, and cart-page navigation on production.
-- [ ] Test mobile cart visibility, independence from the menu, add/view/remove/empty states, and cart-page navigation on production.
-- [ ] Verify checkout gating without initiating payment and document the full regression result.
+- [x] Test desktop cart visibility, independent opening, add/view/total/remove/empty states, and cart-page navigation on production.
+- [x] Test mobile cart visibility, independence from the menu, add/view/remove/empty states, and cart-page navigation on production.
+- [x] Verify checkout gating without initiating payment and document the full regression result.
 - [x] Fix the verified mobile positioning defect: after a customer scrolls to add a beat, the populated cart panel is rendered above the viewport.
