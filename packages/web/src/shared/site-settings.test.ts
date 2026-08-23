@@ -464,6 +464,35 @@ describe("Site Builder settings migration", () => {
     });
   });
 
+  test("preserves a reusable Published Beats block and its selected catalog order", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_custom",
+          slug: "custom",
+          title: "Custom",
+          navLabel: "Custom",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "selected_beats",
+              type: "publishedBeats",
+              title: "Featured on this page",
+              beatIds: ["beat_second", "beat_first"],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_custom")?.sections[0]).toMatchObject({
+      type: "publishedBeats",
+      title: "Featured on this page",
+      beatIds: ["beat_second", "beat_first"],
+    });
+  });
+
   test("preserves page wordmarks and section logos through settings migration", () => {
     const settings = mergeSettings({
       pages: [

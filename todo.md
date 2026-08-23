@@ -902,3 +902,9 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Run an isolated non-production checkout and signed Stripe webhook simulation without creating a live charge or customer order.
 - [x] Verify paid-order state, customer entitlement activation, exclusive-beat handling, delivery idempotency, and duplicate-event protection.
+
+## Page Builder Published Beats Block
+
+- [x] Add a Published Beats option to Page Builder Add Block so published catalog beats can be selected for any managed page.
+- [x] Validate selected beat IDs and ensure only currently published beats render publicly, without changing Beat Vault behavior.
+- [x] Add responsive public beat cards, editor selection controls, and regression coverage for the new reusable page section.

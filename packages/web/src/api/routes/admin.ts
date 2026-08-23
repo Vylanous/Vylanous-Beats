@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { eq, desc } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -400,6 +400,7 @@ const settingsSchema = z.object({
               "pressKit",
               "merch",
               "featuredBeats",
+              "publishedBeats",
               "beatCatalog",
               "licenseTiers",
               "licenseComparison",
@@ -418,6 +419,13 @@ const settingsSchema = z.object({
             secondaryCtaLabel: z.string().optional(),
             secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
+            beatIds: z
+              .array(z.string().min(1).max(120))
+              .max(12)
+              .refine((ids) => new Set(ids).size === ids.length, {
+                message: "Each selected beat can only appear once in a block.",
+              })
+              .optional(),
             anchorId: z
               .string()
               .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
@@ -1164,6 +1172,32 @@ export function adminRoutes(app: Hono) {
   app.put("/admin/settings", requireAdmin, zValidator("json", settingsSchema), async (c) => {
     const input = c.req.valid("json");
     const current = await loadSettings();
+    const requestedBeatIds = Array.from(
+      new Set(
+        (input.pages || [])
+          .flatMap((page) => page.sections)
+          .filter((section) => section.type === "publishedBeats")
+          .flatMap((section) => section.beatIds || []),
+      ),
+    );
+    let pages = input.pages;
+    if (requestedBeatIds.length) {
+      const published = await db
+        .select({ id: beats.id })
+        .from(beats)
+        .where(and(inArray(beats.id, requestedBeatIds), eq(beats.published, true)));
+      const publishedIds = new Set(published.map((beat) => beat.id));
+      // A beat can become unpublished after an administrator selected it. Prune
+      // stale IDs rather than blocking an otherwise valid Page Builder save.
+      pages = input.pages?.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) =>
+          section.type === "publishedBeats"
+            ? { ...section, beatIds: (section.beatIds || []).filter((id) => publishedIds.has(id)) }
+            : section,
+        ),
+      }));
+    }
     const merged = mergeSettings({
       theme: { ...current.theme, ...input.theme },
       fontId: input.fontId ?? current.fontId,
@@ -1182,7 +1216,7 @@ export function adminRoutes(app: Hono) {
           }
         : current.announcementBanner,
       socials: input.socials ?? current.socials,
-      pages: input.pages ?? current.pages,
+      pages: pages ?? current.pages,
       deletedPageIds: input.deletedPageIds ?? current.deletedPageIds,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
       builder: input.builder

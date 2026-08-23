@@ -43,6 +43,7 @@ export type PageSectionType =
   | "pressKit"
   | "merch"
   | "featuredBeats"
+  | "publishedBeats"
   | "beatCatalog"
   | "licenseTiers"
   | "licenseComparison";
@@ -504,6 +505,8 @@ export interface PageSection {
   secondaryCtaLabel?: string;
   secondaryCtaHref?: string;
   collection?: string;
+  /** Ordered published catalog beats shown by a reusable Page Builder block. */
+  beatIds?: string[];
   /** Optional in-page anchor used by navigation links and deep links. */
   anchorId?: string;
   /** Optional admin-only CSS hook for advanced layouts. */

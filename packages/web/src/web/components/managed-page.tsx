@@ -345,6 +345,7 @@ function BuilderSection({
           <MerchSection section={section} currency={currency} shopDomain={shopDomain} />
         )}
         {section.type === "featuredBeats" && <FeaturedBeats section={section} layout={layout} />}
+        {section.type === "publishedBeats" && <PublishedBeats section={section} layout={layout} />}
         {section.type === "beatCatalog" && <BeatCatalog />}
         {section.type === "licenseTiers" && <LicenseTiers section={section} layout={layout} />}
         {section.type === "licenseComparison" && <LicenseComparison section={section} />}
@@ -933,6 +934,58 @@ function FeaturedBeats({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function PublishedBeats({
+  section,
+  layout,
+}: {
+  section: PageSection;
+  layout: Required<SectionLayout>;
+}) {
+  const beatIds = useMemo(
+    () => Array.from(new Set(section.beatIds || [])).slice(0, 12),
+    [section.beatIds],
+  );
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["beats", "selected", beatIds],
+    enabled: beatIds.length > 0,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      beatIds.forEach((id) => params.append("id", id));
+      const response = await fetch(`/api/beats/selected?${params.toString()}`);
+      if (!response.ok) throw new Error("Unable to load selected beats.");
+      return response.json() as Promise<{ beats: Beat[] }>;
+    },
+  });
+  const beats = data?.beats || [];
+  return (
+    <div className="w-full">
+      <CopyBlock section={section} layout={layout} />
+      {beatIds.length === 0 ? (
+        <p className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-5 font-body text-sm text-vb-muted">
+          No published beats have been selected for this section yet.
+        </p>
+      ) : isLoading ? (
+        <div className={`mt-8 grid gap-6 ${COLUMNS[layout.columns]}`}>
+          {Array.from({ length: Math.min(beatIds.length, 3) }).map((_, index) => (
+            <div key={index} className="aspect-square animate-pulse rounded-xl bg-vb-ink" />
+          ))}
+        </div>
+      ) : isError || !beats.length ? (
+        <p className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-5 font-body text-sm text-vb-muted">
+          The selected beats are no longer published or available.
+        </p>
+      ) : (
+        <div className={`mt-8 grid gap-6 ${COLUMNS[layout.columns]}`}>
+          {beats.map((beat) => (
+            <BeatCard key={beat.id} beat={beat} />
+          ))}
+        </div>
+      )}
+      <Actions section={section} />
     </div>
   );
 }
