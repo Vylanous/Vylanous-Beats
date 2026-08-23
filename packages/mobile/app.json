@@ -13,17 +13,21 @@
     },
     "updates": {
       "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/c5ce894e-f856-4c49-8318-1a0be3fe9bcb"
     },
     "ios": {
       "bundleIdentifier": "com.vylanousbeats.app",
       "buildNumber": "1",
       "supportsTablet": true,
-      "associatedDomains": ["applinks:www.vylanous.com", "applinks:vylanous.com"]
+      "associatedDomains": [
+        "applinks:www.vylanous.com",
+        "applinks:vylanous.com"
+      ]
     },
     "android": {
       "package": "com.vylanousbeats.app",
-      "versionCode": 1,
+      "versionCode": 2,
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -40,7 +44,10 @@
               "pathPrefix": "/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -49,7 +56,11 @@
       "resizeMode": "contain",
       "backgroundColor": "#0B0A11"
     },
-    "plugins": ["expo-router", "expo-iap", "expo-updates"],
+    "plugins": [
+      "expo-router",
+      "expo-iap",
+      "expo-updates"
+    ],
     "extra": {
       "apiUrl": "https://www.vylanous.com",
       "router": {},
