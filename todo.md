@@ -840,3 +840,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Delete only merged or clearly obsolete local and remote branches after branch ancestry review.
 - [x] Re-run the complete validation suite, commit/push verified fixes, and confirm the Render deployment.
 - [x] Record that the remaining dependency-audit findings are transitive mobile/desktop/tooling advisories requiring planned upstream major-version upgrades rather than unsafe bulk changes.
+
+## Cross-Viewport Cart Regression Test
+
+- [ ] Test desktop cart visibility, independent opening, add/view/total/remove/empty states, and cart-page navigation on production.
+- [ ] Test mobile cart visibility, independence from the menu, add/view/remove/empty states, and cart-page navigation on production.
+- [ ] Verify checkout gating without initiating payment and document the full regression result.
+- [x] Fix the verified mobile positioning defect: after a customer scrolls to add a beat, the populated cart panel is rendered above the viewport.

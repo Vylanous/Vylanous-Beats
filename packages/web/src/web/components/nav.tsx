@@ -1,5 +1,6 @@
 /** Vylanous navigation: global chrome rendered from Site Builder header, social, and page settings. */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { ShoppingCart, Menu, X, UserRound, LogOut, Trash2 } from "lucide-react";
 import { useCart } from "../lib/cart-store";
@@ -215,15 +216,27 @@ export function Nav() {
   );
 }
 
+export function isCartInteractionTarget(
+  target: EventTarget | null,
+  triggerRoot: Pick<HTMLElement, "contains"> | null,
+  panel: Pick<HTMLElement, "contains"> | null,
+) {
+  return Boolean(
+    target &&
+      (triggerRoot?.contains(target as Node) || panel?.contains(target as Node)),
+  );
+}
+
 function CartDropdown({ count }: { count: number }) {
   const { items, remove, totalCents } = useCart();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+      if (!isCartInteractionTarget(event.target, rootRef.current, panelRef.current)) {
         setOpen(false);
       }
     };
@@ -239,6 +252,94 @@ function CartDropdown({ count }: { count: number }) {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
+  const panel = open ? (
+    <section
+      ref={panelRef}
+      aria-label="Cart contents"
+      className="fixed right-4 top-20 z-[9999] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50 md:right-8"
+    >
+      <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
+        <h2 className="font-sub text-sm uppercase tracking-[0.16em] text-vb-silver-bright">
+          Your cart
+        </h2>
+        <span className="font-body text-xs text-vb-silver/45">
+          {count} item{count === 1 ? "" : "s"}
+        </span>
+      </div>
+      {items.length === 0 ? (
+        <div className="px-4 py-6 text-center">
+          <p className="font-body text-sm text-vb-silver/55">Your cart is empty.</p>
+          <Link
+            to="/beats"
+            onClick={() => {
+              setOpen(false);
+            }}
+            className="mt-2 inline-block font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:underline"
+          >
+            Browse beats
+          </Link>
+        </div>
+      ) : (
+        <>
+          <ul className="max-h-72 divide-y divide-white/[0.06] overflow-y-auto">
+            {items.map((item) => (
+              <li
+                key={`${item.beatId}-${item.tier}`}
+                className="flex items-center gap-3 px-4 py-3"
+              >
+                <img
+                  src={item.artworkUrl || "/brand/Favicon_sharp.png"}
+                  alt=""
+                  className="h-11 w-11 shrink-0 rounded-lg object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-body text-sm text-vb-silver-bright">
+                    {item.beatTitle}
+                  </p>
+                  <p className="truncate font-sub text-[10px] uppercase tracking-wide text-vb-silver/45">
+                    {item.tierName}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="font-display text-base text-chrome">
+                    {formatCad(item.priceCents)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => remove(item.beatId, item.tier)}
+                    className="grid h-8 w-8 place-items-center rounded-md text-vb-silver/45 hover:bg-red-500/10 hover:text-red-300"
+                    aria-label={`Remove ${item.beatTitle} from cart`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="border-t border-white/[0.07] px-4 py-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-sub text-xs uppercase tracking-wide text-vb-silver/55">
+                Total
+              </span>
+              <span className="font-display text-xl text-chrome">
+                {formatCad(totalCents)} CAD
+              </span>
+            </div>
+            <Link
+              to="/cart"
+              onClick={() => {
+                setOpen(false);
+              }}
+              className="block w-full rounded-lg bg-vb-purple px-4 py-3 text-center font-sub text-sm uppercase tracking-widest text-white transition hover:bg-vb-purple-bright"
+            >
+              Buy Now
+            </Link>
+          </div>
+        </>
+      )}
+    </section>
+  ) : null;
 
   return (
     <div ref={rootRef} className="relative z-[110] shrink-0 pointer-events-auto">
@@ -259,92 +360,7 @@ function CartDropdown({ count }: { count: number }) {
           </span>
         )}
       </button>
-      {open && (
-        <section
-          aria-label="Cart contents"
-          className="fixed right-4 top-20 z-[9999] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-vb-ink shadow-2xl shadow-black/50 md:right-8"
-        >
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
-            <h2 className="font-sub text-sm uppercase tracking-[0.16em] text-vb-silver-bright">
-              Your cart
-            </h2>
-            <span className="font-body text-xs text-vb-silver/45">
-              {count} item{count === 1 ? "" : "s"}
-            </span>
-          </div>
-          {items.length === 0 ? (
-            <div className="px-4 py-6 text-center">
-              <p className="font-body text-sm text-vb-silver/55">Your cart is empty.</p>
-              <Link
-                to="/beats"
-                onClick={() => {
-                  setOpen(false);
-                }}
-                className="mt-2 inline-block font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:underline"
-              >
-                Browse beats
-              </Link>
-            </div>
-          ) : (
-            <>
-              <ul className="max-h-72 divide-y divide-white/[0.06] overflow-y-auto">
-                {items.map((item) => (
-                  <li
-                    key={`${item.beatId}-${item.tier}`}
-                    className="flex items-center gap-3 px-4 py-3"
-                  >
-                    <img
-                      src={item.artworkUrl || "/brand/Favicon_sharp.png"}
-                      alt=""
-                      className="h-11 w-11 shrink-0 rounded-lg object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-body text-sm text-vb-silver-bright">
-                        {item.beatTitle}
-                      </p>
-                      <p className="truncate font-sub text-[10px] uppercase tracking-wide text-vb-silver/45">
-                        {item.tierName}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="font-display text-base text-chrome">
-                        {formatCad(item.priceCents)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => remove(item.beatId, item.tier)}
-                        className="grid h-8 w-8 place-items-center rounded-md text-vb-silver/45 hover:bg-red-500/10 hover:text-red-300"
-                        aria-label={`Remove ${item.beatTitle} from cart`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <div className="border-t border-white/[0.07] px-4 py-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="font-sub text-xs uppercase tracking-wide text-vb-silver/55">
-                    Total
-                  </span>
-                  <span className="font-display text-xl text-chrome">
-                    {formatCad(totalCents)} CAD
-                  </span>
-                </div>
-                <Link
-                  to="/cart"
-                  onClick={() => {
-                    setOpen(false);
-                  }}
-                  className="block w-full rounded-lg bg-vb-purple px-4 py-3 text-center font-sub text-sm uppercase tracking-widest text-white transition hover:bg-vb-purple-bright"
-                >
-                  Buy Now
-                </Link>
-              </div>
-            </>
-          )}
-        </section>
-      )}
+      {panel && typeof document !== "undefined" ? createPortal(panel, document.body) : panel}
     </div>
   );
 }
