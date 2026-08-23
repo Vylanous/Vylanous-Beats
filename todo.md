@@ -847,3 +847,7 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Test mobile cart visibility, independence from the menu, add/view/remove/empty states, and cart-page navigation on production.
 - [x] Verify checkout gating without initiating payment and document the full regression result.
 - [x] Fix the verified mobile positioning defect: after a customer scrolls to add a beat, the populated cart panel is rendered above the viewport.
+
+## Header Navigation and Mobile Menu Repair
+
+- [ ] Inspect and restore the expected header navigation links and mobile menu dropdown control without regressing cart visibility.

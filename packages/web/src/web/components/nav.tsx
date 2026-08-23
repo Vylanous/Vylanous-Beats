@@ -42,9 +42,7 @@ export function Nav() {
   // Page Settings override Universal Settings only when an explicit value is saved.
   // Cart and mobile-menu visibility remain independent controls.
   const showCart = headerActions?.showCart ?? header.showCart;
-  const showMenu =
-    headerActions?.showMenu ??
-    (activePage?.layout?.chrome?.navigation !== false && header.showMenu);
+  const showMenu = resolveMenuVisibility(headerActions?.showMenu, header.showMenu);
   const wordmarkAccentIndex =
     pageWordmark && pageWordmarkAccent ? pageWordmark.lastIndexOf(pageWordmarkAccent) : -1;
   const wordmarkBase =
@@ -225,6 +223,10 @@ export function isCartInteractionTarget(
     target &&
       (triggerRoot?.contains(target as Node) || panel?.contains(target as Node)),
   );
+}
+
+export function resolveMenuVisibility(pageOverride: boolean | undefined, universalSetting: boolean) {
+  return pageOverride ?? universalSetting;
 }
 
 function CartDropdown({ count }: { count: number }) {
