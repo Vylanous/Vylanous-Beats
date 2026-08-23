@@ -854,7 +854,7 @@ User request: border glow colors remain purple for other border styles; change t
 
 ## Page Settings Background Color and Texture Controls
 
-- [ ] Add Page Settings controls for page background color and selectable textures while retaining Ink and Mesh.
-- [ ] Add several non-purple texture treatments that layer safely with a selected page color or background image.
-- [ ] Ensure page-level background choices fully override inherited purple backgrounds, including the Artist page and its sections.
-- [ ] Add regression coverage and validate the public renderer across desktop and mobile layouts.
+- [x] Add Page Settings controls for page background color and selectable textures while retaining Ink and Mesh.
+- [x] Add several non-purple texture treatments that layer safely with a selected page color or background image.
+- [x] Ensure page-level background choices fully override inherited purple backgrounds, including the Artist page and its sections.
+- [x] Add regression coverage and validate the public renderer across desktop and mobile layouts.
