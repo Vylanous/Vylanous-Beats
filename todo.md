@@ -896,4 +896,4 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Correct delivery-email idempotency handling and preserve retry-safe fulfillment and exclusive-beat rules.
 - [x] Add signature, duplicate-event, payment-state, concurrent-confirmation, entitlement, email, and checkout regression coverage.
 - [x] Run the focused suite and complete repository validation; inspect the final diff, commit, and push the implementation.
-- [ ] Delete the obsolete `fix/upload-webhook-launch-blockers` remote branch only after the replacement implementation is published and verified.
+- [x] Delete the obsolete `fix/upload-webhook-launch-blockers` remote branch only after the replacement implementation is published and verified.
