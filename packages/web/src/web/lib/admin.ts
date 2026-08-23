@@ -34,16 +34,13 @@ export function formatAdminError(value: unknown, fallback: string): string {
         const path = Array.isArray(item.path)
           ? item.path.filter((part) => part !== "").join(".")
           : "";
-        const message =
-          typeof item.message === "string" ? item.message : "Invalid value";
+        const message = typeof item.message === "string" ? item.message : "Invalid value";
         return path ? `${path}: ${message}` : message;
       })
       .filter(Boolean);
     if (details.length) return details.join("; ");
-    if (typeof record.message === "string" && record.message.trim())
-      return record.message;
-    if (typeof record.error === "string" && record.error.trim())
-      return record.error;
+    if (typeof record.message === "string" && record.message.trim()) return record.message;
+    if (typeof record.error === "string" && record.error.trim()) return record.error;
     try {
       const serialized = JSON.stringify(value);
       if (serialized && serialized !== "{}") return serialized;
@@ -109,32 +106,22 @@ export const adminApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  deleteBeat: (id: string) =>
-    req<{ ok: true }>(`/admin/beats/${id}`, { method: "DELETE" }),
+  deleteBeat: (id: string) => req<{ ok: true }>(`/admin/beats/${id}`, { method: "DELETE" }),
   listOrders: () => req<{ orders: AdminOrder[] }>("/admin/orders"),
   listSubscribers: () =>
-    req<{ subscribers: { id: string; email: string; createdAt: string }[] }>(
-      "/admin/subscribers",
-    ),
-  listInbox: () =>
-    req<{ messages: InboundEmail[]; events: EmailEvent[] }>("/admin/inbox"),
+    req<{ subscribers: { id: string; email: string; createdAt: string }[] }>("/admin/subscribers"),
+  listInbox: () => req<{ messages: InboundEmail[]; events: EmailEvent[] }>("/admin/inbox"),
   updateInboxStatus: (id: string, status: InboundEmail["status"]) =>
     req<{ ok: true }>(`/admin/inbox/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
-  getInboxContent: (id: string) =>
-    req<{ text: string }>(`/admin/inbox/${id}/content`),
+  getInboxContent: (id: string) => req<{ text: string }>(`/admin/inbox/${id}/content`),
   sendEmailTest: () =>
     req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", {
       method: "POST",
     }),
-  presign: (
-    filename: string,
-    contentType: string,
-    folder: string,
-    size?: number,
-  ) =>
+  presign: (filename: string, contentType: string, folder: string, size?: number) =>
     req<{ url: string; key: string }>("/admin/upload/presign", {
       method: "POST",
       body: JSON.stringify({ filename, contentType, folder, size }),
@@ -149,9 +136,7 @@ export async function getAdminSettings(): Promise<{
   settings: SiteSettings;
   preview: SiteSettings;
 }> {
-  return req<{ settings: SiteSettings; preview: SiteSettings }>(
-    "/admin/settings",
-  );
+  return req<{ settings: SiteSettings; preview: SiteSettings }>("/admin/settings");
 }
 
 /** Persist a partial patch of the site customization settings (merged server-side). */
@@ -193,9 +178,7 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
   }
   if (response.status === 401) {
     clearToken();
-    throw new Error(
-      "Your admin session expired. Sign in again before uploading.",
-    );
+    throw new Error("Your admin session expired. Sign in again before uploading.");
   }
   if (!response.ok) {
     let message = `Upload failed (${response.status})`;
@@ -254,7 +237,12 @@ export interface BeatInput {
 }
 
 export type MediaHealthStatus =
-  "healthy" | "missing" | "broken" | "external" | "public" | "unavailable";
+  | "healthy"
+  | "missing"
+  | "broken"
+  | "external"
+  | "public"
+  | "unavailable";
 export interface MediaHealthEntry {
   id: string;
   source: string;

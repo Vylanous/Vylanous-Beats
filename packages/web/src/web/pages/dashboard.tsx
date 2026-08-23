@@ -31,7 +31,9 @@ export default function DashboardPage() {
       }
       window.location.assign(payload.url);
     } catch {
-      setDownloadError("Your download could not be prepared. Please check your connection and try again.");
+      setDownloadError(
+        "Your download could not be prepared. Please check your connection and try again.",
+      );
     } finally {
       setDownloadingId("");
     }

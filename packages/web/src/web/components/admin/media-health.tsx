@@ -7,39 +7,34 @@ import {
   RefreshCw,
   TriangleAlert,
 } from "lucide-react";
-import {
-  adminApi,
-  type MediaHealthReport,
-  type MediaHealthStatus,
-} from "../../lib/admin";
+import { adminApi, type MediaHealthReport, type MediaHealthStatus } from "../../lib/admin";
 
-const STATUS_META: Record<MediaHealthStatus, { label: string; tone: string }> =
-  {
-    healthy: {
-      label: "Healthy",
-      tone: "text-emerald-300 border-emerald-400/25 bg-emerald-400/[0.08]",
-    },
-    broken: {
-      label: "Broken",
-      tone: "text-red-300 border-red-400/25 bg-red-400/[0.08]",
-    },
-    missing: {
-      label: "Missing",
-      tone: "text-amber-200 border-amber-300/25 bg-amber-300/[0.08]",
-    },
-    external: {
-      label: "External",
-      tone: "text-cyan-200 border-cyan-300/25 bg-cyan-300/[0.08]",
-    },
-    public: {
-      label: "Public asset",
-      tone: "text-vb-purple-bright border-vb-purple/25 bg-vb-purple/[0.08]",
-    },
-    unavailable: {
-      label: "Storage unavailable",
-      tone: "text-orange-200 border-orange-300/25 bg-orange-300/[0.08]",
-    },
-  };
+const STATUS_META: Record<MediaHealthStatus, { label: string; tone: string }> = {
+  healthy: {
+    label: "Healthy",
+    tone: "text-emerald-300 border-emerald-400/25 bg-emerald-400/[0.08]",
+  },
+  broken: {
+    label: "Broken",
+    tone: "text-red-300 border-red-400/25 bg-red-400/[0.08]",
+  },
+  missing: {
+    label: "Missing",
+    tone: "text-amber-200 border-amber-300/25 bg-amber-300/[0.08]",
+  },
+  external: {
+    label: "External",
+    tone: "text-cyan-200 border-cyan-300/25 bg-cyan-300/[0.08]",
+  },
+  public: {
+    label: "Public asset",
+    tone: "text-vb-purple-bright border-vb-purple/25 bg-vb-purple/[0.08]",
+  },
+  unavailable: {
+    label: "Storage unavailable",
+    tone: "text-orange-200 border-orange-300/25 bg-orange-300/[0.08]",
+  },
+};
 
 const STATUS_ORDER: MediaHealthStatus[] = [
   "broken",
@@ -62,19 +57,14 @@ export default function MediaHealthPanel() {
     try {
       setReport(await adminApi.mediaHealth());
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Media health check failed.",
-      );
+      setError(err instanceof Error ? err.message : "Media health check failed.");
     } finally {
       setLoading(false);
     }
   };
 
   const items = useMemo(
-    () =>
-      report?.items.filter(
-        (item) => status === "all" || item.status === status,
-      ) || [],
+    () => report?.items.filter((item) => status === "all" || item.status === status) || [],
     [report, status],
   );
 
@@ -89,8 +79,8 @@ export default function MediaHealthPanel() {
             </h1>
           </div>
           <p className="mt-2 max-w-2xl font-body text-sm text-vb-silver/55">
-            Scan Builder media, brand assets, SEO images, beat artwork, audio,
-            and downloadable files for missing or broken storage references.
+            Scan Builder media, brand assets, SEO images, beat artwork, audio, and downloadable
+            files for missing or broken storage references.
           </p>
         </div>
         <button
@@ -99,11 +89,7 @@ export default function MediaHealthPanel() {
           disabled={loading}
           className="inline-flex items-center gap-2 rounded-lg bg-vb-purple px-4 py-2.5 font-sub text-xs uppercase tracking-wide text-white hover:bg-vb-purple-bright disabled:opacity-60"
         >
-          {loading ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : (
-            <RefreshCw size={15} />
-          )}
+          {loading ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
           {loading ? "Scanning" : report ? "Run again" : "Run health check"}
         </button>
       </div>
@@ -117,9 +103,7 @@ export default function MediaHealthPanel() {
       {!report ? (
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 text-center">
           <FileWarning size={28} className="mx-auto text-vb-silver/45" />
-          <h2 className="mt-3 font-sub text-lg uppercase tracking-wide">
-            No scan yet
-          </h2>
+          <h2 className="mt-3 font-sub text-lg uppercase tracking-wide">No scan yet</h2>
           <p className="mt-1 font-body text-sm text-vb-silver/50">
             Run a check to inspect every saved media reference.
           </p>
@@ -145,9 +129,7 @@ export default function MediaHealthPanel() {
                       <TriangleAlert size={15} />
                     ) : null}
                   </span>
-                  <span className="mt-2 block font-display text-3xl">
-                    {count}
-                  </span>
+                  <span className="mt-2 block font-display text-3xl">{count}</span>
                 </button>
               );
             })}
@@ -156,19 +138,14 @@ export default function MediaHealthPanel() {
           <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] px-4 py-3">
               <div>
-                <h2 className="font-sub text-lg uppercase tracking-wide">
-                  Media references
-                </h2>
+                <h2 className="font-sub text-lg uppercase tracking-wide">Media references</h2>
                 <p className="font-body text-xs text-vb-silver/45">
-                  {items.length} shown · checked{" "}
-                  {new Date(report.checkedAt).toLocaleString()}
+                  {items.length} shown · checked {new Date(report.checkedAt).toLocaleString()}
                 </p>
               </div>
               <select
                 value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as MediaHealthStatus | "all")
-                }
+                onChange={(event) => setStatus(event.target.value as MediaHealthStatus | "all")}
                 className="rounded-lg border border-white/10 bg-vb-black px-3 py-2 font-body text-xs text-vb-silver-bright outline-none"
                 aria-label="Filter media health status"
               >
@@ -204,9 +181,7 @@ export default function MediaHealthPanel() {
                       </span>
                       <p className="font-body text-xs text-vb-silver/50">
                         {item.detail}
-                        {item.normalizedKey
-                          ? ` Key: ${item.normalizedKey}`
-                          : ""}
+                        {item.normalizedKey ? ` Key: ${item.normalizedKey}` : ""}
                       </p>
                     </div>
                   );

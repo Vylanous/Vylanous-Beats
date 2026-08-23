@@ -54,7 +54,10 @@ export function checkoutRoutes(app: Hono) {
     for (const item of body.items) {
       const rows = await db.select().from(beats).where(eq(beats.id, item.beatId)).limit(1);
       if (rows.length === 0 || !rows[0].published) {
-        return c.json({ error: "A beat in your cart is no longer available. Refresh your cart and try again." }, 409);
+        return c.json(
+          { error: "A beat in your cart is no longer available. Refresh your cart and try again." },
+          409,
+        );
       }
       const beat = rows[0];
       const tier = TIER_BY_ID[item.tier];
@@ -170,10 +173,12 @@ export function checkoutRoutes(app: Hono) {
       await db.update(orders).set({ status: "cancelled" }).where(eq(orders.id, orderId));
       console.error("[checkout] Stripe session creation failed", error);
       return c.json(
-        { error: "checkout_unavailable", message: "Checkout could not be started. Please try again." },
+        {
+          error: "checkout_unavailable",
+          message: "Checkout could not be started. Please try again.",
+        },
         503,
       );
     }
-
   });
 }

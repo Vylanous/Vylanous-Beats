@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { LicenseTierId } from "../../shared/licenses";
 
 export interface CartLine {
@@ -33,9 +26,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 function readStoredCart(): CartLine[] {
   if (typeof window === "undefined") return [];
   try {
-    const parsed: unknown = JSON.parse(
-      window.localStorage.getItem(STORAGE_KEY) || "[]",
-    );
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "[]");
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
       (item): item is CartLine =>
@@ -63,9 +54,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const add = useCallback((line: CartLine) => {
     setItems((current) =>
-      current.some(
-        (item) => item.beatId === line.beatId && item.tier === line.tier,
-      )
+      current.some((item) => item.beatId === line.beatId && item.tier === line.tier)
         ? current
         : [...current, line],
     );

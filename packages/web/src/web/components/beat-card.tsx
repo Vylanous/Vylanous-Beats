@@ -4,11 +4,7 @@ import { Play, Pause, ShoppingCart, Check } from "lucide-react";
 import { usePlayer } from "../lib/player";
 import { useCart } from "../lib/cart-store";
 import { Waveform } from "./waveform";
-import {
-  LICENSE_TIERS,
-  formatCad,
-  type LicenseTierId,
-} from "../../shared/licenses";
+import { LICENSE_TIERS, formatCad, type LicenseTierId } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
 
 export function BeatCard({ beat }: { beat: Beat }) {
@@ -105,10 +101,7 @@ export function BeatCard({ beat }: { beat: Beat }) {
 
         <div className="flex flex-wrap gap-1.5 mt-2">
           {tags.map((t) => (
-            <span
-              key={t}
-              className="text-[11px] text-vb-muted font-body lowercase"
-            >
+            <span key={t} className="text-[11px] text-vb-muted font-body lowercase">
               #{t}
             </span>
           ))}
@@ -142,11 +135,7 @@ export function BeatCard({ beat }: { beat: Beat }) {
             className="shrink-0 grid place-items-center w-10 h-10 rounded-lg bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors disabled:opacity-50 disabled:bg-vb-ink-2"
             aria-label="Add to cart"
           >
-            {has(beat.id, tier) ? (
-              <Check size={18} />
-            ) : (
-              <ShoppingCart size={18} />
-            )}
+            {has(beat.id, tier) ? <Check size={18} /> : <ShoppingCart size={18} />}
           </button>
         </div>
       </div>

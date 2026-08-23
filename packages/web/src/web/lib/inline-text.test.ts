@@ -15,7 +15,9 @@ describe("inline Builder text", () => {
   });
 
   test("keeps malformed marker text visible and strips valid markers for metadata", () => {
-    expect(parseInlineText("Keep **unfinished")).toEqual([{ text: "Keep **unfinished", style: "plain" }]);
+    expect(parseInlineText("Keep **unfinished")).toEqual([
+      { text: "Keep **unfinished", style: "plain" },
+    ]);
     expect(stripInlineText("**Bold** _italic_ [u]underline[/u]")).toBe("Bold italic underline");
   });
 

@@ -78,7 +78,9 @@ describe("shared customer portal", () => {
     expect(resend.status).toBe(202);
     const unverifiedHeaders = { Authorization: `Bearer ${registered.session.token}` };
     expect((await app.request("/api/beats", { headers: unverifiedHeaders })).status).toBe(200);
-    expect((await app.request(`/api/beats/${privateBeat.slug}`, { headers: unverifiedHeaders })).status).toBe(200);
+    expect(
+      (await app.request(`/api/beats/${privateBeat.slug}`, { headers: unverifiedHeaders })).status,
+    ).toBe(200);
     const unverifiedCheckout = await app.request("/api/checkout", {
       method: "POST",
       headers: { ...unverifiedHeaders, "Content-Type": "application/json" },

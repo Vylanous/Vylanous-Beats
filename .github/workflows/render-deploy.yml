@@ -37,6 +37,12 @@ jobs:
       - name: Type-check web app
         run: bun --cwd packages/web run typecheck
 
+      - name: Lint web app
+        run: bun --cwd packages/web run lint
+
+      - name: Test web app
+        run: bun --cwd packages/web run test
+
       - name: Build web app
         run: bun --cwd packages/web run build
 

@@ -12,15 +12,10 @@ export function invalidateSettingsCache(): void {
 }
 
 export async function loadSettings(): Promise<SiteSettings> {
-  if (settingsCache && Date.now() - settingsCache.at < SETTINGS_TTL_MS)
-    return settingsCache.value;
+  if (settingsCache && Date.now() - settingsCache.at < SETTINGS_TTL_MS) return settingsCache.value;
   let value: SiteSettings;
   try {
-    const rows = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.id, SETTINGS_ID))
-      .limit(1);
+    const rows = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);
     if (rows.length === 0) value = mergeSettings(null);
     else {
       try {
@@ -60,15 +55,9 @@ export async function publicSettings(s: SiteSettings) {
         layout: page.layout
           ? {
               ...page.layout,
-              backgroundImage: await signBrandUrl(
-                page.layout.backgroundImage || "",
-              ),
-              headerLogoUrl: await signBrandUrl(
-                page.layout.headerLogoUrl || "",
-              ),
-              footerLogoUrl: await signBrandUrl(
-                page.layout.footerLogoUrl || "",
-              ),
+              backgroundImage: await signBrandUrl(page.layout.backgroundImage || ""),
+              headerLogoUrl: await signBrandUrl(page.layout.headerLogoUrl || ""),
+              footerLogoUrl: await signBrandUrl(page.layout.footerLogoUrl || ""),
             }
           : page.layout,
         seo: page.seo

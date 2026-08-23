@@ -64,10 +64,9 @@ export const LICENSE_TIERS: LicenseTier[] = [
   },
 ];
 
-export const TIER_BY_ID = Object.fromEntries(LICENSE_TIERS.map((tier) => [tier.id, tier])) as Record<
-  LicenseTierId,
-  LicenseTier
->;
+export const TIER_BY_ID = Object.fromEntries(
+  LICENSE_TIERS.map((tier) => [tier.id, tier]),
+) as Record<LicenseTierId, LicenseTier>;
 
 export const MOBILE_PRODUCT_BY_TIER: Record<Exclude<LicenseTierId, "free">, string> = {
   mp3: "com.vylanousbeats.license.mp3",

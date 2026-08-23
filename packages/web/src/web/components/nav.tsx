@@ -30,9 +30,7 @@ export function Nav() {
   const headerLogoHref = activePage?.layout?.headerLogoHref?.trim() || "/";
   const pageWordmarkAccent = activePage?.layout?.wordmarkAccent?.trim() || "";
   const pageWordmarkAccentColor =
-    activePage?.layout?.wordmarkAccentColor ||
-    activePage?.layout?.primaryColor ||
-    "#7C2FCB";
+    activePage?.layout?.wordmarkAccentColor || activePage?.layout?.primaryColor || "#7C2FCB";
   const headerActions = activePage?.layout?.headerActions;
   const showVault = headerActions?.showVault !== false;
   const vaultLabel = headerActions?.vaultLabel?.trim() || "Vault";
@@ -47,21 +45,15 @@ export function Nav() {
     headerActions?.showMenu ??
     (activePage?.layout?.chrome?.navigation !== false && header.showMenu);
   const wordmarkAccentIndex =
-    pageWordmark && pageWordmarkAccent
-      ? pageWordmark.lastIndexOf(pageWordmarkAccent)
-      : -1;
+    pageWordmark && pageWordmarkAccent ? pageWordmark.lastIndexOf(pageWordmarkAccent) : -1;
   const wordmarkBase =
-    wordmarkAccentIndex >= 0
-      ? pageWordmark.slice(0, wordmarkAccentIndex).trimEnd()
-      : pageWordmark;
+    wordmarkAccentIndex >= 0 ? pageWordmark.slice(0, wordmarkAccentIndex).trimEnd() : pageWordmark;
   const links = useMemo(
     () =>
       [...pages]
         .filter(
           (page) =>
-            page.published &&
-            page.showInNav &&
-            page.navLabel.trim().toLowerCase() !== "all beats",
+            page.published && page.showInNav && page.navLabel.trim().toLowerCase() !== "all beats",
         )
         .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000))
         .map((page) => ({
@@ -74,8 +66,7 @@ export function Nav() {
   const universalHeaderSocials = socials.filter(
     (social) =>
       social.showInHeader &&
-      (pageHeaderSocialIds === undefined ||
-        pageHeaderSocialIds.includes(social.id)),
+      (pageHeaderSocialIds === undefined || pageHeaderSocialIds.includes(social.id)),
   );
   const pageHeaderSocials =
     activePage?.layout?.pageSocialLinks?.filter(
@@ -92,18 +83,13 @@ export function Nav() {
   }, []);
   useEffect(() => setMobile(false), [loc]);
 
-  const chromeClass = header.sticky
-    ? "fixed top-0 inset-x-0 z-50"
-    : "relative z-50";
+  const chromeClass = header.sticky ? "fixed top-0 inset-x-0 z-50" : "relative z-50";
   return (
     <header
       className={`page-header ${chromeClass} transition-all duration-300 ${opaque ? "bg-vb-black/85 backdrop-blur-xl border-b border-white/[0.06]" : "bg-transparent"}`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-        <Link
-          to={headerLogoHref}
-          className="flex shrink-0 items-center gap-2.5"
-        >
+        <Link to={headerLogoHref} className="flex shrink-0 items-center gap-2.5">
           <img
             src={headerLogoUrl}
             alt={pageHeaderLabel || pageWordmark || "Vylanous Beats"}
@@ -119,9 +105,7 @@ export function Nav() {
                 <>
                   <span className="text-vb-silver-bright">{wordmarkBase}</span>{" "}
                   {wordmarkAccentIndex >= 0 && (
-                    <span style={{ color: pageWordmarkAccentColor }}>
-                      {pageWordmarkAccent}
-                    </span>
+                    <span style={{ color: pageWordmarkAccentColor }}>{pageWordmarkAccent}</span>
                   )}
                 </>
               ) : (
@@ -169,11 +153,7 @@ export function Nav() {
           {customer ? (
             <>
               {showVault && (
-                <AccountAction
-                  href={vaultHref}
-                  label={vaultLabel}
-                  icon={<UserRound size={14} />}
-                />
+                <AccountAction href={vaultHref} label={vaultLabel} icon={<UserRound size={14} />} />
               )}
               <button
                 onClick={() => signOut()}
@@ -213,17 +193,11 @@ export function Nav() {
             {header.ctaLabel &&
               header.ctaHref &&
               header.ctaLabel.trim().toLowerCase() !== "all beats" && (
-                <HeaderAction
-                  href={header.ctaHref}
-                  label={header.ctaLabel}
-                  mobile
-                />
+                <HeaderAction href={header.ctaHref} label={header.ctaLabel} mobile />
               )}
             {customer ? (
               <>
-                {showVault && (
-                  <AccountAction href={vaultHref} label={vaultLabel} mobile />
-                )}
+                {showVault && <AccountAction href={vaultHref} label={vaultLabel} mobile />}
                 <button
                   onClick={() => signOut()}
                   className="mt-1 w-fit py-2 font-sub text-sm uppercase tracking-wide text-vb-silver/60 hover:text-white"
@@ -267,10 +241,7 @@ function CartDropdown({ count }: { count: number }) {
   }, [open]);
 
   return (
-    <div
-      ref={rootRef}
-      className="relative z-[110] shrink-0 pointer-events-auto"
-    >
+    <div ref={rootRef} className="relative z-[110] shrink-0 pointer-events-auto">
       <button
         type="button"
         onClick={() => {
@@ -303,9 +274,7 @@ function CartDropdown({ count }: { count: number }) {
           </div>
           {items.length === 0 ? (
             <div className="px-4 py-6 text-center">
-              <p className="font-body text-sm text-vb-silver/55">
-                Your cart is empty.
-              </p>
+              <p className="font-body text-sm text-vb-silver/55">Your cart is empty.</p>
               <Link
                 to="/beats"
                 onClick={() => {

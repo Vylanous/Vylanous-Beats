@@ -130,13 +130,7 @@
 
   /* Chrome / silver gradient text */
   .text-chrome {
-    background: linear-gradient(
-      180deg,
-      #ffffff 0%,
-      #c9ccd6 45%,
-      #8c8f9c 60%,
-      #edeef2 100%
-    );
+    background: linear-gradient(180deg, #ffffff 0%, #c9ccd6 45%, #8c8f9c 60%, #edeef2 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -179,31 +173,13 @@
 
   .bg-mesh {
     background:
-      radial-gradient(
-        60% 50% at 80% 0%,
-        rgba(124, 47, 203, 0.25) 0%,
-        transparent 60%
-      ),
-      radial-gradient(
-        50% 50% at 10% 20%,
-        rgba(74, 20, 128, 0.35) 0%,
-        transparent 55%
-      ),
-      radial-gradient(
-        70% 60% at 50% 110%,
-        rgba(124, 47, 203, 0.18) 0%,
-        transparent 60%
-      ),
-      #0a0a0c;
+      radial-gradient(60% 50% at 80% 0%, rgba(124, 47, 203, 0.25) 0%, transparent 60%),
+      radial-gradient(50% 50% at 10% 20%, rgba(74, 20, 128, 0.35) 0%, transparent 55%),
+      radial-gradient(70% 60% at 50% 110%, rgba(124, 47, 203, 0.18) 0%, transparent 60%), #0a0a0c;
   }
 
   .border-chrome {
-    border-image: linear-gradient(
-        180deg,
-        rgba(237, 238, 242, 0.6),
-        rgba(124, 47, 203, 0.4)
-      )
-      1;
+    border-image: linear-gradient(180deg, rgba(237, 238, 242, 0.6), rgba(124, 47, 203, 0.4)) 1;
   }
 
   .clip-slant {
@@ -314,8 +290,7 @@
 .builder-palette-forest .text-purple-glow,
 .builder-palette-mono .text-purple-glow {
   color: var(--builder-accent-bright);
-  text-shadow: 0 0 24px
-    color-mix(in srgb, var(--builder-accent) 55%, transparent);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--builder-accent) 55%, transparent);
 }
 .builder-palette-electric .text-vb-purple-bright,
 .builder-palette-sunset .text-vb-purple-bright,
@@ -331,8 +306,7 @@
 .builder-type-mono .font-display,
 .builder-type-mono .font-sub,
 .builder-type-mono .font-body {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   letter-spacing: 0.02em;
 }
 .builder-type-condensed .font-display,
@@ -374,8 +348,7 @@
 .builder-font-mono-family .font-display,
 .builder-font-mono-family .font-sub,
 .builder-font-mono-family .font-body {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
 }
 .builder-font-condensed-family .font-display,
 .builder-font-condensed-family .font-sub,
@@ -385,24 +358,15 @@
 .builder-custom-color .text-purple-glow,
 .builder-custom-color .text-vb-purple-bright {
   color: var(--builder-custom-color) !important;
-  text-shadow: 0 0 24px
-    color-mix(in srgb, var(--builder-custom-color) 55%, transparent);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--builder-custom-color) 55%, transparent);
 }
 .builder-custom-color .bg-vb-purple\/15,
 .builder-custom-color .bg-vb-purple\/\[0\.06\] {
-  background-color: color-mix(
-    in srgb,
-    var(--builder-custom-color) 15%,
-    transparent
-  ) !important;
+  background-color: color-mix(in srgb, var(--builder-custom-color) 15%, transparent) !important;
 }
 .builder-custom-color .border-vb-purple\/20,
 .builder-custom-color .border-vb-purple\/35 {
-  border-color: color-mix(
-    in srgb,
-    var(--builder-custom-color) 35%,
-    transparent
-  ) !important;
+  border-color: color-mix(in srgb, var(--builder-custom-color) 35%, transparent) !important;
 }
 
 .builder-font-selected .font-display,
@@ -494,8 +458,7 @@
   0%,
   78%,
   100% {
-    box-shadow: 0 0 10px
-      color-mix(in srgb, var(--builder-glow-color) 22%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--builder-glow-color) 22%, transparent);
   }
   84%,
   92% {
@@ -507,24 +470,18 @@
 @keyframes builder-glow-move {
   0% {
     box-shadow:
-      -26px -10px 26px
-        color-mix(in srgb, var(--builder-glow-color) 48%, transparent),
-      20px 14px 50px
-        color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
+      -26px -10px 26px color-mix(in srgb, var(--builder-glow-color) 48%, transparent),
+      20px 14px 50px color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
   }
   50% {
     box-shadow:
-      26px 10px 30px
-        color-mix(in srgb, var(--builder-glow-color) 58%, transparent),
-      -20px -14px 54px
-        color-mix(in srgb, var(--builder-glow-color) 18%, transparent);
+      26px 10px 30px color-mix(in srgb, var(--builder-glow-color) 58%, transparent),
+      -20px -14px 54px color-mix(in srgb, var(--builder-glow-color) 18%, transparent);
   }
   100% {
     box-shadow:
-      -26px -10px 26px
-        color-mix(in srgb, var(--builder-glow-color) 48%, transparent),
-      20px 14px 50px
-        color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
+      -26px -10px 26px color-mix(in srgb, var(--builder-glow-color) 48%, transparent),
+      20px 14px 50px color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
   }
 }
 .builder-glow-pulse {
@@ -591,11 +548,7 @@ main {
 .page-style main .text-vb-purple-bright {
   color: var(--page-primary, var(--color-vb-purple-bright)) !important;
   text-shadow: 0 0 24px
-    color-mix(
-      in srgb,
-      var(--page-primary, var(--color-vb-purple)) 45%,
-      transparent
-    );
+    color-mix(in srgb, var(--page-primary, var(--color-vb-purple)) 45%, transparent);
 }
 .page-style main .bg-vb-purple {
   background-color: var(--page-primary, var(--color-vb-purple)) !important;
@@ -618,9 +571,7 @@ main {
   background-color: var(--page-background, transparent);
 }
 .page-style
-  > :not(.page-background-media):not(.page-background-overlay):not(
-    .page-background-treatment
-  ) {
+  > :not(.page-background-media):not(.page-background-overlay):not(.page-background-treatment) {
   position: relative;
   z-index: 1;
 }
@@ -693,11 +644,7 @@ main {
 
 /* Local Builder navigation uses the active page color instead of storefront purple. */
 .page-sub-navigation {
-  border-color: color-mix(
-    in srgb,
-    var(--page-primary, #7c2fcb) 25%,
-    transparent
-  );
+  border-color: color-mix(in srgb, var(--page-primary, #7c2fcb) 25%, transparent);
 }
 .page-sub-navigation-button {
   border-color: color-mix(
@@ -709,11 +656,7 @@ main {
 }
 .page-sub-navigation-button:hover,
 .page-sub-navigation-button.is-active {
-  border-color: color-mix(
-    in srgb,
-    var(--page-primary, #7c2fcb) 75%,
-    transparent
-  );
+  border-color: color-mix(in srgb, var(--page-primary, #7c2fcb) 75%, transparent);
   color: var(--page-primary, #7c2fcb);
 }
 .page-sub-navigation-button.is-active {
@@ -763,9 +706,7 @@ main {
 .page-style.page-theme-isolated .page-background-treatment {
   --page-primary: var(--page-primary, transparent);
 }
-.page-style.page-theme-isolated
-  .page-treatment-spotlight
-  .page-background-treatment {
+.page-style.page-theme-isolated .page-treatment-spotlight .page-background-treatment {
   background: radial-gradient(
     circle at 50% 10%,
     color-mix(in srgb, var(--page-primary, transparent) 24%, transparent),
@@ -779,10 +720,7 @@ main {
   color: var(--page-primary, var(--page-text, inherit)) !important;
 }
 .page-style.page-theme-isolated [class*="bg-vb-purple"] {
-  background-color: var(
-    --page-primary,
-    var(--page-surface, transparent)
-  ) !important;
+  background-color: var(--page-primary, var(--page-surface, transparent)) !important;
 }
 .page-style.page-theme-isolated [class*="border-vb-purple"] {
   border-color: color-mix(
@@ -799,9 +737,5 @@ main {
   background-color: var(--page-surface, transparent) !important;
 }
 .page-style.page-theme-isolated [class*="border-white"] {
-  border-color: color-mix(
-    in srgb,
-    var(--page-border, #777) 45%,
-    transparent
-  ) !important;
+  border-color: color-mix(in srgb, var(--page-border, #777) 45%, transparent) !important;
 }

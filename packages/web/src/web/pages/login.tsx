@@ -9,9 +9,7 @@ export default function LoginPage() {
   const { signIn, signUp } = useCustomer();
   const { pages } = useSiteSettings();
   const loginPage = pages.find((page) => page.path === "/login");
-  const loginHero = loginPage?.sections.find(
-    (section) => section.type === "hero",
-  );
+  const loginHero = loginPage?.sections.find((section) => section.type === "hero");
   const eyebrow = loginHero?.eyebrow || "Customer portal";
   const title = loginHero?.title || "Keep every license in your vault.";
   const body =
@@ -33,11 +31,7 @@ export default function LoginPage() {
       else await signUp({ email, password, displayName, marketingOptIn });
       navigate("/dashboard");
     } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Could not complete your request.",
-      );
+      setError(reason instanceof Error ? reason.message : "Could not complete your request.");
     } finally {
       setBusy(false);
     }
@@ -52,9 +46,7 @@ export default function LoginPage() {
           <h1 className="mt-4 font-display text-6xl uppercase leading-[.88] text-chrome sm:text-8xl">
             {title}
           </h1>
-          <p className="mt-7 max-w-xl font-body leading-7 text-vb-silver/65">
-            {body}
-          </p>
+          <p className="mt-7 max-w-xl font-body leading-7 text-vb-silver/65">{body}</p>
         </section>
         <form
           onSubmit={submit}
@@ -125,11 +117,7 @@ export default function LoginPage() {
             disabled={busy}
             className="mt-6 w-full rounded-xl bg-vb-purple py-4 font-sub text-sm uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
           >
-            {busy
-              ? "Working…"
-              : mode === "login"
-                ? "Enter your vault"
-                : "Create your vault"}
+            {busy ? "Working…" : mode === "login" ? "Enter your vault" : "Create your vault"}
           </button>
         </form>
       </main>

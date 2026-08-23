@@ -752,7 +752,6 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Render page-scoped social links correctly in that page’s header and footer with universal fallback.
 - [x] Add regression coverage, validate the production build, commit/push, and verify Render deployment; 45 tests passed and Render workflow 32513163977 succeeded.
 
-
 ## Page Settings Branding, Cart Dropdown, and Nested Pages
 
 - [x] Audit current page branding destination, cart dropdown rendering/state/stacking, and Pages column ordering.
@@ -832,3 +831,12 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Implement one minimal deterministic cart trigger/dropdown path.
 - [ ] Interactively verify add, view, remove, and empty states on production at desktop and mobile sizes.
 - [x] Run tests/build, commit/push, and verify Render deployment before reporting completion.
+
+## Repository-Wide Production Hardening
+
+- [x] Map repository structure, branch status, deployment workflow, and production health.
+- [x] Run full linting, type checks, unit tests, builds, dependency review, and targeted production probes.
+- [x] Fix confirmed defects, remove safe dead code, and document remaining operational risks.
+- [x] Delete only merged or clearly obsolete local and remote branches after branch ancestry review.
+- [x] Re-run the complete validation suite, commit/push verified fixes, and confirm the Render deployment.
+- [x] Record that the remaining dependency-audit findings are transitive mobile/desktop/tooling advisories requiring planned upstream major-version upgrades rather than unsafe bulk changes.

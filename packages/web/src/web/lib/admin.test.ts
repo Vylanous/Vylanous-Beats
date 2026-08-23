@@ -20,10 +20,14 @@ describe("admin error formatting", () => {
   });
 
   test("keeps a useful server message", () => {
-    expect(formatAdminError({ message: "Settings saved" }, "Request failed")).toBe("Settings saved");
+    expect(formatAdminError({ message: "Settings saved" }, "Request failed")).toBe(
+      "Settings saved",
+    );
   });
 
   test("never returns object coercion output", () => {
-    expect(formatAdminError({ unexpected: { value: true } }, "Request failed")).not.toBe("[object Object]");
+    expect(formatAdminError({ unexpected: { value: true } }, "Request failed")).not.toBe(
+      "[object Object]",
+    );
   });
 });

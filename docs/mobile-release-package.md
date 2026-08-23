@@ -2,16 +2,16 @@
 
 ## Store identity
 
-| Field | Value |
-|---|---|
-| App name | Vylanous Beats |
-| iOS bundle identifier | `com.vylanousbeats.app` |
-| Android application ID | `com.vylanousbeats.app` |
-| URL scheme | `vylanousbeats://` |
-| Support email | `support@vylanous.com` |
-| Website | `https://www.vylanous.com` |
-| Primary category | Music |
-| Secondary category | Entertainment |
+| Field                    | Value                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| App name                 | Vylanous Beats                                                                                          |
+| iOS bundle identifier    | `com.vylanousbeats.app`                                                                                 |
+| Android application ID   | `com.vylanousbeats.app`                                                                                 |
+| URL scheme               | `vylanousbeats://`                                                                                      |
+| Support email            | `support@vylanous.com`                                                                                  |
+| Website                  | `https://www.vylanous.com`                                                                              |
+| Primary category         | Music                                                                                                   |
+| Secondary category       | Entertainment                                                                                           |
 | Content rating direction | Music, user-generated content: no; mature visual brand themes: disclose accurately during questionnaire |
 
 ## Store listing copy
@@ -34,23 +34,23 @@
 
 Create the following **consumable one-time products** in both App Store Connect and Play Console. The identifiers must match exactly.
 
-| Product ID | Display name | Initial reference price | Fulfillment |
-|---|---|---:|---|
-| `com.vylanousbeats.license.mp3` | MP3 Lease Credit | CA$24 | Redeem for one selected MP3 beat lease. |
-| `com.vylanousbeats.license.wav` | WAV Lease Credit | CA$49 | Redeem for one selected WAV beat lease. |
-| `com.vylanousbeats.license.unlimited` | Unlimited Lease Credit | CA$99 | Redeem for one selected unlimited beat license. |
-| `com.vylanousbeats.license.exclusive` | Exclusive License Credit | CA$299 | Redeem for one available exclusive beat license. |
+| Product ID                            | Display name             | Initial reference price | Fulfillment                                      |
+| ------------------------------------- | ------------------------ | ----------------------: | ------------------------------------------------ |
+| `com.vylanousbeats.license.mp3`       | MP3 Lease Credit         |                   CA$24 | Redeem for one selected MP3 beat lease.          |
+| `com.vylanousbeats.license.wav`       | WAV Lease Credit         |                   CA$49 | Redeem for one selected WAV beat lease.          |
+| `com.vylanousbeats.license.unlimited` | Unlimited Lease Credit   |                   CA$99 | Redeem for one selected unlimited beat license.  |
+| `com.vylanousbeats.license.exclusive` | Exclusive License Credit |                  CA$299 | Redeem for one available exclusive beat license. |
 
 The product descriptions must state that each purchase grants one license credit for a selected Vylanous beat. Do not create beat-specific products; the catalog changes independently from the four stable license products.
 
 ## Required protected configuration
 
-| Destination | Required value |
-|---|---|
-| Expo/EAS | Expo account, EAS project ID, `EXPO_TOKEN` repository secret. Replace `REPLACE_WITH_EAS_PROJECT_ID` after `eas init`. |
-| Apple backend | `APPLE_IAP_PRIVATE_KEY`, `APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_BUNDLE_ID`, plus App Store Server Notifications configuration. |
-| Google backend | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`, `GOOGLE_PLAY_PACKAGE_NAME`, plus Real-time Developer Notifications configuration. |
-| Store consoles | App records, the four products, pricing/tax settings, privacy/data-safety forms, test users, screenshots, and reviewer notes. |
+| Destination    | Required value                                                                                                                                |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Expo/EAS       | Expo account, EAS project ID, `EXPO_TOKEN` repository secret. Replace `REPLACE_WITH_EAS_PROJECT_ID` after `eas init`.                         |
+| Apple backend  | `APPLE_IAP_PRIVATE_KEY`, `APPLE_IAP_KEY_ID`, `APPLE_IAP_ISSUER_ID`, `APPLE_IAP_BUNDLE_ID`, plus App Store Server Notifications configuration. |
+| Google backend | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`, `GOOGLE_PLAY_PACKAGE_NAME`, plus Real-time Developer Notifications configuration.                         |
+| Store consoles | App records, the four products, pricing/tax settings, privacy/data-safety forms, test users, screenshots, and reviewer notes.                 |
 
 No credentials belong in Git, the mobile app configuration, or browser-visible client code.
 
@@ -66,13 +66,13 @@ No credentials belong in Git, the mobile app configuration, or browser-visible c
 
 ## Validation record
 
-| Check | Result |
-|---|---|
-| Mobile TypeScript check | Passed |
-| Web/API production build | Passed |
-| Android Expo production-style export | Passed |
-| App identity and plugins | Validated by Expo configuration inspection |
-| Store transaction verification | Implemented but cannot be exercised until store products, service credentials, and sandbox purchasers are configured |
+| Check                                | Result                                                                                                               |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Mobile TypeScript check              | Passed                                                                                                               |
+| Web/API production build             | Passed                                                                                                               |
+| Android Expo production-style export | Passed                                                                                                               |
+| App identity and plugins             | Validated by Expo configuration inspection                                                                           |
+| Store transaction verification       | Implemented but cannot be exercised until store products, service credentials, and sandbox purchasers are configured |
 
 ## Known account-bound steps
 

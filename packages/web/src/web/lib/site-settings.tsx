@@ -57,9 +57,7 @@ function applyFont(fontId: string) {
 
 function applyFavicon(faviconUrl: string) {
   if (!faviconUrl) return;
-  let link = document.querySelector(
-    "link[rel~='icon']",
-  ) as HTMLLinkElement | null;
+  let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
   if (!link) {
     link = document.createElement("link");
     link.rel = "icon";
@@ -68,11 +66,7 @@ function applyFavicon(faviconUrl: string) {
   link.href = faviconUrl;
 }
 
-export function SiteSettingsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
@@ -93,11 +87,7 @@ export function SiteSettingsProvider({
     };
   }, []);
 
-  return (
-    <SiteSettingsContext.Provider value={settings}>
-      {children}
-    </SiteSettingsContext.Provider>
-  );
+  return <SiteSettingsContext.Provider value={settings}>{children}</SiteSettingsContext.Provider>;
 }
 
 /** Read the live re-skin settings (theme colors, font, brand assets) anywhere in the app. */

@@ -24,12 +24,8 @@ export function Layout({
   const { current } = usePlayer();
   const settings = useSiteSettings();
   const activePath =
-    typeof window === "undefined"
-      ? "/"
-      : normalizeManagedPath(window.location.pathname);
-  const activePage = settings.pages.find(
-    (page) => builderPagePath(page) === activePath,
-  );
+    typeof window === "undefined" ? "/" : normalizeManagedPath(window.location.pathname);
+  const activePage = settings.pages.find((page) => builderPagePath(page) === activePath);
   const announcement = settings.announcementBanner;
   const showAnnouncement =
     announcement.enabled &&
@@ -37,34 +33,21 @@ export function Layout({
     (announcement.target === "all" ||
       Boolean(activePage && announcement.pageIds.includes(activePage.id)));
   const background =
-    pageBackground === "mesh"
-      ? "bg-mesh"
-      : pageBackground === "ink"
-        ? "bg-vb-ink"
-        : "";
+    pageBackground === "mesh" ? "bg-mesh" : pageBackground === "ink" ? "bg-vb-ink" : "";
   const pageVars = {
     "--page-primary":
-      pageStyle?.primaryColor ||
-      (pageStyle?.inheritTheme === false ? "#D94A4A" : undefined),
-    ...(pageStyle?.backgroundColor
-      ? { "--page-background": pageStyle.backgroundColor }
-      : {}),
+      pageStyle?.primaryColor || (pageStyle?.inheritTheme === false ? "#D94A4A" : undefined),
+    ...(pageStyle?.backgroundColor ? { "--page-background": pageStyle.backgroundColor } : {}),
     ...(pageStyle?.textColor ? { "--page-text": pageStyle.textColor } : {}),
     ...(pageStyle?.mutedColor ? { "--page-muted": pageStyle.mutedColor } : {}),
-    ...(pageStyle?.surfaceColor
-      ? { "--page-surface": pageStyle.surfaceColor }
-      : {}),
-    ...(pageStyle?.borderColor
-      ? { "--page-border": pageStyle.borderColor }
-      : {}),
+    ...(pageStyle?.surfaceColor ? { "--page-surface": pageStyle.surfaceColor } : {}),
+    ...(pageStyle?.borderColor ? { "--page-border": pageStyle.borderColor } : {}),
     ...(pageStyle?.backgroundImage
       ? {
           "--page-background-image": `url("${pageStyle.backgroundImage.replace(/"/g, "%22")}")`,
         }
       : {}),
-    ...(pageStyle?.eyebrowColor
-      ? { "--page-eyebrow": pageStyle.eyebrowColor }
-      : {}),
+    ...(pageStyle?.eyebrowColor ? { "--page-eyebrow": pageStyle.eyebrowColor } : {}),
     ...(pageStyle?.linkColor ? { "--page-link": pageStyle.linkColor } : {}),
     "--page-background-overlay":
       pageStyle?.backgroundOverlay === "strong"
@@ -96,9 +79,7 @@ export function Layout({
       )}
       {showHeader && <Nav />}
       {showAnnouncement && <AnnouncementBanner {...announcement} />}
-      <main className={`min-w-0 w-full flex-1 ${current ? "pb-20" : ""}`}>
-        {children}
-      </main>
+      <main className={`min-w-0 w-full flex-1 ${current ? "pb-20" : ""}`}>{children}</main>
       {showFooter && <Footer />}
       <PlayerBar />
       <NewsletterPopup />
@@ -128,9 +109,7 @@ function AnnouncementBanner({
       aria-label="Site announcement"
     >
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
-        <p className="font-sub text-xs uppercase tracking-[0.14em]">
-          {message}
-        </p>
+        <p className="font-sub text-xs uppercase tracking-[0.14em]">{message}</p>
         {ctaLabel && ctaHref && (
           <a
             href={ctaHref}

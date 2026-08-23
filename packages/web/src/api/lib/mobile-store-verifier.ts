@@ -55,7 +55,10 @@ function decodeJwsPayload(compactJws: string): Record<string, unknown> {
   const [, payload] = compactJws.split(".");
   if (!payload) throw new MobileStoreVerificationError("Apple did not return a valid transaction.");
   try {
-    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<string, unknown>;
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<
+      string,
+      unknown
+    >;
   } catch {
     throw new MobileStoreVerificationError("Apple returned unreadable transaction data.");
   }
@@ -72,7 +75,13 @@ function appleClient(environment: MobileStoreEnvironment): AppStoreServerAPIClie
       503,
     );
   }
-  return new AppStoreServerAPIClient(privateKey, keyId, issuerId, bundleId, appleEnvironment(environment));
+  return new AppStoreServerAPIClient(
+    privateKey,
+    keyId,
+    issuerId,
+    bundleId,
+    appleEnvironment(environment),
+  );
 }
 
 async function verifyApplePurchase(
@@ -81,11 +90,14 @@ async function verifyApplePurchase(
   const response = await appleClient(input.environment).getTransactionInfo(input.transactionId);
   const decoded = decodeJwsPayload(response.signedTransactionInfo);
   const actualProductId = typeof decoded.productId === "string" ? decoded.productId : "";
-  const actualTransactionId = typeof decoded.transactionId === "string" ? decoded.transactionId : "";
+  const actualTransactionId =
+    typeof decoded.transactionId === "string" ? decoded.transactionId : "";
   const bundleId = process.env.APPLE_IAP_BUNDLE_ID!;
 
   if (actualTransactionId !== input.transactionId || actualProductId !== input.productId) {
-    throw new MobileStoreVerificationError("Apple transaction does not match the requested license.");
+    throw new MobileStoreVerificationError(
+      "Apple transaction does not match the requested license.",
+    );
   }
   if (decoded.bundleId !== bundleId) {
     throw new MobileStoreVerificationError("Apple transaction belongs to another app.");
@@ -118,7 +130,10 @@ function googleAuth(): GoogleAuth {
       scopes: ["https://www.googleapis.com/auth/androidpublisher"],
     });
   } catch {
-    throw new MobileStoreVerificationError("Google Play service account configuration is invalid.", 503);
+    throw new MobileStoreVerificationError(
+      "Google Play service account configuration is invalid.",
+      503,
+    );
   }
 }
 
@@ -144,7 +159,9 @@ async function verifyGooglePurchase(
   }) as Record<string, unknown> | undefined;
 
   if (!matchingLineItem) {
-    throw new MobileStoreVerificationError("Google Play transaction does not match the requested license.");
+    throw new MobileStoreVerificationError(
+      "Google Play transaction does not match the requested license.",
+    );
   }
   if (data.purchaseStateContext && typeof data.purchaseStateContext === "object") {
     const state = (data.purchaseStateContext as Record<string, unknown>).purchaseState;

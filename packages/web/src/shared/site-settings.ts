@@ -372,17 +372,20 @@ export function normalizeBuilderFont(value: unknown): BuilderFontId {
 
 export function getBuilderFont(value: unknown) {
   const id = normalizeBuilderFont(value);
-  return (
-    BUILDER_FONT_OPTIONS.find((font) => font.id === id) ||
-    BUILDER_FONT_OPTIONS[0]
-  );
+  return BUILDER_FONT_OPTIONS.find((font) => font.id === id) || BUILDER_FONT_OPTIONS[0];
 }
 
 export type BuilderEyebrowSize = "12px" | "14px" | "16px" | "18px" | "20px";
 export type BuilderHeadingSize =
-  "32px" | "40px" | "48px" | "56px" | "64px" | "72px" | "88px" | "104px";
-export type BuilderBodySize =
-  "14px" | "16px" | "18px" | "20px" | "22px" | "24px";
+  | "32px"
+  | "40px"
+  | "48px"
+  | "56px"
+  | "64px"
+  | "72px"
+  | "88px"
+  | "104px";
+export type BuilderBodySize = "14px" | "16px" | "18px" | "20px" | "22px" | "24px";
 
 export interface SectionLayout {
   width?: "narrow" | "standard" | "wide" | "full";
@@ -1000,8 +1003,7 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     isSystem: true,
     seo: {
       title: "Beat Licensing | Vylanous Beats",
-      description:
-        "Compare simple beat licensing tiers from a free demo to exclusive ownership.",
+      description: "Compare simple beat licensing tiers from a free demo to exclusive ownership.",
       canonicalPath: "/licensing",
     },
     sections: [
@@ -1113,8 +1115,7 @@ export const DEFAULT_PAGES: BuilderPage[] = [
     navOrder: 40,
     seo: {
       title: "Vylanous | Artist & Producer",
-      description:
-        "Discover Vylanous: artist, producer, and the sound behind Vylanous Beats.",
+      description: "Discover Vylanous: artist, producer, and the sound behind Vylanous Beats.",
       canonicalPath: "/artist",
     },
     layout: {
@@ -1324,9 +1325,7 @@ function mergeSectionItems(
   storedItems: SectionItem[] | undefined,
 ): SectionItem[] | undefined {
   if (!Array.isArray(storedItems)) return templateItems;
-  const templates = new Map(
-    (templateItems || []).map((item) => [item.id, item]),
-  );
+  const templates = new Map((templateItems || []).map((item) => [item.id, item]));
   return storedItems.map((storedItem, index) => ({
     ...templates.get(storedItem.id),
     ...storedItem,
@@ -1338,9 +1337,7 @@ function mergePage(
   defaultPage: BuilderPage,
   storedPage: Partial<BuilderPage> | undefined,
 ): BuilderPage {
-  const sections = Array.isArray(storedPage?.sections)
-    ? storedPage.sections
-    : defaultPage.sections;
+  const sections = Array.isArray(storedPage?.sections) ? storedPage.sections : defaultPage.sections;
   return {
     ...defaultPage,
     ...storedPage,
@@ -1355,9 +1352,7 @@ function mergePage(
       chrome: { ...defaultPage.layout?.chrome, ...storedPage?.layout?.chrome },
     },
     sections: sections.map((storedSection, index) => {
-      const template = defaultPage.sections.find(
-        (candidate) => candidate.id === storedSection.id,
-      );
+      const template = defaultPage.sections.find((candidate) => candidate.id === storedSection.id);
       return {
         ...template,
         ...storedSection,
@@ -1374,27 +1369,22 @@ function mergePage(
   };
 }
 
-function mergePages(
-  storedPages: unknown,
-  deletedPageIds: string[] = [],
-): BuilderPage[] {
-  const saved = Array.isArray(storedPages)
-    ? (storedPages as Partial<BuilderPage>[])
-    : [];
+function mergePages(storedPages: unknown, deletedPageIds: string[] = []): BuilderPage[] {
+  const saved = Array.isArray(storedPages) ? (storedPages as Partial<BuilderPage>[]) : [];
   const deleted = new Set(deletedPageIds);
   const matched = new Set<number>();
-  const core = DEFAULT_PAGES.filter(
-    (defaultPage) => !deleted.has(defaultPage.id),
-  ).map((defaultPage) => {
-    const index = saved.findIndex(
-      (candidate) =>
-        candidate.id === defaultPage.id ||
-        candidate.slug === defaultPage.slug ||
-        candidate.path === defaultPage.path,
-    );
-    if (index >= 0) matched.add(index);
-    return mergePage(defaultPage, index >= 0 ? saved[index] : undefined);
-  });
+  const core = DEFAULT_PAGES.filter((defaultPage) => !deleted.has(defaultPage.id)).map(
+    (defaultPage) => {
+      const index = saved.findIndex(
+        (candidate) =>
+          candidate.id === defaultPage.id ||
+          candidate.slug === defaultPage.slug ||
+          candidate.path === defaultPage.path,
+      );
+      if (index >= 0) matched.add(index);
+      return mergePage(defaultPage, index >= 0 ? saved[index] : undefined);
+    },
+  );
   const custom = saved
     .filter((_, index) => !matched.has(index))
     .map((page, index) =>
@@ -1421,31 +1411,18 @@ function mergePages(
 }
 
 /** Merge stored settings over defaults so production data gains new builder controls safely. */
-type StoredSiteSettings = Omit<
-  Partial<SiteSettings>,
-  "newsletterPopup" | "announcementBanner"
-> & {
+type StoredSiteSettings = Omit<Partial<SiteSettings>, "newsletterPopup" | "announcementBanner"> & {
   newsletterPopup?: Partial<NewsletterPopupSettings>;
   announcementBanner?: Partial<AnnouncementBannerSettings>;
 };
 
-export function mergeSettings(
-  stored: StoredSiteSettings | null | undefined,
-): SiteSettings {
+export function mergeSettings(stored: StoredSiteSettings | null | undefined): SiteSettings {
   return {
-    theme: stored?.theme
-      ? { ...DEFAULT_THEME, ...stored.theme }
-      : { ...DEFAULT_THEME },
+    theme: stored?.theme ? { ...DEFAULT_THEME, ...stored.theme } : { ...DEFAULT_THEME },
     fontId: stored?.fontId || DEFAULT_SETTINGS.fontId,
-    brand: stored?.brand
-      ? { ...DEFAULT_BRAND, ...stored.brand }
-      : { ...DEFAULT_BRAND },
-    header: stored?.header
-      ? { ...DEFAULT_HEADER, ...stored.header }
-      : { ...DEFAULT_HEADER },
-    footer: stored?.footer
-      ? { ...DEFAULT_FOOTER, ...stored.footer }
-      : { ...DEFAULT_FOOTER },
+    brand: stored?.brand ? { ...DEFAULT_BRAND, ...stored.brand } : { ...DEFAULT_BRAND },
+    header: stored?.header ? { ...DEFAULT_HEADER, ...stored.header } : { ...DEFAULT_HEADER },
+    footer: stored?.footer ? { ...DEFAULT_FOOTER, ...stored.footer } : { ...DEFAULT_FOOTER },
     newsletterPopup: stored?.newsletterPopup
       ? { ...DEFAULT_NEWSLETTER_POPUP, ...stored.newsletterPopup }
       : { ...DEFAULT_NEWSLETTER_POPUP },
@@ -1459,9 +1436,7 @@ export function mergeSettings(
         }
       : { ...DEFAULT_ANNOUNCEMENT_BANNER },
     socials: Array.isArray(stored?.socials) ? stored.socials : DEFAULT_SOCIALS,
-    deletedPageIds: Array.isArray(stored?.deletedPageIds)
-      ? stored.deletedPageIds
-      : [],
+    deletedPageIds: Array.isArray(stored?.deletedPageIds) ? stored.deletedPageIds : [],
     pages: mergePages(
       stored?.pages,
       Array.isArray(stored?.deletedPageIds) ? stored.deletedPageIds : [],
@@ -1470,15 +1445,9 @@ export function mergeSettings(
       ? { ...DEFAULT_FOURTHWALL, ...stored.fourthwall }
       : { ...DEFAULT_FOURTHWALL },
     builder: {
-      drafts: Array.isArray(stored?.builder?.drafts)
-        ? stored.builder.drafts
-        : [],
-      templates: Array.isArray(stored?.builder?.templates)
-        ? stored.builder.templates
-        : [],
-      versions: Array.isArray(stored?.builder?.versions)
-        ? stored.builder.versions
-        : [],
+      drafts: Array.isArray(stored?.builder?.drafts) ? stored.builder.drafts : [],
+      templates: Array.isArray(stored?.builder?.templates) ? stored.builder.templates : [],
+      versions: Array.isArray(stored?.builder?.versions) ? stored.builder.versions : [],
     },
   };
 }

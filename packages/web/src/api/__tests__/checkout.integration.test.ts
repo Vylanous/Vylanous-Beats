@@ -137,7 +137,9 @@ describe("checkout", () => {
   test("paid checkout fails cleanly before creating an order when Stripe is unavailable", async () => {
     const beat = await seedBeat();
     const before = await db.select().from(orders);
-    const response = await checkout("stripe-missing@example.com", [{ beatId: beat.id, tier: "mp3" }]);
+    const response = await checkout("stripe-missing@example.com", [
+      { beatId: beat.id, tier: "mp3" },
+    ]);
     expect(response.status).toBe(503);
     const after = await db.select().from(orders);
     expect(after).toHaveLength(before.length);

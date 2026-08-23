@@ -54,12 +54,8 @@ export default function CartPage() {
       <Layout>
         <div className="mx-auto max-w-3xl px-5 pb-24 pt-40 text-center">
           <ShoppingBag size={48} className="mx-auto text-vb-muted opacity-40" />
-          <h1 className="mt-4 font-display text-5xl uppercase text-chrome">
-            Cart Empty
-          </h1>
-          <p className="mt-2 font-body text-vb-muted">
-            Go find something that knocks.
-          </p>
+          <h1 className="mt-4 font-display text-5xl uppercase text-chrome">Cart Empty</h1>
+          <p className="mt-2 font-body text-vb-muted">Go find something that knocks.</p>
           <Link
             to="/beats"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-vb-purple px-7 py-3.5 font-sub text-lg uppercase tracking-widest text-white hover:bg-vb-purple-bright"
@@ -82,11 +78,7 @@ export default function CartPage() {
                 key={item.beatId + item.tier}
                 className="flex items-center gap-4 rounded-xl border border-white/[.06] bg-vb-ink p-4"
               >
-                <img
-                  src={item.artworkUrl}
-                  alt=""
-                  className="h-16 w-16 rounded-lg object-cover"
-                />
+                <img src={item.artworkUrl} alt="" className="h-16 w-16 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-display text-xl uppercase leading-none">
                     {item.beatTitle}
@@ -112,13 +104,10 @@ export default function CartPage() {
             {!customer ? (
               <div className="sticky top-24 rounded-2xl border border-vb-purple/30 bg-vb-ink p-6">
                 <Lock className="text-vb-purple-bright" size={22} />
-                <h2 className="mt-4 font-display text-3xl uppercase">
-                  Sign in to purchase
-                </h2>
+                <h2 className="mt-4 font-display text-3xl uppercase">Sign in to purchase</h2>
                 <p className="mt-3 font-body text-sm leading-6 text-vb-silver/60">
-                  Purchases and downloads are attached to your customer account,
-                  so every license is available in your website and mobile music
-                  vault.
+                  Purchases and downloads are attached to your customer account, so every license is
+                  available in your website and mobile music vault.
                 </p>
                 <Link
                   to="/login"
@@ -132,30 +121,22 @@ export default function CartPage() {
                 onSubmit={checkout}
                 className="sticky top-24 rounded-2xl border border-white/[.06] bg-vb-ink p-6"
               >
-                <h2 className="mb-4 font-display text-2xl uppercase">
-                  Order Summary
-                </h2>
+                <h2 className="mb-4 font-display text-2xl uppercase">Order Summary</h2>
                 <div className="mb-4 space-y-2">
                   <div className="flex justify-between font-body text-vb-muted">
                     <span>Items</span>
                     <span>{items.length}</span>
                   </div>
                   <div className="flex items-center justify-between border-t border-white/[.06] pt-3">
-                    <span className="font-sub uppercase tracking-wider text-vb-silver">
-                      Total
-                    </span>
+                    <span className="font-sub uppercase tracking-wider text-vb-silver">Total</span>
                     <span className="font-display text-3xl text-chrome">
-                      {formatCad(totalCents)}{" "}
-                      <span className="text-base">CAD</span>
+                      {formatCad(totalCents)} <span className="text-base">CAD</span>
                     </span>
                   </div>
                 </div>
                 <div className="mb-4 rounded-xl border border-white/[.07] bg-vb-black/30 p-3 font-body text-sm text-vb-silver/65">
                   License delivery and your secure music vault will be tied to{" "}
-                  <strong className="font-medium text-vb-silver-bright">
-                    {customer.email}
-                  </strong>
-                  .
+                  <strong className="font-medium text-vb-silver-bright">{customer.email}</strong>.
                 </div>
                 {error && (
                   <p className="mb-4 rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 font-body text-sm text-amber-400">

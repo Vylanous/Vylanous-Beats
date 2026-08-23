@@ -42,11 +42,7 @@ import {
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
 import { parseInlineText } from "../../lib/inline-text";
-import {
-  BUILDER_FONT_OPTIONS,
-  FONT_PAIRS,
-  type ThemeColors,
-} from "../../../shared/site-settings";
+import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
   BuilderPage,
@@ -248,16 +244,14 @@ export default function PageBuilderPanel() {
   const [selectedId, setSelectedId] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
-  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">(
-    "desktop",
-  );
+  const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [builderTab, setBuilderTab] = useState<"universal" | "pages">("pages");
   const [focusedSectionId, setFocusedSectionId] = useState("");
   const [showBlockLibrary, setShowBlockLibrary] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
-  const [draftSaveState, setDraftSaveState] = useState<
-    "saved" | "unsaved" | "saving" | "error"
-  >("saved");
+  const [draftSaveState, setDraftSaveState] = useState<"saved" | "unsaved" | "saving" | "error">(
+    "saved",
+  );
   const [draggingSectionId, setDraggingSectionId] = useState("");
   const [dragOverSectionId, setDragOverSectionId] = useState("");
   const historyRef = useRef<{ past: SiteSettings[]; future: SiteSettings[] }>({
@@ -281,20 +275,12 @@ export default function PageBuilderPanel() {
   }, []);
 
   const page = useMemo(
-    () =>
-      settings?.pages.find((candidate) => candidate.id === selectedId) ||
-      settings?.pages[0],
+    () => settings?.pages.find((candidate) => candidate.id === selectedId) || settings?.pages[0],
     [selectedId, settings],
   );
 
   useEffect(() => {
-    if (
-      !settings ||
-      !page ||
-      !hydratedRef.current ||
-      draftSaveState !== "unsaved"
-    )
-      return;
+    if (!settings || !page || !hydratedRef.current || draftSaveState !== "unsaved") return;
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(async () => {
       setDraftSaveState("saving");
@@ -308,12 +294,7 @@ export default function PageBuilderPanel() {
         await saveAdminSettings({
           builder: {
             ...settings.builder,
-            drafts: [
-              ...settings.builder.drafts.filter(
-                (item) => item.pageId !== page.id,
-              ),
-              draft,
-            ],
+            drafts: [...settings.builder.drafts.filter((item) => item.pageId !== page.id), draft],
           },
         });
         setDraftSaveState("saved");
@@ -329,10 +310,7 @@ export default function PageBuilderPanel() {
   const updateSettings = (patch: Partial<SiteSettings>) => {
     setSettings((current) => {
       if (!current) return current;
-      historyRef.current.past = [
-        ...historyRef.current.past.slice(-29),
-        current,
-      ];
+      historyRef.current.past = [...historyRef.current.past.slice(-29), current];
       historyRef.current.future = [];
       return { ...current, ...patch };
     });
@@ -362,9 +340,7 @@ export default function PageBuilderPanel() {
   const updatePage = (next: BuilderPage) => {
     if (!settings) return;
     updateSettings({
-      pages: settings.pages.map((candidate) =>
-        candidate.id === next.id ? next : candidate,
-      ),
+      pages: settings.pages.map((candidate) => (candidate.id === next.id ? next : candidate)),
     });
   };
 
@@ -373,18 +349,11 @@ export default function PageBuilderPanel() {
       setNotice("Core pages stay protected and cannot be deleted.");
       return;
     }
-    const children = settings.pages.filter(
-      (candidate) => candidate.parentPageId === target.id,
-    );
+    const children = settings.pages.filter((candidate) => candidate.parentPageId === target.id);
     const childMessage = children.length
       ? ` ${children.length} child ${children.length === 1 ? "page will" : "pages will"} remain published as standalone pages at their current URLs.`
       : "";
-    if (
-      !window.confirm(
-        `Delete “${target.title}”? This cannot be undone.${childMessage}`,
-      )
-    )
-      return;
+    if (!window.confirm(`Delete “${target.title}”? This cannot be undone.${childMessage}`)) return;
     const remainingPages = settings.pages
       .filter((candidate) => candidate.id !== target.id)
       .map((candidate) =>
@@ -392,14 +361,10 @@ export default function PageBuilderPanel() {
           ? { ...candidate, parentPageId: undefined }
           : candidate,
       );
-    const nextPage =
-      remainingPages.find((candidate) => !candidate.isSystem) ||
-      remainingPages[0];
+    const nextPage = remainingPages.find((candidate) => !candidate.isSystem) || remainingPages[0];
     updateSettings({
       pages: remainingPages,
-      deletedPageIds: Array.from(
-        new Set([...settings.deletedPageIds, target.id]),
-      ),
+      deletedPageIds: Array.from(new Set([...settings.deletedPageIds, target.id])),
     });
     setSelectedId(nextPage?.id || "");
     setFocusedSectionId(nextPage?.sections[0]?.id || "");
@@ -454,11 +419,7 @@ export default function PageBuilderPanel() {
           : "Saved. Your live design, navigation, and global chrome update immediately.",
       );
     } catch (error) {
-      setNotice(
-        error instanceof Error
-          ? error.message
-          : "Could not save site-builder changes.",
-      );
+      setNotice(error instanceof Error ? error.message : "Could not save site-builder changes.");
     } finally {
       setSaving(false);
     }
@@ -466,9 +427,7 @@ export default function PageBuilderPanel() {
 
   const moveNavigation = (id: string, direction: -1 | 1) => {
     if (!settings) return;
-    const visible = sortedPages(
-      settings.pages.filter((candidate) => candidate.showInNav),
-    );
+    const visible = sortedPages(settings.pages.filter((candidate) => candidate.showInNav));
     const index = visible.findIndex((candidate) => candidate.id === id);
     const nextIndex = index + direction;
     if (index < 0 || nextIndex < 0 || nextIndex >= visible.length) return;
@@ -478,9 +437,7 @@ export default function PageBuilderPanel() {
     );
     updateSettings({
       pages: settings.pages.map((candidate) =>
-        order.has(candidate.id)
-          ? { ...candidate, navOrder: order.get(candidate.id) }
-          : candidate,
+        order.has(candidate.id) ? { ...candidate, navOrder: order.get(candidate.id) } : candidate,
       ),
     });
   };
@@ -504,17 +461,12 @@ export default function PageBuilderPanel() {
     const destination = index + direction;
     if (destination < 0 || destination >= page.sections.length) return;
     const sections = [...page.sections];
-    [sections[index], sections[destination]] = [
-      sections[destination],
-      sections[index],
-    ];
+    [sections[index], sections[destination]] = [sections[destination], sections[index]];
     updatePage({ ...page, sections });
   };
   const reorderSection = (fromId: string, toId: string) => {
     if (!fromId || !toId || fromId === toId) return;
-    const fromIndex = page.sections.findIndex(
-      (section) => section.id === fromId,
-    );
+    const fromIndex = page.sections.findIndex((section) => section.id === fromId);
     const toIndex = page.sections.findIndex((section) => section.id === toId);
     if (fromIndex < 0 || toIndex < 0) return;
     const sections = [...page.sections];
@@ -542,10 +494,7 @@ export default function PageBuilderPanel() {
     setFocusedSectionId(duplicate.id);
   };
   const createTemplate = () => {
-    const name = window.prompt(
-      "Name this reusable section template",
-      `${page.title} blocks`,
-    );
+    const name = window.prompt("Name this reusable section template", `${page.title} blocks`);
     if (!name?.trim()) return;
     const template: BuilderTemplate = {
       id: newId("template"),
@@ -587,9 +536,7 @@ export default function PageBuilderPanel() {
     setNotice(`Restored checkpoint: ${version.label}`);
   };
 
-  const previewPage = previews?.pages.find(
-    (candidate) => candidate.id === page.id,
-  );
+  const previewPage = previews?.pages.find((candidate) => candidate.id === page.id);
   const focusSection = (id: string) => {
     setFocusedSectionId(id);
     window.requestAnimationFrame(() => {
@@ -607,8 +554,8 @@ export default function PageBuilderPanel() {
             Site Builder
           </h1>
           <p className="mt-1 max-w-2xl font-body text-sm text-vb-silver/55">
-            Manage every public page, navigation order, global chrome, media,
-            and advanced layouts from one place.
+            Manage every public page, navigation order, global chrome, media, and advanced layouts
+            from one place.
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -663,18 +610,12 @@ export default function PageBuilderPanel() {
             disabled={saving}
             className="inline-flex items-center gap-2 rounded-lg bg-vb-purple px-4 py-2.5 font-sub uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:opacity-60"
           >
-            {saving ? (
-              <Loader2 className="animate-spin" size={16} />
-            ) : (
-              <Save size={16} />
-            )}
+            {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
             {saving ? "Saving" : "Save site design"}
           </button>
         </div>
       </div>
-      {notice && (
-        <p className="mb-4 font-body text-sm text-vb-purple-bright">{notice}</p>
-      )}
+      {notice && <p className="mb-4 font-body text-sm text-vb-purple-bright">{notice}</p>}
       <div
         className="mb-5 grid grid-cols-2 gap-1 rounded-xl border border-white/[0.08] bg-vb-black/60 p-1"
         role="tablist"
@@ -701,9 +642,7 @@ export default function PageBuilderPanel() {
           onClick={() => setBuilderTab("pages")}
           className={`rounded-lg px-4 py-3 text-left transition ${builderTab === "pages" ? "bg-vb-purple/20 text-vb-purple-bright" : "text-vb-silver/55 hover:bg-white/[0.05] hover:text-vb-silver-bright"}`}
         >
-          <span className="block font-sub text-sm uppercase tracking-[0.14em]">
-            Page settings
-          </span>
+          <span className="block font-sub text-sm uppercase tracking-[0.14em]">Page settings</span>
           <span className="mt-0.5 block font-body text-xs opacity-65">
             Create pages and override defaults
           </span>
@@ -713,9 +652,7 @@ export default function PageBuilderPanel() {
         <section className="mb-5 rounded-2xl border border-vb-purple/20 bg-vb-purple/[0.06] p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="font-sub text-lg uppercase tracking-wide">
-                Reusable templates
-              </h2>
+              <h2 className="font-sub text-lg uppercase tracking-wide">Reusable templates</h2>
               <p className="font-body text-xs text-vb-silver/50">
                 Insert a saved block composition into the current page.
               </p>
@@ -749,8 +686,7 @@ export default function PageBuilderPanel() {
             </div>
           ) : (
             <p className="mt-4 font-body text-sm text-vb-silver/45">
-              Save your first template from the current page to reuse its
-              composition.
+              Save your first template from the current page to reuse its composition.
             </p>
           )}
           <div className="mt-5 border-t border-white/[0.08] pt-4">
@@ -760,9 +696,7 @@ export default function PageBuilderPanel() {
                 Version checkpoints
               </span>
             </div>
-            {settings.builder.versions.filter(
-              (version) => version.pageId === page.id,
-            ).length ? (
+            {settings.builder.versions.filter((version) => version.pageId === page.id).length ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {settings.builder.versions
                   .filter((version) => version.pageId === page.id)
@@ -786,8 +720,8 @@ export default function PageBuilderPanel() {
               </div>
             ) : (
               <p className="mt-3 font-body text-xs text-vb-silver/40">
-                No checkpoints yet. Save the site design to create the first
-                draft, then publish a named checkpoint from the studio.
+                No checkpoints yet. Save the site design to create the first draft, then publish a
+                named checkpoint from the studio.
               </p>
             )}
           </div>
@@ -805,8 +739,7 @@ export default function PageBuilderPanel() {
                     Builder studio
                   </p>
                   <p className="font-body text-xs text-vb-silver/45">
-                    Compose, preview, and publish every breakpoint from one
-                    workspace.
+                    Compose, preview, and publish every breakpoint from one workspace.
                   </p>
                 </div>
               </div>
@@ -814,11 +747,7 @@ export default function PageBuilderPanel() {
                 <button
                   type="button"
                   onClick={() =>
-                    window.open(
-                      page.path || `/${page.slug}`,
-                      "_blank",
-                      "noopener,noreferrer",
-                    )
+                    window.open(page.path || `/${page.slug}`, "_blank", "noopener,noreferrer")
                   }
                   className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-silver/75 hover:border-vb-purple/50 hover:text-white"
                 >
@@ -844,11 +773,7 @@ export default function PageBuilderPanel() {
                   disabled={saving}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-vb-purple px-3 py-2 font-sub text-xs uppercase tracking-wide text-white hover:bg-vb-purple-bright disabled:opacity-60"
                 >
-                  {saving ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Save size={14} />
-                  )}
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                   {saving ? "Saving" : "Save changes"}
                 </button>
               </div>
@@ -895,48 +820,46 @@ export default function PageBuilderPanel() {
 
           <section className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
             <div className="mb-4">
-              <h2 className="font-sub text-xl uppercase tracking-wide">
-                Live navigation order
-              </h2>
+              <h2 className="font-sub text-xl uppercase tracking-wide">Live navigation order</h2>
               <p className="font-body text-sm text-vb-silver/50">
-                Only pages marked “Show in header navigation” appear here. Use
-                the arrows to set the live order.
+                Only pages marked “Show in header navigation” appear here. Use the arrows to set the
+                live order.
               </p>
             </div>
             <div className="space-y-2">
-              {sortedPages(
-                settings.pages.filter((candidate) => candidate.showInNav),
-              ).map((candidate) => (
-                <div
-                  key={candidate.id}
-                  className="flex items-center gap-3 rounded-lg border border-white/[0.07] bg-vb-black/40 px-3 py-2.5"
-                >
-                  <GripVertical size={17} className="text-vb-silver/35" />
-                  <button
-                    onClick={() => setSelectedId(candidate.id)}
-                    className="min-w-0 flex-1 text-left font-body text-sm text-vb-silver-bright hover:text-vb-purple-bright"
+              {sortedPages(settings.pages.filter((candidate) => candidate.showInNav)).map(
+                (candidate) => (
+                  <div
+                    key={candidate.id}
+                    className="flex items-center gap-3 rounded-lg border border-white/[0.07] bg-vb-black/40 px-3 py-2.5"
                   >
-                    <span className="block truncate">{candidate.navLabel}</span>
-                    <span className="block text-xs text-vb-silver/40">
-                      {candidate.path || `/${candidate.slug}`}
-                    </span>
-                  </button>
-                  <button
-                    aria-label={`Move ${candidate.navLabel} up`}
-                    onClick={() => moveNavigation(candidate.id, -1)}
-                    className="rounded p-1.5 text-vb-silver/60 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <ChevronUp size={16} />
-                  </button>
-                  <button
-                    aria-label={`Move ${candidate.navLabel} down`}
-                    onClick={() => moveNavigation(candidate.id, 1)}
-                    className="rounded p-1.5 text-vb-silver/60 hover:bg-white/[0.06] hover:text-white"
-                  >
-                    <ChevronDown size={16} />
-                  </button>
-                </div>
-              ))}
+                    <GripVertical size={17} className="text-vb-silver/35" />
+                    <button
+                      onClick={() => setSelectedId(candidate.id)}
+                      className="min-w-0 flex-1 text-left font-body text-sm text-vb-silver-bright hover:text-vb-purple-bright"
+                    >
+                      <span className="block truncate">{candidate.navLabel}</span>
+                      <span className="block text-xs text-vb-silver/40">
+                        {candidate.path || `/${candidate.slug}`}
+                      </span>
+                    </button>
+                    <button
+                      aria-label={`Move ${candidate.navLabel} up`}
+                      onClick={() => moveNavigation(candidate.id, -1)}
+                      className="rounded p-1.5 text-vb-silver/60 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      <ChevronUp size={16} />
+                    </button>
+                    <button
+                      aria-label={`Move ${candidate.navLabel} down`}
+                      onClick={() => moveNavigation(candidate.id, 1)}
+                      className="rounded p-1.5 text-vb-silver/60 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      <ChevronDown size={16} />
+                    </button>
+                  </div>
+                ),
+              )}
             </div>
           </section>
 
@@ -946,24 +869,22 @@ export default function PageBuilderPanel() {
                 Pages
               </div>
               <div className="space-y-1">
-                {sortedPageTree(settings.pages).map(
-                  ({ page: candidate, depth }) => (
-                    <button
-                      key={candidate.id}
-                      onClick={() => setSelectedId(candidate.id)}
-                      style={{ paddingLeft: `${12 + depth * 16}px` }}
-                      className={`w-full rounded-lg py-2.5 pr-3 text-left font-body text-sm transition ${page.id === candidate.id ? "bg-vb-purple/20 text-vb-silver-bright" : "text-vb-silver/65 hover:bg-white/[0.05]"}`}
-                    >
-                      <span className="block truncate">
-                        {depth > 0 ? "↳ " : ""}
-                        {candidate.title}
-                      </span>
-                      <span className="block text-xs opacity-55">
-                        {candidate.path || `/${candidate.slug}`}
-                      </span>
-                    </button>
-                  ),
-                )}
+                {sortedPageTree(settings.pages).map(({ page: candidate, depth }) => (
+                  <button
+                    key={candidate.id}
+                    onClick={() => setSelectedId(candidate.id)}
+                    style={{ paddingLeft: `${12 + depth * 16}px` }}
+                    className={`w-full rounded-lg py-2.5 pr-3 text-left font-body text-sm transition ${page.id === candidate.id ? "bg-vb-purple/20 text-vb-silver-bright" : "text-vb-silver/65 hover:bg-white/[0.05]"}`}
+                  >
+                    <span className="block truncate">
+                      {depth > 0 ? "↳ " : ""}
+                      {candidate.title}
+                    </span>
+                    <span className="block text-xs opacity-55">
+                      {candidate.path || `/${candidate.slug}`}
+                    </span>
+                  </button>
+                ))}
               </div>
               <button
                 onClick={() => {
@@ -989,12 +910,9 @@ export default function PageBuilderPanel() {
               <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="font-sub text-xl uppercase tracking-wide">
-                      Page sections
-                    </h2>
+                    <h2 className="font-sub text-xl uppercase tracking-wide">Page sections</h2>
                     <p className="font-body text-sm text-vb-silver/50">
-                      Build the page from reusable content, media, catalog, and
-                      layout blocks.
+                      Build the page from reusable content, media, catalog, and layout blocks.
                     </p>
                   </div>
                   <button
@@ -1024,9 +942,7 @@ export default function PageBuilderPanel() {
                         }}
                         className="rounded-lg border border-white/[0.08] bg-vb-black/50 px-2.5 py-2.5 text-left font-body text-xs text-vb-silver/70 transition hover:border-vb-purple/50 hover:text-vb-purple-bright"
                       >
-                        <span className="block font-sub uppercase tracking-wide">
-                          {label}
-                        </span>
+                        <span className="block font-sub uppercase tracking-wide">{label}</span>
                         <span className="mt-0.5 block text-[10px] text-vb-silver/35">
                           Add block
                         </span>
@@ -1073,11 +989,7 @@ export default function PageBuilderPanel() {
                   ))}
                 </div>
               </section>
-              <SeoEditor
-                page={page}
-                preview={previewPage}
-                onChange={updatePage}
-              />
+              <SeoEditor page={page} preview={previewPage} onChange={updatePage} />
             </div>
           </div>
         </>
@@ -1086,12 +998,10 @@ export default function PageBuilderPanel() {
       {builderTab === "universal" && (
         <div className="space-y-5">
           <section className="rounded-2xl border border-vb-purple/20 bg-vb-purple/[0.06] p-5">
-            <h2 className="font-sub text-xl uppercase tracking-wide">
-              Universal settings
-            </h2>
+            <h2 className="font-sub text-xl uppercase tracking-wide">Universal settings</h2>
             <p className="mt-1 font-body text-sm text-vb-silver/50">
-              These defaults apply across the site. Any value explicitly set in
-              Page Settings takes priority for that page.
+              These defaults apply across the site. Any value explicitly set in Page Settings takes
+              priority for that page.
             </p>
           </section>
           <GlobalChromeEditor settings={settings} onChange={updateSettings} />
@@ -1126,8 +1036,7 @@ function BuilderCanvas({
   onDragEnd: () => void;
 }) {
   const deviceOption =
-    DEVICE_OPTIONS.find((option) => option.value === device) ||
-    DEVICE_OPTIONS[0];
+    DEVICE_OPTIONS.find((option) => option.value === device) || DEVICE_OPTIONS[0];
   return (
     <div className="grid gap-4 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.14),transparent_38%),#0b0b0f] p-4 sm:grid-cols-[13rem_minmax(0,1fr)] sm:p-6">
       <aside className="rounded-xl border border-white/[0.08] bg-vb-black/60 p-3">
@@ -1135,15 +1044,13 @@ function BuilderCanvas({
           <span className="font-sub text-[10px] uppercase tracking-[0.18em] text-vb-silver/50">
             Page outline
           </span>
-          <span className="font-body text-[10px] text-vb-silver/30">
-            {page.sections.length}
-          </span>
+          <span className="font-body text-[10px] text-vb-silver/30">{page.sections.length}</span>
         </div>
         <div className="space-y-1">
           {page.sections.map((section, index) => {
             const label =
-              SECTION_TYPES.find((candidate) => candidate.type === section.type)
-                ?.label || section.type;
+              SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label ||
+              section.type;
             return (
               <button
                 type="button"
@@ -1157,17 +1064,14 @@ function BuilderCanvas({
                 }}
                 onDrop={(event) => {
                   event.preventDefault();
-                  if (draggingSectionId)
-                    onReorder(draggingSectionId, section.id);
+                  if (draggingSectionId) onReorder(draggingSectionId, section.id);
                 }}
                 onPointerDown={() => onDragStart(section.id)}
                 onPointerEnter={() => {
-                  if (draggingSectionId && draggingSectionId !== section.id)
-                    onDragOver(section.id);
+                  if (draggingSectionId && draggingSectionId !== section.id) onDragOver(section.id);
                 }}
                 onPointerUp={() => {
-                  if (draggingSectionId)
-                    onReorder(draggingSectionId, section.id);
+                  if (draggingSectionId) onReorder(draggingSectionId, section.id);
                 }}
                 onDragEnd={onDragEnd}
                 className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${dragOverSectionId === section.id ? "border-vb-purple-bright bg-vb-purple/15" : "border-transparent"} ${focusedSectionId === section.id ? "bg-vb-purple/20 text-vb-purple-bright" : "text-vb-silver/50 hover:bg-white/[0.05] hover:text-vb-silver"}`}
@@ -1175,18 +1079,14 @@ function BuilderCanvas({
                 <span className="font-mono text-[10px] text-vb-silver/30">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <span className="min-w-0 truncate font-body text-xs">
-                  {section.title || label}
-                </span>
+                <span className="min-w-0 truncate font-body text-xs">{section.title || label}</span>
               </button>
             );
           })}
         </div>
       </aside>
       <div className="overflow-x-auto">
-        <div
-          className={`mx-auto transition-[width] duration-200 ${deviceOption.canvasClass}`}
-        >
+        <div className={`mx-auto transition-[width] duration-200 ${deviceOption.canvasClass}`}>
           <div className="overflow-hidden rounded-[1.25rem] border border-white/15 bg-vb-black shadow-2xl shadow-black/40">
             <div className="flex items-center gap-2 border-b border-white/10 bg-white/[0.04] px-4 py-2">
               <span className="h-2 w-2 rounded-full bg-red-400/80" />
@@ -1199,12 +1099,10 @@ function BuilderCanvas({
             <div className="space-y-2 bg-vb-black/80 p-2">
               {page.sections.map((section, index) => {
                 const sectionLabel =
-                  SECTION_TYPES.find(
-                    (candidate) => candidate.type === section.type,
-                  )?.label || section.type;
+                  SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label ||
+                  section.type;
                 const hasMedia = Boolean(
-                  section.imageUrl ||
-                  section.items?.some((item) => item.imageUrl),
+                  section.imageUrl || section.items?.some((item) => item.imageUrl),
                 );
                 return (
                   <button
@@ -1218,9 +1116,7 @@ function BuilderCanvas({
                         <GripVertical size={13} className="text-vb-silver/30" />{" "}
                         {String(index + 1).padStart(2, "0")} · {sectionLabel}
                       </span>
-                      <span className="font-body text-[10px] text-vb-silver/35">
-                        Click to edit
-                      </span>
+                      <span className="font-body text-[10px] text-vb-silver/35">Click to edit</span>
                     </div>
                     <div
                       className={`min-h-20 p-4 ${section.type === "hero" ? "bg-gradient-to-br from-vb-purple/20 via-vb-black to-vb-black" : ""}`}
@@ -1279,12 +1175,9 @@ function StyleStudio({
     <section className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-sub text-xl uppercase tracking-wide">
-            Style studio
-          </h2>
+          <h2 className="font-sub text-xl uppercase tracking-wide">Style studio</h2>
           <p className="mt-1 font-body text-sm text-vb-silver/50">
-            Reskin the entire site with visual presets, color tokens, and type
-            systems.
+            Reskin the entire site with visual presets, color tokens, and type systems.
           </p>
         </div>
         <div className="rounded-lg border border-white/10 px-3 py-2 font-body text-xs text-vb-silver/45">
@@ -1337,9 +1230,7 @@ function StyleStudio({
                 onClick={() => onChange({ fontId: pair.id })}
                 className={`rounded-lg border px-3 py-2 text-left transition ${settings.fontId === pair.id ? "border-vb-purple-bright bg-vb-purple/15" : "border-white/[0.07] hover:border-vb-purple/40"}`}
               >
-                <span className="block font-body text-xs text-vb-silver-bright">
-                  {pair.label}
-                </span>
+                <span className="block font-body text-xs text-vb-silver-bright">{pair.label}</span>
                 <span className="mt-0.5 block font-mono text-[10px] text-vb-silver/40">
                   {pair.display.split(",")[0].replace(/'/g, "")} +{" "}
                   {pair.body.split(",")[0].replace(/'/g, "")}
@@ -1390,9 +1281,7 @@ function GlobalChromeEditor({
     onChange({ footer: { ...settings.footer, ...patch } });
   const updatePopup = (patch: Partial<SiteSettings["newsletterPopup"]>) =>
     onChange({ newsletterPopup: { ...settings.newsletterPopup, ...patch } });
-  const updateAnnouncement = (
-    patch: Partial<SiteSettings["announcementBanner"]>,
-  ) =>
+  const updateAnnouncement = (patch: Partial<SiteSettings["announcementBanner"]>) =>
     onChange({
       announcementBanner: { ...settings.announcementBanner, ...patch },
     });
@@ -1405,9 +1294,7 @@ function GlobalChromeEditor({
   return (
     <div className="grid gap-5 xl:grid-cols-2">
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-        <h2 className="font-sub text-xl uppercase tracking-wide">
-          Header & navigation
-        </h2>
+        <h2 className="font-sub text-xl uppercase tracking-wide">Header & navigation</h2>
         <p className="mt-1 font-body text-sm text-vb-silver/50">
           Control the global header without affecting your saved page content.
         </p>
@@ -1503,8 +1390,8 @@ function GlobalChromeEditor({
               Sales & announcement banner
             </h2>
             <p className="mt-1 max-w-2xl font-body text-sm text-vb-silver/50">
-              Display a compact promotion or announcement above selected page
-              content. Target every page or only the Builder pages you choose.
+              Display a compact promotion or announcement above selected page content. Target every
+              page or only the Builder pages you choose.
             </p>
           </div>
           <Toggle
@@ -1557,9 +1444,7 @@ function GlobalChromeEditor({
           {settings.announcementBanner.target === "selected" && (
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {settings.pages.map((page) => {
-                const selected = settings.announcementBanner.pageIds.includes(
-                  page.id,
-                );
+                const selected = settings.announcementBanner.pageIds.includes(page.id);
                 return (
                   <ToggleCard
                     key={page.id}
@@ -1570,9 +1455,7 @@ function GlobalChromeEditor({
                       updateAnnouncement({
                         pageIds: checked
                           ? [...settings.announcementBanner.pageIds, page.id]
-                          : settings.announcementBanner.pageIds.filter(
-                              (id) => id !== page.id,
-                            ),
+                          : settings.announcementBanner.pageIds.filter((id) => id !== page.id),
                       })
                     }
                   />
@@ -1585,12 +1468,10 @@ function GlobalChromeEditor({
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 xl:col-span-2">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="font-sub text-xl uppercase tracking-wide">
-              Newsletter popup
-            </h2>
+            <h2 className="font-sub text-xl uppercase tracking-wide">Newsletter popup</h2>
             <p className="mt-1 max-w-2xl font-body text-sm text-vb-silver/50">
-              Invite visitors to join the fan list with a branded popup.
-              Existing subscribers are stored in the admin Fan List.
+              Invite visitors to join the fan list with a branded popup. Existing subscribers are
+              stored in the admin Fan List.
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -1664,12 +1545,9 @@ function GlobalChromeEditor({
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 xl:col-span-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-sub text-xl uppercase tracking-wide">
-              Social links
-            </h2>
+            <h2 className="font-sub text-xl uppercase tracking-wide">Social links</h2>
             <p className="font-body text-sm text-vb-silver/50">
-              Add links once, then choose whether each appears in the header or
-              footer.
+              Add links once, then choose whether each appears in the header or footer.
             </p>
           </div>
           <button
@@ -1708,27 +1586,23 @@ function GlobalChromeEditor({
                   role="radiogroup"
                   aria-label="Social platform"
                 >
-                  {SOCIAL_PLATFORMS.map(
-                    ({ value, label: platformLabel, Icon }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        aria-pressed={social.platform === value}
-                        aria-label={platformLabel}
-                        title={platformLabel}
-                        onClick={() =>
-                          updateSocial(social.id, { platform: value })
-                        }
-                        className={`grid h-9 place-items-center rounded-md border transition ${
-                          social.platform === value
-                            ? "border-vb-purple-bright bg-vb-purple/20 text-vb-purple-bright"
-                            : "border-white/10 text-vb-silver/45 hover:border-white/25 hover:text-vb-silver"
-                        }`}
-                      >
-                        <Icon size={16} />
-                      </button>
-                    ),
-                  )}
+                  {SOCIAL_PLATFORMS.map(({ value, label: platformLabel, Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={social.platform === value}
+                      aria-label={platformLabel}
+                      title={platformLabel}
+                      onClick={() => updateSocial(social.id, { platform: value })}
+                      className={`grid h-9 place-items-center rounded-md border transition ${
+                        social.platform === value
+                          ? "border-vb-purple-bright bg-vb-purple/20 text-vb-purple-bright"
+                          : "border-white/10 text-vb-silver/45 hover:border-white/25 hover:text-vb-silver"
+                      }`}
+                    >
+                      <Icon size={16} />
+                    </button>
+                  ))}
                 </div>
               </div>
               <Field
@@ -1746,24 +1620,18 @@ function GlobalChromeEditor({
                 <Toggle
                   label="Header"
                   checked={Boolean(social.showInHeader)}
-                  onChange={(checked) =>
-                    updateSocial(social.id, { showInHeader: checked })
-                  }
+                  onChange={(checked) => updateSocial(social.id, { showInHeader: checked })}
                 />
                 <Toggle
                   label="Footer"
                   checked={Boolean(social.showInFooter)}
-                  onChange={(checked) =>
-                    updateSocial(social.id, { showInFooter: checked })
-                  }
+                  onChange={(checked) => updateSocial(social.id, { showInFooter: checked })}
                 />
                 <button
                   aria-label={`Delete ${social.label}`}
                   onClick={() =>
                     onChange({
-                      socials: settings.socials.filter(
-                        (candidate) => candidate.id !== social.id,
-                      ),
+                      socials: settings.socials.filter((candidate) => candidate.id !== social.id),
                     })
                   }
                   className="rounded p-2 text-vb-silver/60 hover:bg-red-500/10 hover:text-red-400"
@@ -1794,10 +1662,8 @@ function PagePropertiesEditor({
   onChange: (page: BuilderPage) => void;
   onDelete: () => void;
 }) {
-  const setField = <K extends keyof BuilderPage>(
-    field: K,
-    value: BuilderPage[K],
-  ) => onChange({ ...page, [field]: value });
+  const setField = <K extends keyof BuilderPage>(field: K, value: BuilderPage[K]) =>
+    onChange({ ...page, [field]: value });
   const updateLayout = (patch: NonNullable<BuilderPage["layout"]>) =>
     onChange({ ...page, layout: { ...page.layout, ...patch } });
   const updateSeo = (patch: NonNullable<BuilderPage["seo"]>) =>
@@ -1815,9 +1681,7 @@ function PagePropertiesEditor({
     checked: boolean,
   ) => {
     const available = socials
-      .filter((social) =>
-        area === "headerSocialIds" ? social.showInHeader : social.showInFooter,
-      )
+      .filter((social) => (area === "headerSocialIds" ? social.showInHeader : social.showInFooter))
       .map((social) => social.id);
     const current = page.layout?.[area] ?? available;
     updateLayout({
@@ -1854,15 +1718,11 @@ function PagePropertiesEditor({
       pageSocialLinks: pageSocialLinks.filter((social) => social.id !== id),
     });
   const eligibleParents = pages.filter(
-    (candidate) =>
-      candidate.id !== page.id && candidate.parentPageId !== page.id,
+    (candidate) => candidate.id !== page.id && candidate.parentPageId !== page.id,
   );
   const parent = pages.find((candidate) => candidate.id === page.parentPageId);
-  const childPages = pages.filter(
-    (candidate) => candidate.parentPageId === page.id,
-  );
-  const leafSlug =
-    (page.path || page.slug).split("/").filter(Boolean).pop() || page.slug;
+  const childPages = pages.filter((candidate) => candidate.parentPageId === page.id);
+  const leafSlug = (page.path || page.slug).split("/").filter(Boolean).pop() || page.slug;
   const nestedPath = (parentPage: BuilderPage, leaf: string) =>
     `${(parentPage.path || `/${parentPage.slug}`).replace(/\/+$/, "")}/${leaf.replace(/[^a-z0-9-]/gi, "-").toLowerCase()}`;
   return (
@@ -1878,8 +1738,7 @@ function PagePropertiesEditor({
               : "Set the URL, page chrome, and visibility before publishing."}
           </p>
           <p className="mt-2 inline-flex rounded-md border border-vb-purple/20 bg-vb-purple/[0.06] px-2.5 py-1.5 font-body text-xs text-vb-purple-bright">
-            Page overrides win over Universal Settings; blank values inherit the
-            universal default.
+            Page overrides win over Universal Settings; blank values inherit the universal default.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -1918,9 +1777,7 @@ function PagePropertiesEditor({
         <Field
           label="Page wordmark"
           value={page.layout?.wordmark || ""}
-          placeholder={
-            page.id === "page_artist" ? "VYLANOUS ARTIST" : "Vylanous Beats"
-          }
+          placeholder={page.id === "page_artist" ? "VYLANOUS ARTIST" : "Vylanous Beats"}
           onChange={(value) => updateLayout({ wordmark: value })}
         />
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1934,9 +1791,7 @@ function PagePropertiesEditor({
             label="Wordmark accent color"
             value={
               page.layout?.wordmarkAccentColor ||
-              (page.id === "page_artist"
-                ? "#D94A4A"
-                : page.layout?.primaryColor || "#7C2FCB")
+              (page.id === "page_artist" ? "#D94A4A" : page.layout?.primaryColor || "#7C2FCB")
             }
             onChange={(value) => updateLayout({ wordmarkAccentColor: value })}
             hint="Independent from the page link and glow colors."
@@ -1948,8 +1803,8 @@ function PagePropertiesEditor({
               Page chrome branding
             </h3>
             <p className="mt-1 font-body text-xs text-vb-silver/50">
-              These overrides affect only this page. Leave them empty to use the
-              Universal Settings branding.
+              These overrides affect only this page. Leave them empty to use the Universal Settings
+              branding.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -1983,9 +1838,8 @@ function PagePropertiesEditor({
                 Page social links
               </h3>
               <p className="mt-1 font-body text-xs text-vb-silver/50">
-                Choose which Universal social links appear in this page’s Header
-                and Footer. Leave each area untouched to inherit Universal
-                Settings; uncheck all to hide them.
+                Choose which Universal social links appear in this page’s Header and Footer. Leave
+                each area untouched to inherit Universal Settings; uncheck all to hide them.
               </p>
             </div>
             {(page.layout?.headerSocialIds !== undefined ||
@@ -2002,20 +1856,13 @@ function PagePropertiesEditor({
           <div className="grid gap-4 md:grid-cols-2">
             {(["headerSocialIds", "footerSocialIds"] as const).map((area) => {
               const available = socials.filter((social) =>
-                area === "headerSocialIds"
-                  ? social.showInHeader
-                  : social.showInFooter,
+                area === "headerSocialIds" ? social.showInHeader : social.showInFooter,
               );
               const selected = page.layout?.[area];
               return (
-                <div
-                  key={area}
-                  className="rounded-lg border border-white/[0.06] p-3"
-                >
+                <div key={area} className="rounded-lg border border-white/[0.06] p-3">
                   <p className="mb-2 font-sub text-xs uppercase tracking-[0.16em] text-vb-silver-bright">
-                    {area === "headerSocialIds"
-                      ? "Header social links"
-                      : "Footer social links"}
+                    {area === "headerSocialIds" ? "Header social links" : "Footer social links"}
                   </p>
                   {available.length === 0 ? (
                     <p className="font-body text-xs text-vb-silver/45">
@@ -2031,16 +1878,9 @@ function PagePropertiesEditor({
                           <input
                             type="checkbox"
                             aria-label={`${area === "headerSocialIds" ? "Header" : "Footer"} social link: ${social.label}`}
-                            checked={
-                              selected === undefined ||
-                              selected.includes(social.id)
-                            }
+                            checked={selected === undefined || selected.includes(social.id)}
                             onChange={(event) =>
-                              updatePageSocialIds(
-                                area,
-                                social.id,
-                                event.target.checked,
-                              )
+                              updatePageSocialIds(area, social.id, event.target.checked)
                             }
                             className="accent-vb-purple"
                           />
@@ -2061,8 +1901,7 @@ function PagePropertiesEditor({
                 Page-only social links
               </h3>
               <p className="mt-1 font-body text-xs text-vb-silver/50">
-                Create links used only on this page. They do not change
-                Universal Settings.
+                Create links used only on this page. They do not change Universal Settings.
               </p>
             </div>
             <button
@@ -2075,8 +1914,7 @@ function PagePropertiesEditor({
           </div>
           {pageSocialLinks.length === 0 ? (
             <p className="font-body text-xs text-vb-silver/45">
-              No page-only links yet. Add one to create a social link for this
-              page.
+              No page-only links yet. Add one to create a social link for this page.
             </p>
           ) : (
             <div className="space-y-3">
@@ -2094,46 +1932,41 @@ function PagePropertiesEditor({
                       role="radiogroup"
                       aria-label="Page social platform"
                     >
-                      {SOCIAL_PLATFORMS.map(
-                        ({ value, label: platformLabel, Icon }) => (
-                          <button
-                            key={value}
-                            type="button"
-                            aria-pressed={social.platform === value}
-                            aria-label={platformLabel}
-                            title={platformLabel}
-                            onClick={() =>
-                              updatePageSocialLink(social.id, {
-                                platform: value,
-                              })
-                            }
-                            className={`grid h-9 place-items-center rounded-md border transition ${social.platform === value ? "border-vb-purple-bright bg-vb-purple/20 text-vb-purple-bright" : "border-white/10 text-vb-silver/45 hover:border-white/25 hover:text-vb-silver"}`}
-                          >
-                            <Icon size={16} />
-                          </button>
-                        ),
-                      )}
+                      {SOCIAL_PLATFORMS.map(({ value, label: platformLabel, Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={social.platform === value}
+                          aria-label={platformLabel}
+                          title={platformLabel}
+                          onClick={() =>
+                            updatePageSocialLink(social.id, {
+                              platform: value,
+                            })
+                          }
+                          className={`grid h-9 place-items-center rounded-md border transition ${social.platform === value ? "border-vb-purple-bright bg-vb-purple/20 text-vb-purple-bright" : "border-white/10 text-vb-silver/45 hover:border-white/25 hover:text-vb-silver"}`}
+                        >
+                          <Icon size={16} />
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <Field
                     label="Label"
                     value={social.label}
-                    onChange={(value) =>
-                      updatePageSocialLink(social.id, { label: value })
-                    }
+                    onChange={(value) => updatePageSocialLink(social.id, { label: value })}
                   />
                   <Field
                     label="URL"
                     value={social.url}
                     placeholder="https://..."
-                    onChange={(value) =>
-                      updatePageSocialLink(social.id, { url: value })
-                    }
+                    onChange={(value) => updatePageSocialLink(social.id, { url: value })}
                   />
                   <div className="flex flex-wrap items-center gap-3 md:pb-1">
                     <label className="flex items-center gap-1.5 font-body text-xs text-vb-silver/70">
                       <input
                         type="checkbox"
+                        aria-label={`Show ${social.label || "page link"} in header`}
                         checked={social.showInHeader !== false}
                         onChange={(event) =>
                           updatePageSocialLink(social.id, {
@@ -2147,6 +1980,7 @@ function PagePropertiesEditor({
                     <label className="flex items-center gap-1.5 font-body text-xs text-vb-silver/70">
                       <input
                         type="checkbox"
+                        aria-label={`Show ${social.label || "page link"} in footer`}
                         checked={social.showInFooter !== false}
                         onChange={(event) =>
                           updatePageSocialLink(social.id, {
@@ -2178,8 +2012,8 @@ function PagePropertiesEditor({
                 Header actions
               </h3>
               <p className="mt-1 font-body text-xs text-vb-silver/50">
-                Customize these actions for this page only. An unset option
-                inherits Universal Settings.
+                Customize these actions for this page only. An unset option inherits Universal
+                Settings.
               </p>
             </div>
             {page.layout?.headerActions && (
@@ -2197,9 +2031,7 @@ function PagePropertiesEditor({
               <Toggle
                 label="Show Beats Vault"
                 checked={page.layout?.headerActions?.showVault !== false}
-                onChange={(checked) =>
-                  updateHeaderActions({ showVault: checked })
-                }
+                onChange={(checked) => updateHeaderActions({ showVault: checked })}
               />
               <Field
                 label="Vault label"
@@ -2218,17 +2050,13 @@ function PagePropertiesEditor({
               <Toggle
                 label="Show Sign In"
                 checked={page.layout?.headerActions?.showSignIn !== false}
-                onChange={(checked) =>
-                  updateHeaderActions({ showSignIn: checked })
-                }
+                onChange={(checked) => updateHeaderActions({ showSignIn: checked })}
               />
               <Field
                 label="Sign-in label"
                 value={page.layout?.headerActions?.signInLabel || ""}
                 placeholder="Sign in"
-                onChange={(value) =>
-                  updateHeaderActions({ signInLabel: value })
-                }
+                onChange={(value) => updateHeaderActions({ signInLabel: value })}
               />
               <Field
                 label="Sign-in link"
@@ -2241,20 +2069,16 @@ function PagePropertiesEditor({
               <Toggle
                 label="Show shopping cart"
                 checked={page.layout?.headerActions?.showCart !== false}
-                onChange={(checked) =>
-                  updateHeaderActions({ showCart: checked })
-                }
+                onChange={(checked) => updateHeaderActions({ showCart: checked })}
               />
               <Toggle
                 label="Show mobile menu button"
                 checked={page.layout?.headerActions?.showMenu !== false}
-                onChange={(checked) =>
-                  updateHeaderActions({ showMenu: checked })
-                }
+                onChange={(checked) => updateHeaderActions({ showMenu: checked })}
               />
               <p className="font-body text-xs leading-5 text-vb-silver/45">
-                These controls override Universal Settings for this page. Reset
-                them to inherit the universal visibility choices.
+                These controls override Universal Settings for this page. Reset them to inherit the
+                universal visibility choices.
               </p>
             </div>
           </div>
@@ -2295,22 +2119,17 @@ function PagePropertiesEditor({
         <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
           Parent page
           <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
-            Choose a parent to create a child route and local sub-navigation
-            relationship.
+            Choose a parent to create a child route and local sub-navigation relationship.
           </span>
           <select
             aria-label="Parent page"
             value={page.parentPageId || "none"}
             onChange={(event) => {
-              const nextParent = pages.find(
-                (candidate) => candidate.id === event.target.value,
-              );
+              const nextParent = pages.find((candidate) => candidate.id === event.target.value);
               onChange({
                 ...page,
                 parentPageId: nextParent?.id || undefined,
-                path: nextParent
-                  ? nestedPath(nextParent, leafSlug)
-                  : `/${leafSlug}`,
+                path: nextParent ? nestedPath(nextParent, leafSlug) : `/${leafSlug}`,
                 slug: leafSlug,
               });
             }}
@@ -2328,9 +2147,7 @@ function PagePropertiesEditor({
           label="Page background"
           value={page.layout?.background || "default"}
           options={["default", "mesh", "ink"]}
-          onChange={(value) =>
-            updateLayout({ background: value as "default" | "mesh" | "ink" })
-          }
+          onChange={(value) => updateLayout({ background: value as "default" | "mesh" | "ink" })}
         />
         <Toggle
           label="Published"
@@ -2405,9 +2222,7 @@ function SectionEditor({
   const updateLayout = (patch: Partial<SectionLayout>) =>
     onChange({ layout: { ...layout, ...patch } });
   const supportsCopy = !["divider", "spacer", "marquee"].includes(section.type);
-  const supportsMedia = ["hero", "image", "video", "gallery"].includes(
-    section.type,
-  );
+  const supportsMedia = ["hero", "image", "video", "gallery"].includes(section.type);
   const supportsItems = ["gallery", "featureCards"].includes(section.type);
   const supportsCta = [
     "hero",
@@ -2418,20 +2233,17 @@ function SectionEditor({
     "licenseTiers",
     "featuredBeats",
   ].includes(section.type);
-  const [activeTab, setActiveTab] = useState<"content" | "style" | "advanced">(
-    "content",
-  );
+  const [activeTab, setActiveTab] = useState<"content" | "style" | "advanced">("content");
   const sectionLabel =
-    SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label ||
-    section.type;
+    SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label || section.type;
   return (
     <article className="rounded-xl border border-white/[0.08] bg-vb-black/50 p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <GripVertical size={17} className="text-vb-silver/35" />
           <span className="font-sub uppercase tracking-wide text-vb-purple-bright">
-            {SECTION_TYPES.find((candidate) => candidate.type === section.type)
-              ?.label || section.type}
+            {SECTION_TYPES.find((candidate) => candidate.type === section.type)?.label ||
+              section.type}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -2487,13 +2299,12 @@ function SectionEditor({
         <div role="tabpanel" className="space-y-3">
           {section.type === "spacer" ? (
             <p className="font-body text-sm text-vb-silver/50">
-              A breathing-space block. Use “Section spacing” below to set its
-              height.
+              A breathing-space block. Use “Section spacing” below to set its height.
             </p>
           ) : section.type === "divider" ? (
             <p className="font-body text-sm text-vb-silver/50">
-              A visual divider. Use the surface, width, and spacing controls
-              below to create a transition.
+              A visual divider. Use the surface, width, and spacing controls below to create a
+              transition.
             </p>
           ) : (
             <>
@@ -2514,11 +2325,7 @@ function SectionEditor({
                         onChange={(value) => onChange({ eyebrow: value })}
                       />
                       <Field
-                        label={
-                          section.type === "image"
-                            ? "Image description"
-                            : "Headline"
-                        }
+                        label={section.type === "image" ? "Image description" : "Headline"}
                         value={section.title || ""}
                         placeholder={
                           section.type === "image"
@@ -2537,9 +2344,7 @@ function SectionEditor({
                       onChange={(value, enableInlineFormat) =>
                         onChange({
                           body: value,
-                          ...(enableInlineFormat
-                            ? { bodyFormat: "inline" }
-                            : {}),
+                          ...(enableInlineFormat ? { bodyFormat: "inline" } : {}),
                         })
                       }
                     />
@@ -2550,8 +2355,8 @@ function SectionEditor({
                         Section logo
                       </summary>
                       <p className="mt-2 font-body text-xs leading-relaxed text-vb-silver/45">
-                        Upload a logo used only in this section. Leave it empty
-                        when the section should use text only.
+                        Upload a logo used only in this section. Leave it empty when the section
+                        should use text only.
                       </p>
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <FileUpload
@@ -2563,21 +2368,13 @@ function SectionEditor({
                           maxBytes={5 * 1024 * 1024}
                           value={section.sectionLogoUrl || ""}
                           previewUrl={preview?.sectionLogoUrl}
-                          onChange={(sectionLogoUrl) =>
-                            onChange({ sectionLogoUrl })
-                          }
+                          onChange={(sectionLogoUrl) => onChange({ sectionLogoUrl })}
                         />
                         <Field
                           label="Logo accessibility label"
-                          value={
-                            section.sectionLogoAlt ||
-                            section.title ||
-                            "Section logo"
-                          }
+                          value={section.sectionLogoAlt || section.title || "Section logo"}
                           placeholder="Describe the logo"
-                          onChange={(sectionLogoAlt) =>
-                            onChange({ sectionLogoAlt })
-                          }
+                          onChange={(sectionLogoAlt) => onChange({ sectionLogoAlt })}
                         />
                       </div>
                     </details>
@@ -2588,9 +2385,9 @@ function SectionEditor({
                         16:9 section cover
                       </summary>
                       <p className="mt-2 font-body text-xs leading-relaxed text-vb-silver/45">
-                        Add a wide photo or a muted looping video above this
-                        section’s content. A cover video takes priority and the
-                        photo remains available as its fallback frame.
+                        Add a wide photo or a muted looping video above this section’s content. A
+                        cover video takes priority and the photo remains available as its fallback
+                        frame.
                       </p>
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <FileUpload
@@ -2602,9 +2399,7 @@ function SectionEditor({
                           maxBytes={10 * 1024 * 1024}
                           value={section.coverImageUrl || ""}
                           previewUrl={preview?.coverImageUrl}
-                          onChange={(coverImageUrl) =>
-                            onChange({ coverImageUrl })
-                          }
+                          onChange={(coverImageUrl) => onChange({ coverImageUrl })}
                         />
                         <FileUpload
                           label="16:9 animated cover video"
@@ -2613,9 +2408,7 @@ function SectionEditor({
                           folder="site-builder/videos"
                           maxBytes={50 * 1024 * 1024}
                           value={section.coverVideoUrl || ""}
-                          onChange={(coverVideoUrl) =>
-                            onChange({ coverVideoUrl })
-                          }
+                          onChange={(coverVideoUrl) => onChange({ coverVideoUrl })}
                         />
                       </div>
                       <div className="mt-3 max-w-sm">
@@ -2637,11 +2430,7 @@ function SectionEditor({
                   {supportsMedia && (
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <ImageAssetField
-                        label={
-                          section.type === "video"
-                            ? "Poster image"
-                            : "Section image"
-                        }
+                        label={section.type === "video" ? "Poster image" : "Section image"}
                         value={section.imageUrl || ""}
                         previewUrl={preview?.imageUrl}
                         hint="Recommended 1200 × 675 px (16:9). JPG, PNG, WebP, GIF, or AVIF up to 10 MB."
@@ -2661,9 +2450,7 @@ function SectionEditor({
                     <ItemsEditor
                       items={section.items || []}
                       previewItems={preview?.items || []}
-                      label={
-                        section.type === "gallery" ? "Gallery images" : "Cards"
-                      }
+                      label={section.type === "gallery" ? "Gallery images" : "Cards"}
                       onChange={(items) => onChange({ items })}
                     />
                   )}
@@ -2681,8 +2468,7 @@ function SectionEditor({
                           Merch store settings
                         </h3>
                         <p className="mt-1 font-body text-xs text-vb-silver/45">
-                          These settings apply to this Merch page and its
-                          Fourthwall product feed.
+                          These settings apply to this Merch page and its Fourthwall product feed.
                         </p>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
@@ -2698,9 +2484,7 @@ function SectionEditor({
                         />
                         <Field
                           label="Collection"
-                          value={
-                            section.collection || fourthwall.defaultCollection
-                          }
+                          value={section.collection || fourthwall.defaultCollection}
                           hint="Use all for every product."
                           onChange={(value) => {
                             onChange({ collection: value });
@@ -2738,17 +2522,13 @@ function SectionEditor({
                         label="Secondary button label"
                         value={section.secondaryCtaLabel || ""}
                         placeholder="Optional second action"
-                        onChange={(value) =>
-                          onChange({ secondaryCtaLabel: value })
-                        }
+                        onChange={(value) => onChange({ secondaryCtaLabel: value })}
                       />
                       <Field
                         label="Secondary button destination"
                         value={section.secondaryCtaHref || ""}
                         placeholder="/about or https://…"
-                        onChange={(value) =>
-                          onChange({ secondaryCtaHref: value })
-                        }
+                        onChange={(value) => onChange({ secondaryCtaHref: value })}
                       />
                     </div>
                   )}
@@ -2772,8 +2552,8 @@ function SectionEditor({
       {activeTab === "advanced" && (
         <div role="tabpanel" className="space-y-3">
           <div className="rounded-lg border border-vb-purple/20 bg-vb-purple/[0.06] px-3 py-2 font-body text-xs text-vb-silver/55">
-            Advanced hooks are optional. Use them for deep links, custom CSS
-            hooks, and accessible section labels.
+            Advanced hooks are optional. Use them for deep links, custom CSS hooks, and accessible
+            section labels.
           </div>
           <Field
             label="Anchor ID"
@@ -2817,8 +2597,7 @@ function ImageAssetField({
   folder?: string;
   onChange: (value: string) => void;
 }) {
-  const externalUrl =
-    /^(https?:)?\/\//.test(value) || value.startsWith("/") ? value : "";
+  const externalUrl = /^(https?:)?\/\//.test(value) || value.startsWith("/") ? value : "";
   const activePreview = value ? externalUrl || previewUrl : "";
   return (
     <div className="space-y-3">
@@ -2872,9 +2651,7 @@ function PressKitEditor({
       ...value,
       audience: {
         ...audience,
-        [key]: rows.map((row, rowIndex) =>
-          rowIndex === index ? { ...row, ...patch } : row,
-        ),
+        [key]: rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)),
       },
     });
   };
@@ -2886,17 +2663,12 @@ function PressKitEditor({
         [key]: [...(audience[key] || []), { label: "New segment", value: 0 }],
       },
     });
-  const removeBreakdown = (
-    key: "gender" | "age" | "locations",
-    index: number,
-  ) =>
+  const removeBreakdown = (key: "gender" | "age" | "locations", index: number) =>
     onChange({
       ...value,
       audience: {
         ...audience,
-        [key]: (audience[key] || []).filter(
-          (_, rowIndex) => rowIndex !== index,
-        ),
+        [key]: (audience[key] || []).filter((_, rowIndex) => rowIndex !== index),
       },
     });
   return (
@@ -2906,8 +2678,8 @@ function PressKitEditor({
           Press Kit analytics
         </h3>
         <p className="mt-1 font-body text-xs text-vb-silver/45">
-          Enter verified figures from each platform. The block presents a
-          polished snapshot for press, booking, and partnership inquiries.
+          Enter verified figures from each platform. The block presents a polished snapshot for
+          press, booking, and partnership inquiries.
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -2926,9 +2698,7 @@ function PressKitEditor({
       </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h4 className="font-sub text-xs uppercase tracking-wide text-vb-silver/70">
-            Platforms
-          </h4>
+          <h4 className="font-sub text-xs uppercase tracking-wide text-vb-silver/70">Platforms</h4>
           <button
             type="button"
             onClick={() =>
@@ -2951,14 +2721,11 @@ function PressKitEditor({
         </div>
         {metrics.length === 0 && (
           <p className="rounded-lg border border-dashed border-white/10 px-3 py-3 font-body text-xs text-vb-silver/40">
-            Add YouTube, TikTok, Instagram, Facebook, Spotify, or another
-            platform to begin.
+            Add YouTube, TikTok, Instagram, Facebook, Spotify, or another platform to begin.
           </p>
         )}
         {metrics.map((metric, index) => {
-          const linkedSocial = socials.find(
-            (social) => social.id === metric.socialId,
-          );
+          const linkedSocial = socials.find((social) => social.id === metric.socialId);
           return (
             <div
               key={metric.id}
@@ -2979,10 +2746,7 @@ function PressKitEditor({
                         social
                           ? {
                               socialId: social.id,
-                              platform:
-                                social.platform === "custom"
-                                  ? "other"
-                                  : social.platform,
+                              platform: social.platform === "custom" ? "other" : social.platform,
                               label: social.label,
                               url: social.url,
                             }
@@ -3024,9 +2788,7 @@ function PressKitEditor({
                   onClick={() =>
                     onChange({
                       ...value,
-                      metrics: metrics.filter(
-                        (_, metricIndex) => metricIndex !== index,
-                      ),
+                      metrics: metrics.filter((_, metricIndex) => metricIndex !== index),
                     })
                   }
                   className="h-10 rounded-lg px-2 text-vb-silver/40 hover:bg-red-500/10 hover:text-red-400"
@@ -3056,9 +2818,7 @@ function PressKitEditor({
                 <NumberField
                   label="Subscribers"
                   value={metric.subscribers}
-                  onChange={(subscribers) =>
-                    updateMetric(index, { subscribers })
-                  }
+                  onChange={(subscribers) => updateMetric(index, { subscribers })}
                 />
                 <NumberField
                   label="Videos uploaded"
@@ -3083,9 +2843,7 @@ function PressKitEditor({
                 <NumberField
                   label="Engagement rate %"
                   value={metric.engagementRate}
-                  onChange={(engagementRate) =>
-                    updateMetric(index, { engagementRate })
-                  }
+                  onChange={(engagementRate) => updateMetric(index, { engagementRate })}
                 />
                 <Field
                   label="Profile URL"
@@ -3103,16 +2861,9 @@ function PressKitEditor({
         {(["gender", "age", "locations"] as const).map((key) => {
           const rows = audience[key] || [];
           const label =
-            key === "gender"
-              ? "Gender"
-              : key === "age"
-                ? "Age groups"
-                : "Top locations";
+            key === "gender" ? "Gender" : key === "age" ? "Age groups" : "Top locations";
           return (
-            <div
-              key={key}
-              className="rounded-lg border border-white/[0.08] bg-vb-black/40 p-3"
-            >
+            <div key={key} className="rounded-lg border border-white/[0.08] bg-vb-black/40 p-3">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h4 className="font-sub text-xs uppercase tracking-wide text-vb-silver/70">
                   {label}
@@ -3127,10 +2878,7 @@ function PressKitEditor({
               </div>
               <div className="space-y-2">
                 {rows.map((row, index) => (
-                  <div
-                    key={`${key}-${index}`}
-                    className="flex items-center gap-2"
-                  >
+                  <div key={`${key}-${index}`} className="flex items-center gap-2">
                     <input
                       aria-label={`${label} segment ${index + 1}`}
                       value={row.label}
@@ -3155,9 +2903,7 @@ function PressKitEditor({
                       }
                       className="w-20 rounded border border-white/10 bg-vb-black px-2 py-2 font-body text-xs text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
                     />
-                    <span className="font-body text-xs text-vb-silver/40">
-                      %
-                    </span>
+                    <span className="font-body text-xs text-vb-silver/40">%</span>
                     <button
                       type="button"
                       aria-label={`Remove ${label} segment ${index + 1}`}
@@ -3169,9 +2915,7 @@ function PressKitEditor({
                   </div>
                 ))}
                 {rows.length === 0 && (
-                  <p className="font-body text-xs text-vb-silver/35">
-                    No data added.
-                  </p>
+                  <p className="font-body text-xs text-vb-silver/35">No data added.</p>
                 )}
               </div>
             </div>
@@ -3182,9 +2926,7 @@ function PressKitEditor({
         label="Audience note"
         value={audience.note || ""}
         placeholder="Optional context about the reporting period or methodology."
-        onChange={(note) =>
-          onChange({ ...value, audience: { ...audience, note } })
-        }
+        onChange={(note) => onChange({ ...value, audience: { ...audience, note } })}
       />
     </div>
   );
@@ -3209,9 +2951,7 @@ function NumberField({
         step="any"
         value={value ?? ""}
         onChange={(event) =>
-          onChange(
-            event.target.value === "" ? undefined : Number(event.target.value),
-          )
+          onChange(event.target.value === "" ? undefined : Number(event.target.value))
         }
         className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
       />
@@ -3237,9 +2977,7 @@ function ItemsEditor({
           {label}
         </span>
         <button
-          onClick={() =>
-            onChange([...items, { id: newId("item"), title: "New item" }])
-          }
+          onClick={() => onChange([...items, { id: newId("item"), title: "New item" }])}
           className="inline-flex items-center gap-1 rounded border border-vb-purple/40 px-2 py-1 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10"
         >
           <Plus size={13} /> Add item
@@ -3251,9 +2989,7 @@ function ItemsEditor({
             const updateItem = (patch: Partial<SectionItem>) =>
               onChange(
                 items.map((candidate, candidateIndex) =>
-                  candidateIndex === index
-                    ? { ...candidate, ...patch }
-                    : candidate,
+                  candidateIndex === index ? { ...candidate, ...patch } : candidate,
                 ),
               );
             return (
@@ -3267,11 +3003,7 @@ function ItemsEditor({
                   </span>
                   <button
                     aria-label={`Remove ${item.title || `item ${index + 1}`}`}
-                    onClick={() =>
-                      onChange(
-                        items.filter((candidate) => candidate.id !== item.id),
-                      )
-                    }
+                    onClick={() => onChange(items.filter((candidate) => candidate.id !== item.id))}
                     className="rounded p-1 text-vb-silver/45 hover:bg-red-500/10 hover:text-red-400"
                   >
                     <Trash2 size={14} />
@@ -3308,10 +3040,7 @@ function ItemsEditor({
                   kind="image"
                   maxBytes={10 * 1024 * 1024}
                   value={item.imageUrl || ""}
-                  previewUrl={
-                    previewItems.find((candidate) => candidate.id === item.id)
-                      ?.imageUrl
-                  }
+                  previewUrl={previewItems.find((candidate) => candidate.id === item.id)?.imageUrl}
                   onChange={(imageUrl) => updateItem({ imageUrl })}
                 />
               </div>
@@ -3320,8 +3049,8 @@ function ItemsEditor({
         </div>
       )}
       <p className="mt-3 font-body text-xs text-vb-silver/40">
-        Edit each card above using labeled fields. Changes preview as you work
-        and save with the site design button.
+        Edit each card above using labeled fields. Changes preview as you work and save with the
+        site design button.
       </p>
     </div>
   );
@@ -3347,12 +3076,10 @@ function StyleWorkspace({
         <p className="font-sub text-xs uppercase tracking-[0.2em] text-vb-purple-bright">
           Visual style studio
         </p>
-        <h3 className="mt-1 font-display text-2xl uppercase text-chrome">
-          Make this page yours
-        </h3>
+        <h3 className="mt-1 font-display text-2xl uppercase text-chrome">Make this page yours</h3>
         <p className="mt-1 max-w-2xl font-body text-xs leading-relaxed text-vb-silver/55">
-          Start with the page colors, then refine this section’s layout. Every
-          control below updates the live preview as you work.
+          Start with the page colors, then refine this section’s layout. Every control below updates
+          the live preview as you work.
         </p>
       </div>
       <StyleGroup
@@ -3364,18 +3091,13 @@ function StyleWorkspace({
             label="Use shared storefront theme"
             description="Turn off to isolate this page from the global purple palette and chrome accents."
             checked={page.inheritTheme !== false}
-            onChange={(checked) =>
-              onPageLayoutChange({ inheritTheme: checked })
-            }
+            onChange={(checked) => onPageLayoutChange({ inheritTheme: checked })}
           />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <ColorControl
             label="Primary / action color"
-            value={
-              page.primaryColor ||
-              (page.inheritTheme === false ? "#D2B48C" : "#7C2FCB")
-            }
+            value={page.primaryColor || (page.inheritTheme === false ? "#D2B48C" : "#7C2FCB")}
             onChange={(value) => onPageLayoutChange({ primaryColor: value })}
             hint="Buttons, active states, highlights, and linked chrome."
           />
@@ -3452,9 +3174,7 @@ function StyleWorkspace({
           value={page.backgroundImage || ""}
           previewUrl={pageLayoutPreview?.backgroundImage}
           folder="site-builder/backgrounds"
-          onChange={(backgroundImage) =>
-            onPageLayoutChange({ backgroundImage })
-          }
+          onChange={(backgroundImage) => onPageLayoutChange({ backgroundImage })}
         />
         {page.backgroundImage ? (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -3464,9 +3184,7 @@ function StyleWorkspace({
               options={["cover", "contain", "tile"]}
               onChange={(value) =>
                 onPageLayoutChange({
-                  backgroundImageFit: value as NonNullable<
-                    PageLayout["backgroundImageFit"]
-                  >,
+                  backgroundImageFit: value as NonNullable<PageLayout["backgroundImageFit"]>,
                 })
               }
             />
@@ -3488,9 +3206,7 @@ function StyleWorkspace({
               options={["none", "soft", "medium", "strong"]}
               onChange={(value) =>
                 onPageLayoutChange({
-                  backgroundOverlay: value as NonNullable<
-                    PageLayout["backgroundOverlay"]
-                  >,
+                  backgroundOverlay: value as NonNullable<PageLayout["backgroundOverlay"]>,
                 })
               }
             />
@@ -3500,17 +3216,14 @@ function StyleWorkspace({
               options={["none", "grain", "grid", "spotlight"]}
               onChange={(value) =>
                 onPageLayoutChange({
-                  pageTreatment: value as NonNullable<
-                    PageLayout["pageTreatment"]
-                  >,
+                  pageTreatment: value as NonNullable<PageLayout["pageTreatment"]>,
                 })
               }
             />
           </div>
         ) : (
           <p className="mt-3 font-body text-xs text-vb-silver/40">
-            Your selected page background color remains visible until an image
-            is uploaded.
+            Your selected page background color remains visible until an image is uploaded.
           </p>
         )}
         <button
@@ -3553,8 +3266,7 @@ function StyleWorkspace({
           />
         </div>
         <p className="mt-2 font-body text-xs text-vb-silver/40">
-          Section widths are automatically fluid across mobile, tablet, and
-          desktop.
+          Section widths are automatically fluid across mobile, tablet, and desktop.
         </p>
       </StyleGroup>
       <StyleGroup
@@ -3622,16 +3334,7 @@ function StyleWorkspace({
           <SelectField
             label="Heading text size"
             value={layout.headingSize}
-            options={[
-              "32px",
-              "40px",
-              "48px",
-              "56px",
-              "64px",
-              "72px",
-              "88px",
-              "104px",
-            ]}
+            options={["32px", "40px", "48px", "56px", "64px", "72px", "88px", "104px"]}
             onChange={(value) =>
               onChange({
                 headingSize: value as Required<SectionLayout>["headingSize"],
@@ -3652,9 +3355,7 @@ function StyleWorkspace({
             label="Section background"
             value={layout.surface}
             options={["transparent", "ink", "mesh", "bordered"]}
-            onChange={(value) =>
-              onChange({ surface: value as Required<SectionLayout>["surface"] })
-            }
+            onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })}
           />
           <SelectField
             label="Text alignment"
@@ -3687,9 +3388,7 @@ function StyleWorkspace({
             label="Section spacing"
             value={layout.spacing}
             options={["tight", "normal", "relaxed", "cinematic"]}
-            onChange={(value) =>
-              onChange({ spacing: value as Required<SectionLayout>["spacing"] })
-            }
+            onChange={(value) => onChange({ spacing: value as Required<SectionLayout>["spacing"] })}
           />
           <SelectField
             label="Horizontal padding"
@@ -3705,9 +3404,7 @@ function StyleWorkspace({
             label="Shadow"
             value={layout.shadow}
             options={["none", "soft", "glow", "dramatic"]}
-            onChange={(value) =>
-              onChange({ shadow: value as Required<SectionLayout>["shadow"] })
-            }
+            onChange={(value) => onChange({ shadow: value as Required<SectionLayout>["shadow"] })}
           />
           <SelectField
             label="Border"
@@ -3735,8 +3432,7 @@ function StyleWorkspace({
             options={["none", "move", "pulse", "slowFlash"]}
             onChange={(value) =>
               onChange({
-                glowAnimation:
-                  value as Required<SectionLayout>["glowAnimation"],
+                glowAnimation: value as Required<SectionLayout>["glowAnimation"],
               })
             }
           />
@@ -3763,9 +3459,8 @@ function StyleWorkspace({
           hint="Used by glow shadows, neon borders, and animated glow treatments."
         />
         <p className="mt-2 font-body text-xs text-vb-silver/40">
-          Choose “Thin” for a refined one-pixel line. “Slow Flash” creates a
-          low-frequency promotional glow; “Move” travels around neon and
-          gradient borders.
+          Choose “Thin” for a refined one-pixel line. “Slow Flash” creates a low-frequency
+          promotional glow; “Move” travels around neon and gradient borders.
         </p>
       </StyleGroup>
       <details className="rounded-xl border border-white/[0.08] bg-vb-black/30 p-4">
@@ -3777,9 +3472,7 @@ function StyleWorkspace({
             label="Column count"
             value={String(layout.columns)}
             options={["1", "2", "3", "4"]}
-            onChange={(value) =>
-              onChange({ columns: Number(value) as 1 | 2 | 3 | 4 })
-            }
+            onChange={(value) => onChange({ columns: Number(value) as 1 | 2 | 3 | 4 })}
           />
           <SelectField
             label="Media placement"
@@ -3787,8 +3480,7 @@ function StyleWorkspace({
             options={["none", "left", "right", "background", "top"]}
             onChange={(value) =>
               onChange({
-                mediaPosition:
-                  value as Required<SectionLayout>["mediaPosition"],
+                mediaPosition: value as Required<SectionLayout>["mediaPosition"],
               })
             }
           />
@@ -3830,12 +3522,8 @@ function StyleGroup({
   return (
     <section className="rounded-xl border border-white/[0.08] bg-vb-black/35 p-4">
       <div className="mb-4">
-        <h4 className="font-sub text-sm uppercase tracking-[0.14em] text-vb-silver/85">
-          {title}
-        </h4>
-        <p className="mt-1 font-body text-xs leading-relaxed text-vb-silver/45">
-          {description}
-        </p>
+        <h4 className="font-sub text-sm uppercase tracking-[0.14em] text-vb-silver/85">{title}</h4>
+        <p className="mt-1 font-body text-xs leading-relaxed text-vb-silver/45">{description}</p>
       </div>
       {children}
     </section>
@@ -3856,17 +3544,13 @@ function ColorControl({
   return (
     <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
       {label}
-      <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
-        {hint}
-      </span>
+      <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">{hint}</span>
       <div className="mt-2 flex items-center gap-2">
         <input
           type="color"
           aria-label={`${label} color picker`}
           value={/^#[0-9A-Fa-f]{6}$/.test(value) ? value : "#7C2FCB"}
-          onChange={(event) =>
-            onChange(event.currentTarget.value.toUpperCase())
-          }
+          onChange={(event) => onChange(event.currentTarget.value.toUpperCase())}
           className="h-10 w-12 cursor-pointer rounded-md border border-white/15 bg-transparent p-1"
         />
         <input
@@ -3895,8 +3579,7 @@ function FontLibraryPicker({
   onChange: (value: Required<SectionLayout>["fontFamily"]) => void;
 }) {
   const selected =
-    BUILDER_FONT_OPTIONS.find((font) => font.id === value) ||
-    BUILDER_FONT_OPTIONS[0];
+    BUILDER_FONT_OPTIONS.find((font) => font.id === value) || BUILDER_FONT_OPTIONS[0];
   return (
     <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
       {label}
@@ -3906,18 +3589,12 @@ function FontLibraryPicker({
       <select
         aria-label="Font family"
         value={selected.id}
-        onChange={(event) =>
-          onChange(event.target.value as Required<SectionLayout>["fontFamily"])
-        }
+        onChange={(event) => onChange(event.target.value as Required<SectionLayout>["fontFamily"])}
         style={{ fontFamily: selected.family }}
         className="mt-2 w-full rounded-lg border border-white/10 bg-vb-black/50 px-3 py-2.5 text-base normal-case tracking-normal text-vb-silver-bright outline-none focus:border-vb-purple-bright"
       >
         {BUILDER_FONT_OPTIONS.map((font) => (
-          <option
-            key={font.id}
-            value={font.id}
-            style={{ fontFamily: font.family }}
-          >
+          <option key={font.id} value={font.id} style={{ fontFamily: font.family }}>
             {font.label}
           </option>
         ))}
@@ -3933,9 +3610,7 @@ function PageFontPicker({
   value?: PageLayout["pageFont"];
   onChange: (value: PageLayout["pageFont"] | undefined) => void;
 }) {
-  const selected = value
-    ? BUILDER_FONT_OPTIONS.find((font) => font.id === value)
-    : undefined;
+  const selected = value ? BUILDER_FONT_OPTIONS.find((font) => font.id === value) : undefined;
   return (
     <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/60">
       Page font override
@@ -3957,11 +3632,7 @@ function PageFontPicker({
       >
         <option value="block">Use each block’s font</option>
         {BUILDER_FONT_OPTIONS.map((font) => (
-          <option
-            key={font.id}
-            value={font.id}
-            style={{ fontFamily: font.family }}
-          >
+          <option key={font.id} value={font.id} style={{ fontFamily: font.family }}>
             {font.label}
           </option>
         ))}
@@ -4089,17 +3760,13 @@ function LayoutControls({
           label="Horizontal padding"
           value={layout.paddingX}
           options={["none", "tight", "normal", "wide"]}
-          onChange={(value) =>
-            onChange({ paddingX: value as Required<SectionLayout>["paddingX"] })
-          }
+          onChange={(value) => onChange({ paddingX: value as Required<SectionLayout>["paddingX"] })}
         />
         <SelectField
           label="Shadow effect"
           value={layout.shadow}
           options={["none", "soft", "glow", "dramatic"]}
-          onChange={(value) =>
-            onChange({ shadow: value as Required<SectionLayout>["shadow"] })
-          }
+          onChange={(value) => onChange({ shadow: value as Required<SectionLayout>["shadow"] })}
         />
         <SelectField
           label="Border treatment"
@@ -4115,9 +3782,7 @@ function LayoutControls({
           label="Section spacing"
           value={layout.spacing}
           options={["tight", "normal", "relaxed", "cinematic"]}
-          onChange={(value) =>
-            onChange({ spacing: value as Required<SectionLayout>["spacing"] })
-          }
+          onChange={(value) => onChange({ spacing: value as Required<SectionLayout>["spacing"] })}
         />
         <SelectField
           label="Text alignment"
@@ -4133,17 +3798,13 @@ function LayoutControls({
           label="Background treatment"
           value={layout.surface}
           options={["transparent", "ink", "mesh", "accent", "bordered"]}
-          onChange={(value) =>
-            onChange({ surface: value as Required<SectionLayout>["surface"] })
-          }
+          onChange={(value) => onChange({ surface: value as Required<SectionLayout>["surface"] })}
         />
         <SelectField
           label="Column count"
           value={String(layout.columns)}
           options={["1", "2", "3", "4"]}
-          onChange={(value) =>
-            onChange({ columns: Number(value) as 1 | 2 | 3 | 4 })
-          }
+          onChange={(value) => onChange({ columns: Number(value) as 1 | 2 | 3 | 4 })}
         />
         <SelectField
           label="Media placement"
@@ -4159,9 +3820,7 @@ function LayoutControls({
           label="Media fit"
           value={layout.mediaFit}
           options={["cover", "contain"]}
-          onChange={(value) =>
-            onChange({ mediaFit: value as Required<SectionLayout>["mediaFit"] })
-          }
+          onChange={(value) => onChange({ mediaFit: value as Required<SectionLayout>["mediaFit"] })}
         />
         <SelectField
           label="Media aspect"
@@ -4197,9 +3856,7 @@ function LayoutControls({
           label="Text emphasis"
           value={layout.emphasis}
           options={["standard", "accent", "muted"]}
-          onChange={(value) =>
-            onChange({ emphasis: value as Required<SectionLayout>["emphasis"] })
-          }
+          onChange={(value) => onChange({ emphasis: value as Required<SectionLayout>["emphasis"] })}
         />
       </div>
     </details>
@@ -4219,9 +3876,7 @@ function SeoEditor({
     onChange({ ...page, seo: { ...page.seo, ...patch } });
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-      <h2 className="font-sub text-xl uppercase tracking-wide">
-        Search & social sharing
-      </h2>
+      <h2 className="font-sub text-xl uppercase tracking-wide">Search & social sharing</h2>
       <p className="mt-1 font-body text-sm text-vb-silver/50">
         Set the page title, description, canonical URL, and social-card image.
       </p>
@@ -4285,9 +3940,7 @@ function Field({
     <label className="block font-body text-xs uppercase tracking-wider text-vb-silver/50">
       {label}
       {hint && (
-        <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">
-          {hint}
-        </span>
+        <span className="mt-1 block normal-case tracking-normal text-vb-silver/35">{hint}</span>
       )}
       <input
         aria-label={label}
@@ -4370,9 +4023,7 @@ function RichTextArea({
     if (node.nodeType !== Node.ELEMENT_NODE) return "";
     const element = node as HTMLElement;
     if (element.tagName === "BR") return "\n";
-    const content = Array.from(element.childNodes)
-      .map(serializeEditor)
-      .join("");
+    const content = Array.from(element.childNodes).map(serializeEditor).join("");
     if (["STRONG", "B"].includes(element.tagName)) return `**${content}**`;
     if (["EM", "I"].includes(element.tagName)) return `_${content}_`;
     if (element.tagName === "U") return `[u]${content}[/u]`;
@@ -4393,10 +4044,7 @@ function RichTextArea({
     serializedValueRef.current = nextValue;
     onChange(nextValue, true);
   };
-  const applyFormat = (
-    command: "bold" | "italic" | "underline",
-    label: string,
-  ) => {
+  const applyFormat = (command: "bold" | "italic" | "underline", label: string) => {
     const editor = editorRef.current;
     if (!editor) return;
     editor.focus();
@@ -4483,9 +4131,8 @@ function RichTextArea({
         className="mt-1.5 min-h-32 w-full whitespace-pre-wrap rounded-lg border border-white/10 bg-vb-black px-3 py-2.5 font-body text-sm normal-case tracking-normal text-vb-silver-bright outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-vb-silver/25 focus:border-vb-purple-bright/60"
       />
       <p className="mt-1.5 font-body text-[11px] leading-relaxed text-vb-silver/40">
-        Format text directly where you type: select words and choose a control,
-        or use Ctrl/Cmd + B, I, or U. The result you see here is the saved page
-        content.
+        Format text directly where you type: select words and choose a control, or use Ctrl/Cmd + B,
+        I, or U. The result you see here is the saved page content.
       </p>
       <output className="mt-1 block font-body text-[11px] text-vb-purple-bright">
         {formatStatus}
@@ -4495,17 +4142,10 @@ function RichTextArea({
   /* oxlint-enable jsx-a11y/prefer-tag-over-role */
 }
 
-function FormattedText({
-  value,
-  formatted,
-}: {
-  value: string;
-  formatted: boolean;
-}) {
+function FormattedText({ value, formatted }: { value: string; formatted: boolean }) {
   if (!formatted) return value;
   return parseInlineText(value).map((token, index) => {
-    if (token.style === "bold")
-      return <strong key={index}>{token.text}</strong>;
+    if (token.style === "bold") return <strong key={index}>{token.text}</strong>;
     if (token.style === "italic") return <em key={index}>{token.text}</em>;
     if (token.style === "underline") return <u key={index}>{token.text}</u>;
     return <span key={index}>{token.text}</span>;

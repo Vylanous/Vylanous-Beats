@@ -34,13 +34,7 @@ const ICONS: Record<SocialPlatform, LucideIcon> = {
   custom: Link2,
 };
 
-export function SocialIcon({
-  platform,
-  size = 16,
-}: {
-  platform: SocialPlatform;
-  size?: number;
-}) {
+export function SocialIcon({ platform, size = 16 }: { platform: SocialPlatform; size?: number }) {
   const Icon = ICONS[platform] || Link2;
   return <Icon aria-hidden="true" size={size} strokeWidth={1.8} />;
 }
