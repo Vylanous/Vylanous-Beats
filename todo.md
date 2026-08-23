@@ -897,3 +897,8 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Add signature, duplicate-event, payment-state, concurrent-confirmation, entitlement, email, and checkout regression coverage.
 - [x] Run the focused suite and complete repository validation; inspect the final diff, commit, and push the implementation.
 - [x] Delete the obsolete `fix/upload-webhook-launch-blockers` remote branch only after the replacement implementation is published and verified.
+
+## Local Stripe Checkout Simulation
+
+- [x] Run an isolated non-production checkout and signed Stripe webhook simulation without creating a live charge or customer order.
+- [x] Verify paid-order state, customer entitlement activation, exclusive-beat handling, delivery idempotency, and duplicate-event protection.

@@ -41,12 +41,14 @@ const [
   },
   { stripe },
   { fulfillPaidStripeOrder },
+  { createCustomerVerificationToken },
 ] = await Promise.all([
   import("../index"),
   import("../database"),
   import("../database/schema"),
   import("../lib/stripe"),
   import("../lib/order-fulfillment"),
+  import("../lib/customer-auth"),
 ]);
 
 function stripeEvent(input: {
@@ -135,6 +137,31 @@ async function seedPendingOrder(exclusive = false) {
     fileUrl: "https://cdn.example.com/file.mp3",
   });
   return { beatId, customerId, orderId, sessionId };
+}
+
+async function registerVerifiedCustomer(email: string) {
+  const registration = await app.request("/api/customer/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      password: "customer-test-password",
+      displayName: "Checkout Simulation",
+    }),
+  });
+  expect(registration.status).toBe(201);
+  const account = (await registration.json()) as {
+    customer: { id: string };
+    session: { token: string };
+  };
+  const verification = await createCustomerVerificationToken(account.customer.id);
+  const verified = await app.request("/api/customer/verify-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: verification.token }),
+  });
+  expect(verified.status).toBe(200);
+  return account;
 }
 
 describe("Stripe Checkout webhook", () => {
@@ -268,5 +295,75 @@ describe("Stripe Checkout webhook", () => {
     expect(paidOrder.status).toBe("paid");
     expect(sentDelivery).toMatchObject({ status: "sent", attempts: 2 });
     expect(entitlements).toHaveLength(1);
+  });
+
+  test("runs an isolated paid checkout followed by a signed webhook event", async () => {
+    const suffix = randomUUID().slice(0, 8);
+    const sessionId = `cs_test_checkout_${suffix}`;
+    const beat = await seedPendingOrder();
+    // The seeded pending order is not used in this checkout simulation; reuse its
+    // beat and remove its placeholder order data so this test goes through the
+    // public checkout route to create a fresh pending order.
+    await db.delete(orderItems).where(eq(orderItems.orderId, beat.orderId));
+    await db.delete(orders).where(eq(orders.id, beat.orderId));
+    await db.delete(customers).where(eq(customers.id, beat.customerId));
+
+    const account = await registerVerifiedCustomer(`checkout-${suffix}@example.com`);
+    const originalCreate = stripe!.checkout.sessions.create;
+    (stripe!.checkout.sessions.create as unknown as (input: unknown) => Promise<unknown>) =
+      async () => ({
+        id: sessionId,
+        url: `https://checkout.stripe.test/session/${sessionId}`,
+      });
+
+    try {
+      const checkout = await app.request("/api/checkout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${account.session.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ items: [{ beatId: beat.beatId, tier: "mp3" }] }),
+      });
+      expect(checkout.status).toBe(200);
+      const body = (await checkout.json()) as { mode: string; orderId: string; url: string | null };
+      expect(body).toMatchObject({
+        mode: "stripe",
+        url: `https://checkout.stripe.test/session/${sessionId}`,
+      });
+
+      const [pendingOrder] = await db.select().from(orders).where(eq(orders.id, body.orderId));
+      expect(pendingOrder).toMatchObject({
+        customerId: account.customer.id,
+        status: "pending",
+        stripeSessionId: sessionId,
+      });
+
+      const beforeDeliveries = deliveryRequests.length;
+      const event = stripeEvent({
+        eventId: `evt_${randomUUID().replaceAll("-", "")}`,
+        sessionId,
+        orderId: body.orderId,
+      });
+      expect((await signedWebhook(event)).status).toBe(200);
+      expect((await signedWebhook(event)).status).toBe(200);
+
+      const [paidOrder] = await db.select().from(orders).where(eq(orders.id, body.orderId));
+      const entitlements = await db
+        .select()
+        .from(customerEntitlements)
+        .where(eq(customerEntitlements.customerId, account.customer.id));
+      const deliveries = await db
+        .select()
+        .from(orderDeliveries)
+        .where(eq(orderDeliveries.orderId, body.orderId));
+      expect(paidOrder.status).toBe("paid");
+      expect(entitlements).toHaveLength(1);
+      expect(deliveries).toHaveLength(1);
+      expect(deliveries[0]).toMatchObject({ status: "sent", attempts: 1 });
+      expect(deliveryRequests).toHaveLength(beforeDeliveries + 1);
+    } finally {
+      stripe!.checkout.sessions.create = originalCreate;
+    }
   });
 });
