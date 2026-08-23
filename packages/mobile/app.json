@@ -22,8 +22,6 @@
       "supportsTablet": true,
       "associatedDomains": [
         "applinks:www.vylanous.com",
-        "applinks:vylanous.com",
-        "applinks:www.vylanous.com",
         "applinks:vylanous.com"
       ]
     },
@@ -36,21 +34,6 @@
         "backgroundColor": "#0B0A11"
       },
       "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "www.vylanous.com",
-              "pathPrefix": "/"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        },
         {
           "action": "VIEW",
           "autoVerify": true,
