@@ -56,7 +56,11 @@ export const orders = sqliteTable(
       .default(sql`(CURRENT_TIMESTAMP)`),
     paidAt: text("paid_at"),
   },
-  (t) => [index("orders_status_idx").on(t.status), index("orders_customer_idx").on(t.customerId)],
+  (t) => [
+    index("orders_status_idx").on(t.status),
+    index("orders_customer_idx").on(t.customerId),
+    index("orders_stripe_session_idx").on(t.stripeSessionId),
+  ],
 );
 
 /** A customer account shared by the website and native mobile application. */
@@ -154,6 +158,47 @@ export const orderItems = sqliteTable(
     fileUrl: text("file_url").notNull().default(""),
   },
   (t) => [index("order_items_order_id_idx").on(t.orderId)],
+);
+
+/** Signed Stripe events retained for webhook replay protection and support audit. */
+export const stripeWebhookEvents = sqliteTable(
+  "stripe_webhook_events",
+  {
+    id: text("id").primaryKey(),
+    providerEventId: text("provider_event_id").notNull(),
+    eventType: text("event_type").notNull(),
+    checkoutSessionId: text("checkout_session_id").notNull().default(""),
+    orderId: text("order_id").notNull().default(""),
+    status: text("status").notNull().default("processing"), // processing | fulfilled | ignored | failed
+    lastError: text("last_error").notNull().default(""),
+    receivedAt: text("received_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    processedAt: text("processed_at"),
+  },
+  (t) => [
+    uniqueIndex("stripe_webhook_events_provider_event_id_idx").on(t.providerEventId),
+    index("stripe_webhook_events_order_idx").on(t.orderId),
+    index("stripe_webhook_events_session_idx").on(t.checkoutSessionId),
+  ],
+);
+
+/** Durable delivery state keeps payment fulfillment and email retries separate. */
+export const orderDeliveries = sqliteTable(
+  "order_deliveries",
+  {
+    id: text("id").primaryKey(),
+    orderId: text("order_id").notNull(),
+    status: text("status").notNull().default("pending"), // pending | sent | failed
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error").notNull().default(""),
+    sentAt: text("sent_at"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    updatedAt: text("updated_at"),
+  },
+  (t) => [uniqueIndex("order_deliveries_order_id_idx").on(t.orderId)],
 );
 
 /**
@@ -257,6 +302,8 @@ export const inboundEmails = sqliteTable(
 export type Beat = typeof beats.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type StripeWebhookEvent = typeof stripeWebhookEvents.$inferSelect;
+export type OrderDelivery = typeof orderDeliveries.$inferSelect;
 export type Customer = typeof customers.$inferSelect;
 export type CustomerSession = typeof customerSessions.$inferSelect;
 export type CustomerEntitlement = typeof customerEntitlements.$inferSelect;

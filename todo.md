@@ -871,3 +871,29 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Upgrade the Electron and desktop packaging security toolchain through a supported release set.
 - [x] Upgrade the Expo and React Native dependency set with compatible mobile tooling versions.
 - [x] Run the complete audit, lint, typecheck, test, and web/desktop/mobile build suite before deployment.
+
+## Unmerged Branch Review
+
+- [x] Inventory the remaining unmerged remote branches, pull-request state, and unique commits relative to main.
+- [x] Summarize changed areas, merge relevance, and recommended merge-or-delete disposition for each branch without modifying remote branches.
+
+## Approved Stale Branch Cleanup
+
+- [x] Revalidate the eight approved branches against current `origin/main` and confirm the retained webhook branch is excluded.
+- [x] Delete only the approved stale remote branch references without changing `main` or deployed code.
+- [x] Verify the retained webhook branch, `origin/main` revision, and no-deploy-impact result.
+
+## Stripe Webhook Rebuild Review
+
+- [x] Inspect the retained branch's Stripe event verification, idempotency, order fulfillment, entitlement, and email logic.
+- [x] Compare its intended webhook behavior with current `main` checkout, confirmation, entitlement, download, and email flows.
+- [x] Define a conflict-free Stripe webhook rebuild and test plan based on current `main`, without merging stale branch code.
+
+## Stripe Webhook Fulfillment Implementation
+
+- [x] Create a focused implementation branch from current `origin/main` while preserving the existing task-tracker history.
+- [x] Add signed Stripe Checkout webhook handling, durable event idempotency, and shared payment-fulfillment logic compatible with the current customer portal.
+- [x] Correct delivery-email idempotency handling and preserve retry-safe fulfillment and exclusive-beat rules.
+- [x] Add signature, duplicate-event, payment-state, concurrent-confirmation, entitlement, email, and checkout regression coverage.
+- [x] Run the focused suite and complete repository validation; inspect the final diff, commit, and push the implementation.
+- [ ] Delete the obsolete `fix/upload-webhook-launch-blockers` remote branch only after the replacement implementation is published and verified.

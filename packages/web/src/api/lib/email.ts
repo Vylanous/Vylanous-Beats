@@ -38,11 +38,15 @@ export async function sendDeliveryEmail(email: string, orderId: string, token: s
   const { apiKey, from } = emailConfig();
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      // This must be the API request header, not an email-level custom header.
+      "Idempotency-Key": `beat-delivery/${orderId}`,
+    },
     body: JSON.stringify({
       from,
       to: [email],
-      headers: { "Idempotency-Key": `beat-delivery/${orderId}` },
       subject: "Your Vylanous Beats download is ready",
       html: `<div style="font-family:sans-serif;background:#0a0a0c;color:#edeef2;padding:32px;border-radius:12px"><h1 style="color:#a24df5;letter-spacing:1px">VYLANOUS BEATS</h1><p>Thanks for your purchase. Your beats are ready to download.</p><p><a href="${link}" style="background:#7c2fcb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Download your beats</a></p><p style="color:#7a7c88;font-size:13px">Order ${orderId}. Keep this email — your download link is private.</p></div>`,
     }),

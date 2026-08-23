@@ -45,6 +45,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     "paid_at" text
   )`,
   `create index if not exists "orders_status_idx" on "orders" ("status")`,
+  `create index if not exists "orders_stripe_session_idx" on "orders" ("stripe_session_id")`,
   `create table if not exists "customers" (
     "id" text primary key not null,
     "email" text not null,
@@ -102,6 +103,31 @@ export const SCHEMA_STATEMENTS: string[] = [
     "file_url" text not null default ''
   )`,
   `create index if not exists "order_items_order_id_idx" on "order_items" ("order_id")`,
+  `create table if not exists "stripe_webhook_events" (
+    "id" text primary key not null,
+    "provider_event_id" text not null,
+    "event_type" text not null,
+    "checkout_session_id" text not null default '',
+    "order_id" text not null default '',
+    "status" text not null default 'processing',
+    "last_error" text not null default '',
+    "received_at" text not null default (CURRENT_TIMESTAMP),
+    "processed_at" text
+  )`,
+  `create unique index if not exists "stripe_webhook_events_provider_event_id_idx" on "stripe_webhook_events" ("provider_event_id")`,
+  `create index if not exists "stripe_webhook_events_order_idx" on "stripe_webhook_events" ("order_id")`,
+  `create index if not exists "stripe_webhook_events_session_idx" on "stripe_webhook_events" ("checkout_session_id")`,
+  `create table if not exists "order_deliveries" (
+    "id" text primary key not null,
+    "order_id" text not null,
+    "status" text not null default 'pending',
+    "attempts" integer not null default 0,
+    "last_error" text not null default '',
+    "sent_at" text,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "updated_at" text
+  )`,
+  `create unique index if not exists "order_deliveries_order_id_idx" on "order_deliveries" ("order_id")`,
   `create table if not exists "mobile_purchase_transactions" (
     "id" text primary key not null,
     "platform" text not null,

@@ -1,12 +1,11 @@
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../database";
-import { orders, orderItems, beats } from "../database/schema";
+import { orders, orderItems } from "../database/schema";
 import { signIfKey } from "../lib/url-sign";
 import { stripe } from "../lib/stripe";
-import { sendDeliveryEmail } from "../lib/email";
 import { customerFromRequest } from "../lib/customer-auth";
-import { activateOrderEntitlements } from "../lib/customer-portal";
+import { fulfillPaidStripeOrder } from "../lib/order-fulfillment";
 
 export function ordersRoutes(app: Hono) {
   app.post("/orders/:id/confirm", async (c) => {
@@ -19,28 +18,17 @@ export function ordersRoutes(app: Hono) {
     const owner = Boolean(customer && order.customerId && order.customerId === customer.id);
     if (!owner && order.downloadToken !== token) return c.json({ error: "Invalid token" }, 403);
 
-    if (order.status !== "paid" && stripe && order.stripeSessionId) {
+    if (stripe && order.stripeSessionId) {
       try {
         const session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
         if (session.payment_status === "paid") {
-          await db
-            .update(orders)
-            .set({ status: "paid", paidAt: new Date().toISOString() })
-            .where(eq(orders.id, id));
-          order.status = "paid";
-          if (order.customerId) await activateOrderEntitlements(order.customerId, id);
-          const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
-          for (const it of items) {
-            if (it.licenseTier === "exclusive") {
-              await db
-                .update(beats)
-                .set({ soldExclusive: true, published: false, featured: false })
-                .where(eq(beats.id, it.beatId));
-            }
+          const fulfillment = await fulfillPaidStripeOrder({
+            checkoutSessionId: session.id,
+            orderId: id,
+          });
+          if (fulfillment.status === "fulfilled" || fulfillment.status === "already_paid") {
+            order.status = "paid";
           }
-          await sendDeliveryEmail(order.email, id, token).catch((e) =>
-            console.error("[email] paid order", e),
-          );
         }
       } catch (e) {
         console.error("[confirm] stripe retrieve failed", e);
