@@ -864,3 +864,10 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Inventory the remaining transitive dependency advisories with severity, affected versions, and dependency paths.
 - [x] Determine which advisories are reachable from the deployed web/API production path versus desktop, mobile, or development-only tooling.
 - [x] Identify safe remediation options and prioritize any materially exposed critical paths.
+
+## Dependency Vulnerability Remediation
+
+- [x] Upgrade the compatible web build and server-adjacent dependency paths that carry audited advisories.
+- [x] Upgrade the Electron and desktop packaging security toolchain through a supported release set.
+- [x] Upgrade the Expo and React Native dependency set with compatible mobile tooling versions.
+- [x] Run the complete audit, lint, typecheck, test, and web/desktop/mobile build suite before deployment.

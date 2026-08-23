@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "vylanousbeats",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -20,15 +19,11 @@
       "bundleIdentifier": "com.vylanousbeats.app",
       "buildNumber": "1",
       "supportsTablet": true,
-      "associatedDomains": [
-        "applinks:www.vylanous.com",
-        "applinks:vylanous.com"
-      ]
+      "associatedDomains": ["applinks:www.vylanous.com", "applinks:vylanous.com"]
     },
     "android": {
       "package": "com.vylanousbeats.app",
       "versionCode": 2,
-      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0A11"
@@ -44,22 +39,28 @@
               "pathPrefix": "/"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
-    },
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0B0A11"
     },
     "plugins": [
       "expo-router",
       "expo-iap",
-      "expo-updates"
+      "expo-updates",
+      "expo-audio",
+      "expo-font",
+      "expo-secure-store",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0A11"
+        }
+      ],
+      "expo-status-bar",
+      "expo-asset"
     ],
     "extra": {
       "apiUrl": "https://www.vylanous.com",

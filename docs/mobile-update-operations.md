@@ -8,10 +8,10 @@ Native JavaScript and interface changes are delivered through the Expo update se
 
 ## Update streams
 
-| Audience | Channel | Branch | Intended use |
-|---|---|---|---|
-| Internal testers | `preview` | `preview` | Test native UI, customer flows, and compatible interface updates before public release. |
-| Public releases | `production` | `production` | Deliver approved compatible JavaScript updates to published Android and iPhone builds. |
+| Audience         | Channel      | Branch       | Intended use                                                                            |
+| ---------------- | ------------ | ------------ | --------------------------------------------------------------------------------------- |
+| Internal testers | `preview`    | `preview`    | Test native UI, customer flows, and compatible interface updates before public release. |
+| Public releases  | `production` | `production` | Deliver approved compatible JavaScript updates to published Android and iPhone builds.  |
 
 ## Automated publishing
 
@@ -21,10 +21,10 @@ The repository must contain an Actions secret named `EXPO_TOKEN`. The secret mus
 
 ## Release decision
 
-| Change | Delivery path |
-|---|---|
-| Beat catalog, artwork, price, customer order, entitlement, backend-compatible portal data | Website/backend deployment; the app reads the live result. |
-| Native React/Expo screen, component, style, copy, or supported business logic | Validate, merge to `main`, then publish an Expo update to the appropriate channel. |
+| Change                                                                                                             | Delivery path                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Beat catalog, artwork, price, customer order, entitlement, backend-compatible portal data                          | Website/backend deployment; the app reads the live result.                                                 |
+| Native React/Expo screen, component, style, copy, or supported business logic                                      | Validate, merge to `main`, then publish an Expo update to the appropriate channel.                         |
 | New native dependency, permission, deep-link/native manifest, icon/splash asset, SDK change, or app-store metadata | Build and distribute a new Android/iPhone binary; submit the binary through the app store when applicable. |
 
 ## Before production publication
