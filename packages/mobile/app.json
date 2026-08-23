@@ -19,10 +19,7 @@
       "bundleIdentifier": "com.vylanousbeats.app",
       "buildNumber": "1",
       "supportsTablet": true,
-      "associatedDomains": [
-        "applinks:www.vylanous.com",
-        "applinks:vylanous.com"
-      ]
+      "associatedDomains": ["applinks:www.vylanous.com", "applinks:vylanous.com"]
     },
     "android": {
       "package": "com.vylanousbeats.app",
@@ -43,10 +40,7 @@
               "pathPrefix": "/"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -55,11 +49,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#0B0A11"
     },
-    "plugins": [
-      "expo-router",
-      "expo-iap",
-      "expo-updates"
-    ],
+    "plugins": ["expo-router", "expo-iap", "expo-updates"],
     "extra": {
       "apiUrl": "https://www.vylanous.com",
       "router": {},

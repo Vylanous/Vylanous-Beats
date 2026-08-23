@@ -8,14 +8,14 @@ The app is deliberately **not** a remote WebView wrapper. Website-only layout or
 
 ## Application architecture
 
-| Layer | Responsibility | Implementation |
-|---|---|---|
-| Mobile client | Native customer experience | Expo SDK 54, Expo Router, React Native, safe-area support, native tabs, haptics, audio playback, sharing, deep linking, and persistent local cart. |
-| Live catalog API | Beats, tiers, artwork, preview URLs, availability, and licensing copy | Existing Vylanous web/API deployment at `https://www.vylanous.com/api`. New mobile endpoints will be explicitly versioned and CORS-safe. |
-| Commerce client | Product discovery and purchase UI | `expo-iap` in custom development/production builds. Product IDs are queried from Apple/Google storefronts for localized price display. |
-| Commerce backend | Verification, idempotent fulfillment, email delivery, refunds/revocations | Hono routes, Drizzle persistence, App Store Server API, Google Play Developer API, and the existing Vylanous delivery-email pipeline. |
-| Update delivery | JavaScript and asset updates that do not require native code | Expo Application Services Update production channel. Updates publish only after a successful mobile validation workflow and remain within the selected free-plan quota. |
-| Native releases | New permissions, libraries, store metadata, or platform configuration | EAS cloud builds, Firebase App Distribution beta testing, then App Store Connect and Play Console submission. |
+| Layer            | Responsibility                                                            | Implementation                                                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobile client    | Native customer experience                                                | Expo SDK 54, Expo Router, React Native, safe-area support, native tabs, haptics, audio playback, sharing, deep linking, and persistent local cart.                      |
+| Live catalog API | Beats, tiers, artwork, preview URLs, availability, and licensing copy     | Existing Vylanous web/API deployment at `https://www.vylanous.com/api`. New mobile endpoints will be explicitly versioned and CORS-safe.                                |
+| Commerce client  | Product discovery and purchase UI                                         | `expo-iap` in custom development/production builds. Product IDs are queried from Apple/Google storefronts for localized price display.                                  |
+| Commerce backend | Verification, idempotent fulfillment, email delivery, refunds/revocations | Hono routes, Drizzle persistence, App Store Server API, Google Play Developer API, and the existing Vylanous delivery-email pipeline.                                   |
+| Update delivery  | JavaScript and asset updates that do not require native code              | Expo Application Services Update production channel. Updates publish only after a successful mobile validation workflow and remain within the selected free-plan quota. |
+| Native releases  | New permissions, libraries, store metadata, or platform configuration     | EAS cloud builds, Firebase App Distribution beta testing, then App Store Connect and Play Console submission.                                                           |
 
 ## User experience
 
@@ -25,11 +25,11 @@ The first release contains a dark, brand-aligned mobile application with Home, B
 
 The website currently sells a selected beat plus a tiered digital license. Apple and Google require store billing for digital goods purchased inside their apps. Store products cannot be created dynamically as beats are added, so the mobile store catalog uses fixed **license-credit one-time products**:
 
-| Store product | Internal product ID | Redeemable entitlement |
-|---|---|---|
-| MP3 Lease Credit | `com.vylanousbeats.license.mp3` | One MP3 lease for a selected beat. |
-| WAV Lease Credit | `com.vylanousbeats.license.wav` | One WAV lease for a selected beat. |
-| Unlimited Lease Credit | `com.vylanousbeats.license.unlimited` | One unlimited license for a selected beat. |
+| Store product            | Internal product ID                   | Redeemable entitlement                                              |
+| ------------------------ | ------------------------------------- | ------------------------------------------------------------------- |
+| MP3 Lease Credit         | `com.vylanousbeats.license.mp3`       | One MP3 lease for a selected beat.                                  |
+| WAV Lease Credit         | `com.vylanousbeats.license.wav`       | One WAV lease for a selected beat.                                  |
+| Unlimited Lease Credit   | `com.vylanousbeats.license.unlimited` | One unlimited license for a selected beat.                          |
 | Exclusive License Credit | `com.vylanousbeats.license.exclusive` | One exclusive license for a selected beat, subject to availability. |
 
 Free licenses continue through the Vylanous backend without a store purchase. Each paid mobile purchase must include the selected beat and buyer delivery email. The backend verifies the store transaction before creating a paid order, writes an immutable platform transaction record, locks/rechecks exclusive inventory, sends delivery email, and returns the fulfilled order. A transaction ID is unique across fulfillment attempts to prevent duplicate delivery.
@@ -38,14 +38,14 @@ This model keeps storefront products stable even as the beat catalog changes. Be
 
 ## Required backend additions
 
-| Item | Purpose |
-|---|---|
-| `mobile_purchase_transactions` table | Idempotency key, platform transaction ID/token, product ID, selected beat, customer email, verification status, store environment, order ID, timestamps, and revocation/refund state. |
+| Item                                            | Purpose                                                                                                                                                                                      |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mobile_purchase_transactions` table            | Idempotency key, platform transaction ID/token, product ID, selected beat, customer email, verification status, store environment, order ID, timestamps, and revocation/refund state.        |
 | `POST /api/mobile/purchases/verify-and-fulfill` | Validates product/beat/tier consistency, verifies the purchase server-side, writes transaction and order in one controlled flow, and sends delivery email only after confirmed verification. |
-| Store-verification adapters | Apple App Store Server API transaction verification and Google Play Developer API purchase-token verification. Their credentials are environment-only and never shipped in the app. |
-| Notification/webhook routes | Apple App Store Server Notifications and Google Real-time Developer Notifications update revocation/refund status and affected entitlements. |
-| Mobile catalog endpoint or response contract | Returns only the fields mobile screens need, with absolute, HTTPS-only artwork and preview URLs. |
-| CORS policy | Allows only the configured mobile runtime origins as necessary; public catalog routes remain read-only. |
+| Store-verification adapters                     | Apple App Store Server API transaction verification and Google Play Developer API purchase-token verification. Their credentials are environment-only and never shipped in the app.          |
+| Notification/webhook routes                     | Apple App Store Server Notifications and Google Real-time Developer Notifications update revocation/refund status and affected entitlements.                                                 |
+| Mobile catalog endpoint or response contract    | Returns only the fields mobile screens need, with absolute, HTTPS-only artwork and preview URLs.                                                                                             |
+| CORS policy                                     | Allows only the configured mobile runtime origins as necessary; public catalog routes remain read-only.                                                                                      |
 
 ## Configuration and secrets
 

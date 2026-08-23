@@ -11,18 +11,21 @@ import { BeatCard } from "./beat-card";
 import { FourthwallMerch } from "./fourthwall-merch";
 import { Marquee } from "./marquee";
 import { api } from "../lib/api";
+import { builderPagePath, normalizeManagedPath } from "../lib/page-routes";
+import { parseInlineText, stripInlineText } from "../lib/inline-text";
 import { useSiteSettings } from "../lib/site-settings";
 import { customerFetch, useCustomer } from "../lib/customer";
 import { LICENSE_TIERS, formatCad } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
-import type { BuilderPage, PageSection, SectionLayout } from "../../shared/site-settings";
+import { getBuilderFont } from "../../shared/site-settings";
+import type {
+  BuilderPage,
+  PageSection,
+  PressKitBreakdown,
+  PressKitMetric,
+  SectionLayout,
+} from "../../shared/site-settings";
 
-const WIDTH: Record<NonNullable<SectionLayout["width"]>, string> = {
-  narrow: "max-w-2xl",
-  standard: "max-w-4xl",
-  wide: "max-w-7xl",
-  full: "max-w-none",
-};
 const SPACING: Record<NonNullable<SectionLayout["spacing"]>, string> = {
   tight: "py-8 sm:py-10",
   normal: "py-14 sm:py-16",
@@ -33,6 +36,42 @@ const ALIGNMENT: Record<NonNullable<SectionLayout["alignment"]>, string> = {
   left: "text-left items-start",
   center: "text-center items-center",
   right: "text-right items-end",
+};
+const PALETTE: Record<NonNullable<SectionLayout["palette"]>, string> = {
+  brand: "builder-palette-brand",
+  mono: "builder-palette-mono",
+  electric: "builder-palette-electric",
+  sunset: "builder-palette-sunset",
+  forest: "builder-palette-forest",
+};
+const HEADING_SCALE: Record<NonNullable<SectionLayout["headingScale"]>, string> = {
+  compact: "builder-heading-compact",
+  standard: "builder-heading-standard",
+  display: "builder-heading-display",
+  hero: "builder-heading-hero",
+};
+const PADDING_X: Record<NonNullable<SectionLayout["paddingX"]>, string> = {
+  none: "px-0",
+  tight: "px-3 sm:px-5",
+  normal: "px-5 sm:px-8",
+  wide: "px-8 sm:px-14 lg:px-20",
+};
+const SHADOW: Record<NonNullable<SectionLayout["shadow"]>, string> = {
+  none: "",
+  soft: "shadow-[0_18px_55px_rgba(0,0,0,0.18)]",
+  glow: "shadow-[0_18px_70px_rgba(124,47,203,0.24)]",
+  dramatic: "shadow-[0_26px_90px_rgba(0,0,0,0.38)]",
+};
+const BORDER_STYLE: Record<NonNullable<SectionLayout["borderStyle"]>, string> = {
+  none: "border-transparent",
+  subtle: "builder-border-subtle",
+  accent: "builder-border-accent",
+  chrome: "builder-border-chrome",
+  thin: "builder-border-thin",
+  double: "border-2 builder-border-double",
+  dashed: "border-dashed builder-border-dashed",
+  gradient: "builder-border-gradient",
+  neon: "builder-border-neon",
 };
 const SURFACE: Record<NonNullable<SectionLayout["surface"]>, string> = {
   transparent: "",
@@ -72,6 +111,19 @@ const DEFAULT_LAYOUT: Required<SectionLayout> = {
   imageOverlay: "none",
   borderRadius: "rounded",
   emphasis: "standard",
+  palette: "brand",
+  headingScale: "standard",
+  paddingX: "normal",
+  shadow: "none",
+  borderStyle: "none",
+  glowColor: "",
+  glowAnimation: "none",
+  customColor: "",
+  fontFamily: "anton",
+  bodyFontFamily: "barlow",
+  eyebrowSize: "16px",
+  headingSize: "64px",
+  bodySize: "18px",
 };
 
 function usePageMetadata(page: BuilderPage | undefined) {
@@ -79,7 +131,8 @@ function usePageMetadata(page: BuilderPage | undefined) {
     if (!page) return;
     const title = page.seo?.title || `${page.title} | Vylanous Beats`;
     const description =
-      page.seo?.description || page.sections.find((section) => section.body)?.body || "";
+      page.seo?.description ||
+      stripInlineText(page.sections.find((section) => section.body)?.body || "");
     const canonicalPath = page.seo?.canonicalPath || page.path || `/${page.slug}`;
     const canonicalUrl = new URL(canonicalPath, window.location.origin).toString();
     const imageUrl =
@@ -109,26 +162,82 @@ function usePageMetadata(page: BuilderPage | undefined) {
 
 export function ManagedPage({ path }: { path: string }) {
   const { pages, fourthwall } = useSiteSettings();
+  const managedPath = normalizeManagedPath(path);
   const page = pages.find(
-    (candidate) => (candidate.path || `/${candidate.slug}`) === path && candidate.published,
+    (candidate) => builderPagePath(candidate) === managedPath && candidate.published,
   );
   usePageMetadata(page);
   if (!page) return <UnavailablePage />;
+  const parentPage = page.parentPageId
+    ? pages.find((candidate) => candidate.id === page.parentPageId && candidate.published)
+    : undefined;
+  const navigationRoot = parentPage || page;
+  const childPages = pages
+    .filter((candidate) => candidate.parentPageId === navigationRoot.id && candidate.published)
+    .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000));
+  const showLocalNavigation = Boolean(navigationRoot.showChildNavigation && childPages.length);
   return (
     <Layout
       showHeader={page.layout?.showHeader !== false}
       showFooter={page.layout?.showFooter !== false}
       pageBackground={page.layout?.background}
+      pageStyle={page.layout}
     >
+      {showLocalNavigation && (
+        <LocalSubNavigation root={navigationRoot} current={page} childPages={childPages} />
+      )}
       {page.sections.map((section) => (
         <BuilderSection
           key={section.id}
           section={section}
+          pageLayout={page.layout}
           currency={fourthwall.currency}
           shopDomain={fourthwall.shopDomain}
         />
       ))}
     </Layout>
+  );
+}
+
+function LocalSubNavigation({
+  root,
+  current,
+  childPages,
+}: {
+  root: BuilderPage;
+  current: BuilderPage;
+  childPages: BuilderPage[];
+}) {
+  const links = [root, ...childPages];
+  return (
+    <nav
+      aria-label={`${root.navLabel} sub-navigation`}
+      className="page-sub-navigation border-b bg-vb-black/70 backdrop-blur-sm"
+    >
+      <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 sm:px-8 no-scrollbar">
+        {links.map((link) => {
+          const href = builderPagePath(link);
+          const active = link.id === current.id;
+          return (
+            <Link
+              key={link.id}
+              to={href}
+              aria-current={active ? "page" : undefined}
+              onClick={() =>
+                window.scrollTo({
+                  top: 0,
+                  left: 0,
+                  behavior: "instant" as ScrollBehavior,
+                })
+              }
+              className={`page-sub-navigation-button shrink-0 rounded-full border px-4 py-2 font-sub text-xs uppercase tracking-[0.16em] transition ${active ? "is-active" : ""}`}
+            >
+              {link.navLabel}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -153,28 +262,76 @@ function UnavailablePage() {
 
 function BuilderSection({
   section,
+  pageLayout,
   currency,
   shopDomain,
 }: {
   section: PageSection;
+  pageLayout?: BuilderPage["layout"];
   currency: string;
   shopDomain: string;
 }) {
-  const layout = { ...DEFAULT_LAYOUT, ...section.layout };
-  if (section.type === "marquee") return <Marquee text={section.title || "VYLANOUS BEATS"} />;
+  const layout: Required<SectionLayout> = {
+    ...DEFAULT_LAYOUT,
+    ...section.layout,
+    // Width is intentionally fluid. Legacy saved width/contentWidth values are
+    // ignored so the same page fills its available viewport on every device.
+    width: "full",
+    ...(pageLayout?.sectionSpacing ? { spacing: pageLayout.sectionSpacing } : {}),
+  };
+  const selectedHeadingFont = getBuilderFont(pageLayout?.pageFont || layout.fontFamily);
+  const selectedBodyFont = getBuilderFont(layout.bodyFontFamily);
+  const sectionAttributes = {
+    id: section.anchorId || undefined,
+    "aria-label": section.ariaLabel || undefined,
+  };
+  const customStyle = {
+    "--builder-heading-font-family": selectedHeadingFont.family,
+    "--builder-body-font-family": selectedBodyFont.family,
+    "--builder-eyebrow-size": layout.eyebrowSize,
+    "--builder-heading-size": layout.headingSize,
+    "--builder-body-size": layout.bodySize,
+    "--builder-glow-color":
+      layout.glowColor || layout.customColor || pageLayout?.primaryColor || "#7C2FCB",
+    ...(layout.customColor ? { "--builder-custom-color": layout.customColor } : {}),
+  } as Record<string, string>;
+  const customColorClass = layout.customColor ? "builder-custom-color" : "";
+  if (section.type === "marquee")
+    return (
+      <div
+        {...sectionAttributes}
+        style={customStyle}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} builder-font-selected builder-direct-typography ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${customColorClass}`}
+      >
+        <Marquee text={section.title || "VYLANOUS BEATS"} />
+      </div>
+    );
   if (section.type === "divider")
     return (
       <div
-        className={`mx-auto h-px ${WIDTH[layout.width]} bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
+        {...sectionAttributes}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} h-px w-full bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
       />
     );
   if (section.type === "spacer")
-    return <div aria-hidden="true" className={SPACING[layout.spacing]} />;
-  return (
-    <section className={SURFACE[layout.surface]}>
+    return (
       <div
-        className={`relative mx-auto flex ${WIDTH[layout.width]} ${SPACING[layout.spacing]} flex-col px-5 sm:px-8 ${ALIGNMENT[layout.alignment]}`}
+        {...sectionAttributes}
+        aria-hidden="true"
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} ${SPACING[layout.spacing]}`}
+      />
+    );
+  return (
+    <section
+      {...sectionAttributes}
+      style={customStyle}
+      className={`${section.customClass || ""} relative isolate border ${SURFACE[layout.surface]} ${PALETTE[layout.palette]} builder-font-selected builder-direct-typography ${HEADING_SCALE[layout.headingScale]} ${SHADOW[layout.shadow]} ${BORDER_STYLE[layout.borderStyle]} builder-border-${layout.borderStyle} builder-glow-${layout.glowAnimation} ${customColorClass}`}
+    >
+      <div
+        className={`relative flex w-full max-w-none min-w-0 ${SPACING[layout.spacing]} flex-col ${PADDING_X[layout.paddingX]} ${ALIGNMENT[layout.alignment]}`}
       >
+        <SectionCover section={section} />
+        <SectionLogo section={section} />
         {section.type === "hero" && <HeroSection section={section} layout={layout} />}
         {section.type === "text" && <CopySection section={section} layout={layout} />}
         {section.type === "image" && <ImageSection section={section} layout={layout} />}
@@ -182,7 +339,7 @@ function BuilderSection({
         {section.type === "gallery" && <GallerySection section={section} layout={layout} />}
         {section.type === "featureCards" && <FeatureCards section={section} layout={layout} />}
         {section.type === "callout" && <CalloutSection section={section} layout={layout} />}
-        {section.type === "pressKit" && <CopySection section={section} layout={layout} icon />}
+        {section.type === "pressKit" && <PressKitSection section={section} layout={layout} />}
         {section.type === "merch" && (
           <MerchSection section={section} currency={currency} shopDomain={shopDomain} />
         )}
@@ -192,6 +349,58 @@ function BuilderSection({
         {section.type === "licenseComparison" && <LicenseComparison section={section} />}
       </div>
     </section>
+  );
+}
+
+function SectionLogo({ section }: { section: PageSection }) {
+  if (!section.sectionLogoUrl) return null;
+  return (
+    <div className="mb-6 flex w-full justify-start">
+      <img
+        src={section.sectionLogoUrl}
+        alt={section.sectionLogoAlt || section.title || "Section logo"}
+        loading="lazy"
+        decoding="async"
+        className="max-h-24 max-w-[min(18rem,80vw)] object-contain object-left"
+      />
+    </div>
+  );
+}
+
+function SectionCover({ section }: { section: PageSection }) {
+  if (!section.coverImageUrl && !section.coverVideoUrl) return null;
+  const overlay =
+    section.coverOverlay === "strong"
+      ? "after:absolute after:inset-0 after:bg-vb-black/70"
+      : section.coverOverlay === "soft"
+        ? "after:absolute after:inset-0 after:bg-vb-black/35"
+        : "";
+  return (
+    <div
+      className={`relative mb-8 w-full overflow-hidden rounded-2xl border border-white/[0.1] aspect-[16/9] ${overlay}`}
+    >
+      {section.coverVideoUrl ? (
+        // oxlint-disable-next-line jsx-a11y/media-has-caption -- decorative muted cover video without spoken content.
+        <video
+          className="h-full w-full object-cover"
+          src={section.coverVideoUrl}
+          poster={section.coverImageUrl || undefined}
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+        />
+      ) : (
+        <img
+          src={section.coverImageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      )}
+    </div>
   );
 }
 
@@ -214,23 +423,33 @@ function CopyBlock({
   return (
     <div className={`flex max-w-3xl flex-col ${ALIGNMENT[layout.alignment]}`}>
       {section.eyebrow && (
-        <p className="font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
+        <p className="page-eyebrow builder-eyebrow font-sub uppercase tracking-[0.3em] text-vb-purple-bright text-lg">
           {section.eyebrow}
         </p>
       )}
       <Heading
-        className={`mt-3 whitespace-pre-line font-display uppercase leading-[0.88] ${heading === "h1" ? "text-6xl sm:text-8xl" : "text-5xl sm:text-6xl"} ${emphasis}`}
+        className={`builder-section-heading mt-3 whitespace-pre-line font-display uppercase leading-[0.88] ${heading === "h1" ? "text-6xl sm:text-8xl" : "text-5xl sm:text-6xl"} ${emphasis}`}
       >
         {section.title}
       </Heading>
       {section.body && (
-        <p className="mt-5 max-w-2xl whitespace-pre-line font-body text-lg leading-relaxed text-vb-silver/70">
-          {section.body}
+        <p className="builder-section-body mt-5 max-w-2xl whitespace-pre-line font-body text-lg leading-relaxed text-vb-silver/70">
+          <FormattedBody value={section.body} formatted={section.bodyFormat === "inline"} />
         </p>
       )}
       <Actions section={section} />
     </div>
   );
+}
+
+function FormattedBody({ value, formatted }: { value: string; formatted: boolean }) {
+  if (!formatted) return value;
+  return parseInlineText(value).map((token, index) => {
+    if (token.style === "bold") return <strong key={index}>{token.text}</strong>;
+    if (token.style === "italic") return <em key={index}>{token.text}</em>;
+    if (token.style === "underline") return <u key={index}>{token.text}</u>;
+    return <span key={index}>{token.text}</span>;
+  });
 }
 
 function HeroSection({
@@ -406,7 +625,11 @@ function GallerySection({
           {section.items.map((item) => (
             <div key={item.id} className="space-y-3">
               <MediaImage
-                section={{ ...section, imageUrl: item.imageUrl, title: item.title }}
+                section={{
+                  ...section,
+                  imageUrl: item.imageUrl,
+                  title: item.title,
+                }}
                 layout={layout}
                 className="w-full"
               />
@@ -449,6 +672,10 @@ function FeatureCards({
                 <img
                   src={item.imageUrl}
                   alt=""
+                  width={1200}
+                  height={675}
+                  loading="lazy"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                   className="mt-4 aspect-video w-full rounded-lg object-cover"
                 />
               )}
@@ -468,6 +695,176 @@ function FeatureCards({
     </div>
   );
 }
+const PRESS_KIT_LABELS: Record<PressKitMetric["platform"], string> = {
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  spotify: "Spotify",
+  soundcloud: "SoundCloud",
+  x: "X",
+  website: "Website",
+  other: "Other",
+};
+
+function compactMetric(value: number | undefined): string {
+  if (value === undefined || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function PressKitSection({
+  section,
+  layout,
+}: {
+  section: PageSection;
+  layout: Required<SectionLayout>;
+}) {
+  const pressKit = section.pressKit || { metrics: [], audience: {} };
+  const metrics = pressKit.metrics || [];
+  const audienceGroups: {
+    key: "gender" | "age" | "locations";
+    label: string;
+    rows: PressKitBreakdown[];
+  }[] = [
+    { key: "gender", label: "Gender", rows: pressKit.audience.gender || [] },
+    { key: "age", label: "Age groups", rows: pressKit.audience.age || [] },
+    {
+      key: "locations",
+      label: "Top locations",
+      rows: pressKit.audience.locations || [],
+    },
+  ];
+  return (
+    <div className="w-full">
+      <CopyBlock section={section} layout={layout} />
+      {metrics.length === 0 && audienceGroups.every((group) => group.rows.length === 0) ? (
+        <div className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-6 font-body text-sm text-vb-muted">
+          Press Kit analytics will appear here once platform and audience data is added in the Site
+          Builder.
+        </div>
+      ) : (
+        <div className="mt-8 space-y-8">
+          {metrics.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {metrics.map((metric) => (
+                <article
+                  key={metric.id}
+                  className={`rounded-xl border border-white/[0.08] bg-vb-ink/80 p-5 ${RADIUS[layout.borderRadius]}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-sub text-xs uppercase tracking-[0.18em] text-vb-purple-bright">
+                        {PRESS_KIT_LABELS[metric.platform]}
+                      </p>
+                      <h3 className="mt-2 font-display text-2xl uppercase text-chrome">
+                        {metric.label || PRESS_KIT_LABELS[metric.platform]}
+                      </h3>
+                      {metric.handle && (
+                        <p className="mt-1 font-body text-xs text-vb-muted">{metric.handle}</p>
+                      )}
+                    </div>
+                    {metric.url && (
+                      <a
+                        href={metric.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open ${metric.label || PRESS_KIT_LABELS[metric.platform]} profile`}
+                        className="text-vb-silver/55 hover:text-vb-purple-bright"
+                      >
+                        <ExternalLink size={16} />
+                      </a>
+                    )}
+                  </div>
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {metric.followers !== undefined && (
+                      <PressMetric label="Followers" value={compactMetric(metric.followers)} />
+                    )}
+                    {metric.subscribers !== undefined && (
+                      <PressMetric label="Subscribers" value={compactMetric(metric.subscribers)} />
+                    )}
+                    {metric.videos !== undefined && (
+                      <PressMetric label="Videos" value={compactMetric(metric.videos)} />
+                    )}
+                    {metric.posts !== undefined && (
+                      <PressMetric label="Posts" value={compactMetric(metric.posts)} />
+                    )}
+                    {metric.views !== undefined && (
+                      <PressMetric label="Views" value={compactMetric(metric.views)} />
+                    )}
+                    {metric.likes !== undefined && (
+                      <PressMetric label="Likes" value={compactMetric(metric.likes)} />
+                    )}
+                    {metric.engagementRate !== undefined && (
+                      <PressMetric label="Engagement" value={`${metric.engagementRate}%`} />
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          {audienceGroups.some((group) => group.rows.length > 0) && (
+            <div className="grid gap-5 lg:grid-cols-3">
+              {audienceGroups.map(
+                (group) =>
+                  group.rows.length > 0 && (
+                    <div
+                      key={group.key}
+                      className={`rounded-xl border border-white/[0.08] bg-vb-ink/70 p-5 ${RADIUS[layout.borderRadius]}`}
+                    >
+                      <h3 className="font-sub text-xs uppercase tracking-[0.18em] text-vb-purple-bright">
+                        Audience · {group.label}
+                      </h3>
+                      <div className="mt-5 space-y-4">
+                        {group.rows.map((row) => (
+                          <div key={`${group.key}-${row.label}`}>
+                            <div className="mb-1 flex items-center justify-between gap-3 font-body text-xs text-vb-silver/70">
+                              <span>{row.label}</span>
+                              <span>{row.value}%</span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                              <div
+                                className="h-full rounded-full bg-vb-purple"
+                                style={{
+                                  width: `${Math.max(0, Math.min(100, row.value))}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+              )}
+            </div>
+          )}
+          {(pressKit.sourceNote || pressKit.updatedAt || pressKit.audience.note) && (
+            <p className="font-body text-xs text-vb-muted">
+              {pressKit.sourceNote}
+              {pressKit.sourceNote && pressKit.updatedAt ? " · " : ""}
+              {pressKit.updatedAt ? `Updated ${pressKit.updatedAt}` : ""}
+              {(pressKit.sourceNote || pressKit.updatedAt) && pressKit.audience.note ? " · " : ""}
+              {pressKit.audience.note}
+            </p>
+          )}
+        </div>
+      )}
+      <Actions section={section} />
+    </div>
+  );
+}
+
+function PressMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3">
+      <p className="font-body text-[10px] uppercase tracking-wider text-vb-muted">{label}</p>
+      <p className="mt-1 font-display text-xl text-chrome">{value}</p>
+    </div>
+  );
+}
+
 function CalloutSection({
   section,
   layout,
@@ -541,38 +938,14 @@ function FeaturedBeats({
 
 function BeatCatalog() {
   const { ready, customer } = useCustomer();
-  const { data, isLoading } = useQuery({
-    queryKey: ["beats", "all"],
-    enabled: Boolean(customer),
-    queryFn: async () => (await customerFetch("/api/beats")).json(),
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["beats", customer ? "all" : "featured"],
+    enabled: ready,
+    queryFn: async () =>
+      customer
+        ? (await customerFetch("/api/beats")).json()
+        : (await api.beats.featured.$get()).json(),
   });
-  if (!ready)
-    return (
-      <div className="py-20 text-center font-sub uppercase tracking-wide text-vb-purple-bright">
-        Loading catalog access…
-      </div>
-    );
-  if (!customer)
-    return (
-      <div className="rounded-2xl border border-vb-purple/30 bg-vb-ink p-7 sm:p-10">
-        <p className="font-sub text-xs uppercase tracking-[.24em] text-vb-purple-bright">
-          Full catalog access
-        </p>
-        <h2 className="mt-3 font-display text-4xl uppercase text-chrome">
-          Sign in to browse the vault.
-        </h2>
-        <p className="mt-4 max-w-2xl font-body leading-7 text-vb-silver/65">
-          Featured beats remain public. Create a customer account to search every beat, purchase
-          licenses, and keep secure downloads in one shared music vault.
-        </p>
-        <Link
-          to="/login"
-          className="mt-6 inline-flex rounded-xl bg-vb-purple px-5 py-3 font-sub text-sm uppercase tracking-wide text-white hover:bg-vb-purple-bright"
-        >
-          Sign in or create account
-        </Link>
-      </div>
-    );
   const beats = useMemo(() => (data && "beats" in data ? data.beats : []) as Beat[], [data]);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("All");
@@ -594,6 +967,52 @@ function BeatCatalog() {
     if (sort === "az") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     return list;
   }, [beats, genre, query, sort]);
+  if (!ready)
+    return (
+      <div className="py-20 text-center font-sub uppercase tracking-wide text-vb-purple-bright">
+        Loading catalog access…
+      </div>
+    );
+  if (!customer)
+    return (
+      <div>
+        <div className="mb-8 rounded-2xl border border-vb-purple/30 bg-vb-ink p-7 sm:p-10">
+          <p className="font-sub text-xs uppercase tracking-[.24em] text-vb-purple-bright">
+            Featured vault preview
+          </p>
+          <h2 className="mt-3 font-display text-4xl uppercase text-chrome">
+            Hear the latest drops.
+          </h2>
+          <p className="mt-4 max-w-2xl font-body leading-7 text-vb-silver/65">
+            Preview featured beats without an account. Sign in to unlock the complete catalog,
+            search every beat, purchase licenses, and keep secure downloads in one shared vault.
+          </p>
+          <Link
+            to="/login"
+            className="mt-6 inline-flex rounded-xl bg-vb-purple px-5 py-3 font-sub text-sm uppercase tracking-wide text-white hover:bg-vb-purple-bright"
+          >
+            Sign in for full access
+          </Link>
+        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="aspect-square animate-pulse rounded-xl bg-vb-ink" />
+            ))}
+          </div>
+        ) : isError || !beats.length ? (
+          <p className="py-12 text-center font-body text-vb-muted">
+            No featured beats are live yet.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {beats.slice(0, 6).map((beat) => (
+              <BeatCard key={beat.id} beat={beat} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   return (
     <div className="w-full">
       <div className="mb-8 flex flex-col gap-3 md:flex-row">
@@ -706,10 +1125,19 @@ function LicenseComparison({ section }: { section: PageSection }) {
       label: "File Format",
       values: ["Tagged MP3", "Untagged MP3", "WAV + MP3", "WAV+MP3+Stems", "WAV+MP3+Stems"],
     },
-    { label: "Streams", values: ["—", "10,000", "50,000", "Unlimited", "Unlimited"] },
-    { label: "Sold Copies", values: ["—", "2,000", "10,000", "Unlimited", "Unlimited"] },
+    {
+      label: "Streams",
+      values: ["—", "10,000", "50,000", "Unlimited", "Unlimited"],
+    },
+    {
+      label: "Sold Copies",
+      values: ["—", "2,000", "10,000", "Unlimited", "Unlimited"],
+    },
     { label: "Monetization", values: [false, true, true, true, true] },
-    { label: "Exclusive Ownership", values: [false, false, false, false, true] },
+    {
+      label: "Exclusive Ownership",
+      values: [false, false, false, false, true],
+    },
   ];
   return (
     <div className="w-full">
@@ -774,7 +1202,7 @@ function ActionLink({
   label: string;
   primary?: boolean;
 }) {
-  const className = `inline-flex items-center gap-2 rounded-xl px-6 py-3 font-sub uppercase tracking-wider transition ${primary ? "bg-vb-purple text-white hover:bg-vb-purple-bright" : "border border-white/15 text-vb-silver-bright hover:border-vb-purple/60"}`;
+  const className = `page-action inline-flex items-center gap-2 rounded-xl px-6 py-3 font-sub uppercase tracking-wider transition ${primary ? "bg-vb-purple text-white hover:bg-vb-purple-bright" : "border border-white/15 text-vb-silver-bright hover:border-vb-purple/60"}`;
   return href.startsWith("/") ? (
     <Link to={href} className={className}>
       {label}

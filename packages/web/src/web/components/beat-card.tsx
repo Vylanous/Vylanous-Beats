@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Play, Pause, ShoppingCart, Check } from "lucide-react";
 import { usePlayer } from "../lib/player";
-import { useCart } from "../lib/cart";
+import { useCart } from "../lib/cart-store";
 import { Waveform } from "./waveform";
 import { LICENSE_TIERS, formatCad, type LicenseTierId } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
@@ -11,6 +11,7 @@ export function BeatCard({ beat }: { beat: Beat }) {
   const { current, isPlaying, playBeat, progress } = usePlayer();
   const { add, has } = useCart();
   const [tier, setTier] = useState<LicenseTierId>("wav");
+  const [artworkFailed, setArtworkFailed] = useState(false);
   const isCurrent = current?.id === beat.id;
   const playing = isCurrent && isPlaying;
 
@@ -21,14 +22,23 @@ export function BeatCard({ beat }: { beat: Beat }) {
     <div className="group relative bg-vb-ink border border-white/[0.06] rounded-xl overflow-hidden transition-all duration-300 hover:border-vb-purple/50 hover:-translate-y-1 hover:glow-purple">
       {/* Artwork */}
       <div className="relative aspect-square overflow-hidden">
-        <img
-          src={beat.artworkUrl}
-          alt={beat.title}
-          loading="lazy"
-          decoding="async"
-          sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {artworkFailed || !beat.artworkUrl ? (
+          <div className="grid h-full w-full place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(162,77,245,.7),transparent_42%),linear-gradient(135deg,#1b1b22,#0a0a0c)] px-6 text-center">
+            <span className="font-display text-3xl uppercase tracking-wide text-vb-silver-bright/80">
+              {beat.title}
+            </span>
+          </div>
+        ) : (
+          <img
+            src={beat.artworkUrl}
+            alt={`${beat.title} artwork`}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
+            onError={() => setArtworkFailed(true)}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-vb-black via-transparent to-transparent" />
         {/* Play button */}
         <button

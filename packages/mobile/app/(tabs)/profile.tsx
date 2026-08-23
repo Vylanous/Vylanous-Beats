@@ -17,7 +17,8 @@ import { useCustomer } from "../../lib/customer";
 import { formatPrice } from "../../lib/models";
 
 export default function ProfileScreen() {
-  const { ready, customer, dashboard, refreshDashboard, signOut } = useCustomer();
+  const { ready, customer, dashboard, refreshDashboard, resendVerification, signOut } =
+    useCustomer();
   const dashboardQuery = useQuery({
     queryKey: ["customer-dashboard", customer?.id],
     queryFn: refreshDashboard,
@@ -34,6 +35,18 @@ export default function ProfileScreen() {
       );
     }
   }, []);
+  const resend = useCallback(async () => {
+    try {
+      await resendVerification();
+      Alert.alert("Verification email sent", "Check your inbox for a fresh verification link.");
+    } catch (error) {
+      Alert.alert(
+        "Could not resend email",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    }
+  }, [resendVerification]);
+
   const toggleNewsletter = useCallback(
     async (value: boolean) => {
       try {
@@ -82,6 +95,20 @@ export default function ProfileScreen() {
           <Text style={s.eyebrow}>CUSTOMER PORTAL</Text>
           <Text style={s.title}>{customer.displayName || "Your music vault"}</Text>
           <Text style={s.email}>{customer.email}</Text>
+          {!customer.emailVerified && (
+            <View style={s.verification}>
+              <View style={s.verificationCopy}>
+                <Text style={s.cardTitle}>VERIFY YOUR EMAIL</Text>
+                <Text style={s.cardBody}>
+                  Verify your email to unlock the full catalog, purchases, and mobile license
+                  delivery.
+                </Text>
+              </View>
+              <Pressable onPress={resend} style={s.verifyButton}>
+                <Text style={s.verifyButtonText}>RESEND</Text>
+              </Pressable>
+            </View>
+          )}
           <View style={s.insights}>
             <Insight label="LICENSES" value={String(dashboard.insights.licensesOwned)} />
             <Insight label="ORDERS" value={String(dashboard.insights.paidOrders)} />
@@ -174,6 +201,25 @@ const s = StyleSheet.create({
     letterSpacing: 0.7,
     marginTop: 5,
   },
+  verification: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#281B36",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#7E22CE",
+    padding: 14,
+    marginTop: 18,
+  },
+  verificationCopy: { flex: 1 },
+  verifyButton: {
+    backgroundColor: "#A855F7",
+    borderRadius: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  verifyButtonText: { color: "#fff", fontSize: 10, fontWeight: "900", letterSpacing: 0.7 },
   newsletter: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,13 +1,19 @@
 /** Vylanous footer: global chrome rendered from Site Builder footer, page, and social settings. */
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Mail, Check } from "lucide-react";
 import { useSiteSettings } from "../lib/site-settings";
+import { SocialIcon } from "./social-icon";
+import { builderPagePath, normalizeManagedPath } from "../lib/page-routes";
 
 export function Footer() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const { brand, footer, pages, socials } = useSiteSettings();
+  const [loc] = useLocation();
+  const activePage = pages.find((page) => builderPagePath(page) === normalizeManagedPath(loc));
+  const footerLogoUrl = activePage?.layout?.footerLogoUrl?.trim() || brand.fullLogoUrl;
+  const footerLabel = activePage?.layout?.footerLabel?.trim() || "";
   const links = useMemo(
     () =>
       [...pages]
@@ -15,7 +21,17 @@ export function Footer() {
         .sort((a, b) => (a.navOrder ?? 1000) - (b.navOrder ?? 1000)),
     [pages],
   );
-  const footerSocials = socials.filter((social) => social.showInFooter);
+  const pageFooterSocialIds = activePage?.layout?.footerSocialIds;
+  const universalFooterSocials = socials.filter(
+    (social) =>
+      social.showInFooter &&
+      (pageFooterSocialIds === undefined || pageFooterSocialIds.includes(social.id)),
+  );
+  const pageFooterSocials =
+    activePage?.layout?.pageSocialLinks?.filter(
+      (social) => social.showInFooter !== false && social.url.trim(),
+    ) || [];
+  const footerSocials = [...universalFooterSocials, ...pageFooterSocials];
 
   const subscribe = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -34,10 +50,21 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative mt-24 border-t border-white/[0.06] bg-vb-black">
+    <footer className="page-footer relative mt-24 border-t border-white/[0.06] bg-vb-black">
       <div className="grid max-w-7xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-4 mx-auto">
         <div className="md:col-span-2">
-          <img src={brand.fullLogoUrl} alt="Vylanous Beats" className="-ml-2 h-24 w-auto" />
+          <div className="flex flex-wrap items-center gap-3">
+            <img
+              src={footerLogoUrl}
+              alt={footerLabel || "Vylanous Beats"}
+              className="-ml-2 h-24 w-auto max-w-full object-contain"
+            />
+            {footerLabel && (
+              <span className="font-display text-2xl uppercase tracking-wide text-chrome">
+                {footerLabel}
+              </span>
+            )}
+          </div>
           <p className="mt-3 max-w-sm font-body text-vb-muted">{footer.description}</p>
           <p className="mt-4 flex items-center gap-2 font-body text-sm text-vb-muted">
             <Mail size={15} className="text-vb-purple-bright" />
@@ -102,9 +129,11 @@ export function Footer() {
                 href={social.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+                className="inline-flex items-center gap-1.5 font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+                aria-label={social.label}
               >
-                {social.label}
+                <SocialIcon platform={social.platform} size={15} />
+                <span>{social.label}</span>
               </a>
             ))}
             <p className="font-sub uppercase tracking-wider">{footer.legalLine}</p>

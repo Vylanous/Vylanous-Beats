@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import Index from "./pages/index";
 import { Provider } from "./components/provider";
+import { MANAGED_PAGE_FALLBACK_ROUTE } from "./lib/page-routes";
 
 const BeatsPage = lazy(() => import("./pages/beats"));
 const BeatDetail = lazy(() => import("./pages/beat-detail"));
@@ -13,6 +14,7 @@ const AdminPage = lazy(() => import("./pages/admin"));
 const BuilderPage = lazy(() => import("./pages/builder-page"));
 const LoginPage = lazy(() => import("./pages/login"));
 const DashboardPage = lazy(() => import("./pages/dashboard"));
+const VerifyEmailPage = lazy(() => import("./pages/verify-email"));
 const AgentFeedback = import.meta.env.DEV
   ? lazy(() =>
       import("@runablehq/website-runtime").then(({ AgentFeedback }) => ({
@@ -46,8 +48,9 @@ function App() {
           <Route path="/about" component={About} />
           <Route path="/login" component={LoginPage} />
           <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/verify-email" component={VerifyEmailPage} />
           <Route path="/admin" component={AdminPage} />
-          <Route path="/:slug" component={BuilderPage} />
+          <Route path={MANAGED_PAGE_FALLBACK_ROUTE} component={BuilderPage} />
           <Route>
             <div className="min-h-screen grid place-items-center bg-vb-black">
               <div className="text-center">

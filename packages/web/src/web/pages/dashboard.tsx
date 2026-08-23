@@ -1,13 +1,43 @@
 import { useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Download, Mail, Music2, ShoppingBag } from "lucide-react";
 import { Layout } from "../components/layout";
-import { useCustomer } from "../lib/customer";
+import { customerFetch, useCustomer } from "../lib/customer";
 import { formatCad } from "../../shared/licenses";
 
 export default function DashboardPage() {
   const [, navigate] = useLocation();
-  const { ready, customer, dashboard, updatePreferences, signOut } = useCustomer();
+  const { ready, customer, dashboard, updatePreferences, resendVerification, signOut } =
+    useCustomer();
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
+  const [downloadError, setDownloadError] = useState("");
+  const [downloadingId, setDownloadingId] = useState("");
+  const downloadEntitlement = async (entitlementId: string) => {
+    setDownloadError("");
+    setDownloadingId(entitlementId);
+    try {
+      const response = await customerFetch(`/api/customer/entitlements/${entitlementId}/download`);
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        setDownloadError(
+          payload.error === "email_verification_required"
+            ? "Verify your email before downloading your licensed files."
+            : "Your download could not be prepared. Please try again.",
+        );
+        return;
+      }
+      window.location.assign(payload.url);
+    } catch {
+      setDownloadError(
+        "Your download could not be prepared. Please check your connection and try again.",
+      );
+    } finally {
+      setDownloadingId("");
+    }
+  };
   useEffect(() => {
     if (ready && !customer) navigate("/login");
   }, [customer, navigate, ready]);
@@ -39,6 +69,44 @@ export default function DashboardPage() {
             Sign out
           </button>
         </div>
+        {!customer.emailVerified && (
+          <section className="mt-8 flex flex-col gap-4 rounded-2xl border border-vb-purple/40 bg-vb-purple/[.08] p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-sub text-xs uppercase tracking-[.2em] text-vb-purple-bright">
+                Email verification required
+              </p>
+              <p className="mt-2 max-w-2xl font-body text-sm leading-6 text-vb-silver/70">
+                Verify {customer.email} to unlock the complete catalog, checkout, and secure license
+                downloads.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={verificationStatus === "sending"}
+              onClick={async () => {
+                setVerificationStatus("sending");
+                try {
+                  await resendVerification();
+                  setVerificationStatus("sent");
+                } catch {
+                  setVerificationStatus("error");
+                }
+              }}
+              className="shrink-0 rounded-lg bg-vb-purple px-4 py-3 font-sub text-xs uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:cursor-wait disabled:opacity-60"
+            >
+              {verificationStatus === "sending"
+                ? "Sending…"
+                : verificationStatus === "sent"
+                  ? "Email sent"
+                  : "Resend email"}
+            </button>
+            {verificationStatus === "error" && (
+              <p className="font-body text-xs text-red-300">
+                Unable to resend right now. Try again shortly.
+              </p>
+            )}
+          </section>
+        )}
         <section className="mt-10 grid gap-4 sm:grid-cols-3">
           <Stat
             icon={<Music2 size={18} />}
@@ -73,6 +141,11 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="mt-6 space-y-3">
+              {downloadError && (
+                <p className="rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 font-body text-sm text-amber-300">
+                  {downloadError}
+                </p>
+              )}
               {dashboard.entitlements.length ? (
                 dashboard.entitlements.map((entitlement) => (
                   <div
@@ -87,12 +160,15 @@ export default function DashboardPage() {
                         {entitlement.licenseName}
                       </p>
                     </div>
-                    <a
-                      href={entitlement.downloadUrl}
+                    <button
+                      type="button"
+                      disabled={downloadingId === entitlement.id || !customer.emailVerified}
+                      onClick={() => downloadEntitlement(entitlement.id)}
                       className="inline-flex items-center gap-2 rounded-lg border border-vb-purple/50 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-purple-bright hover:bg-vb-purple/10"
                     >
-                      <Download size={14} /> Download
-                    </a>
+                      <Download size={14} />
+                      {downloadingId === entitlement.id ? "Preparing…" : "Download"}
+                    </button>
                   </div>
                 ))
               ) : (

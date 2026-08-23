@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { eq, desc } from "drizzle-orm";
 import type { Hono } from "hono";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { db } from "../database";
@@ -14,10 +14,79 @@ import {
   invalidateSettingsCache,
   SETTINGS_ID,
 } from "../lib/settings";
-import { mergeSettings } from "../../shared/site-settings";
+import { BUILDER_FONT_IDS, mergeSettings } from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
+
+type MediaHealthStatus = "healthy" | "missing" | "broken" | "external" | "public" | "unavailable";
+type MediaHealthEntry = {
+  id: string;
+  source: string;
+  kind: "image" | "video" | "audio" | "file";
+  reference: string;
+  normalizedKey?: string;
+  status: MediaHealthStatus;
+  detail: string;
+};
+
+function addMediaReference(
+  entries: Omit<MediaHealthEntry, "status" | "detail">[],
+  id: string,
+  source: string,
+  kind: MediaHealthEntry["kind"],
+  reference: unknown,
+) {
+  if (typeof reference !== "string" || !reference.trim()) return;
+  entries.push({ id, source, kind, reference: reference.trim() });
+}
+
+async function probeMediaReference(
+  entry: Omit<MediaHealthEntry, "status" | "detail">,
+): Promise<MediaHealthEntry> {
+  const reference = entry.reference;
+  if (/^https?:\/\//i.test(reference)) {
+    return {
+      ...entry,
+      status: "external",
+      detail: "External URL; not probed by the server.",
+    };
+  }
+  if (reference.startsWith("/")) {
+    return { ...entry, status: "public", detail: "Public site asset path." };
+  }
+  const normalizedKey = normalizeKey(reference);
+  if (!normalizedKey) {
+    return {
+      ...entry,
+      status: "missing",
+      detail: "The stored media reference is empty.",
+    };
+  }
+  if (!S3_CONFIGURED) {
+    return {
+      ...entry,
+      normalizedKey,
+      status: "unavailable",
+      detail: "Object storage is not configured in this environment.",
+    };
+  }
+  try {
+    await s3.send(new HeadObjectCommand({ Bucket: S3_BUCKET, Key: normalizedKey }));
+    return {
+      ...entry,
+      normalizedKey,
+      status: "healthy",
+      detail: "Object exists in storage.",
+    };
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "$metadata" in error
+        ? "Storage HEAD request failed."
+        : "Object was not found in storage.";
+    return { ...entry, normalizedKey, status: "broken", detail: code };
+  }
+}
 
 const beatInputSchema = z.object({
   title: z.string().min(1),
@@ -56,6 +125,8 @@ const beatUpdateSchema = z.object({
 
 const PAGE_BUILDER_IMAGE_FOLDER = "site-builder/images";
 const PAGE_BUILDER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PAGE_BUILDER_VIDEO_FOLDER = "site-builder/videos";
+const PAGE_BUILDER_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 const PAGE_BUILDER_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -63,6 +134,7 @@ const PAGE_BUILDER_IMAGE_TYPES = new Set([
   "image/gif",
   "image/avif",
 ]);
+const PAGE_BUILDER_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 const uploadPresignSchema = z.object({
   filename: z.string().min(1).max(180),
   contentType: z.string().min(1).max(120),
@@ -122,6 +194,34 @@ const settingsSchema = z.object({
     })
     .partial()
     .optional(),
+  newsletterPopup: z
+    .object({
+      enabled: z.boolean(),
+      delayMs: z.number().int().min(0).max(60_000),
+      showOnce: z.boolean(),
+      homeOnly: z.boolean(),
+      title: z.string().max(120),
+      body: z.string().max(500),
+      placeholder: z.string().max(120),
+      buttonLabel: z.string().max(80),
+      dismissLabel: z.string().max(80),
+      successMessage: z.string().max(240),
+      consentText: z.string().max(240),
+    })
+    .partial()
+    .optional(),
+  announcementBanner: z
+    .object({
+      enabled: z.boolean(),
+      message: z.string().max(240),
+      ctaLabel: z.string().max(80),
+      ctaHref: z.string().max(2000),
+      tone: z.enum(["accent", "sale", "notice"]),
+      target: z.enum(["all", "selected"]),
+      pageIds: z.array(z.string().max(120)).max(60),
+    })
+    .partial()
+    .optional(),
   socials: z
     .array(
       z.object({
@@ -150,11 +250,13 @@ const settingsSchema = z.object({
         id: z.string(),
         slug: z.string().regex(/^[a-z0-9-]+$/),
         path: z.string().startsWith("/").max(200).optional(),
+        parentPageId: z.string().max(120).optional(),
         title: z.string(),
         navLabel: z.string(),
         published: z.boolean(),
         showInNav: z.boolean(),
         showInFooter: z.boolean().optional(),
+        showChildNavigation: z.boolean().optional(),
         navOrder: z.number().int().min(0).max(10000).optional(),
         isSystem: z.boolean().optional(),
         layout: z
@@ -162,6 +264,110 @@ const settingsSchema = z.object({
             showHeader: z.boolean().optional(),
             showFooter: z.boolean().optional(),
             background: z.enum(["default", "mesh", "ink"]).optional(),
+            inheritTheme: z.boolean().optional(),
+            primaryColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            backgroundColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            textColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            mutedColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            surfaceColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            borderColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            backgroundImage: z.string().max(2000).optional(),
+            backgroundImageFit: z.enum(["cover", "contain", "tile"]).optional(),
+            backgroundImagePosition: z
+              .enum(["center", "top", "bottom", "left", "right"])
+              .optional(),
+            backgroundOverlay: z.enum(["none", "soft", "medium", "strong"]).optional(),
+            pageTreatment: z.enum(["none", "grain", "grid", "spotlight"]).optional(),
+            pageFont: z.enum(BUILDER_FONT_IDS).optional(),
+            contentWidth: z.enum(["narrow", "standard", "wide", "full"]).optional(),
+            sectionSpacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
+            eyebrowColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            linkColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            wordmark: z.string().max(120).optional(),
+            headerLogoUrl: z.string().max(2000).optional(),
+            headerLabel: z.string().max(120).optional(),
+            headerLogoHref: z.string().max(500).optional(),
+            footerLogoUrl: z.string().max(2000).optional(),
+            footerLabel: z.string().max(120).optional(),
+            wordmarkAccent: z.string().max(80).optional(),
+            wordmarkAccentColor: z
+              .string()
+              .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+              .optional(),
+            chrome: z
+              .object({
+                header: z.boolean().optional(),
+                navigation: z.boolean().optional(),
+                footer: z.boolean().optional(),
+              })
+              .optional(),
+            headerActions: z
+              .object({
+                showVault: z.boolean().optional(),
+                vaultLabel: z.string().max(80).optional(),
+                vaultHref: z.string().max(500).optional(),
+                showSignIn: z.boolean().optional(),
+                signInLabel: z.string().max(80).optional(),
+                signInHref: z.string().max(500).optional(),
+                showCart: z.boolean().optional(),
+                showMenu: z.boolean().optional(),
+              })
+              .optional(),
+            headerSocialIds: z.array(z.string().max(120)).max(32).optional(),
+            footerSocialIds: z.array(z.string().max(120)).max(32).optional(),
+            pageSocialLinks: z
+              .array(
+                z.object({
+                  id: z.string().max(120),
+                  platform: z.enum([
+                    "instagram",
+                    "tiktok",
+                    "youtube",
+                    "spotify",
+                    "soundcloud",
+                    "facebook",
+                    "x",
+                    "threads",
+                    "linkedin",
+                    "twitch",
+                    "discord",
+                    "telegram",
+                    "bandcamp",
+                    "appleMusic",
+                    "custom",
+                  ]),
+                  label: z.string().max(80),
+                  url: z.string().max(2000),
+                  showInHeader: z.boolean().optional(),
+                  showInFooter: z.boolean().optional(),
+                }),
+              )
+              .max(32)
+              .optional(),
           })
           .optional(),
         seo: z
@@ -196,14 +402,27 @@ const settingsSchema = z.object({
             ]),
             eyebrow: z.string().optional(),
             title: z.string().optional(),
-            body: z.string().optional(),
+            body: z.string().max(12_000).optional(),
+            bodyFormat: z.enum(["plain", "inline"]).optional(),
             imageUrl: z.string().optional(),
             videoUrl: z.string().optional(),
+            coverImageUrl: z.string().optional(),
+            coverVideoUrl: z.string().optional(),
+            coverOverlay: z.enum(["none", "soft", "strong"]).optional(),
             ctaLabel: z.string().optional(),
             ctaHref: z.string().optional(),
             secondaryCtaLabel: z.string().optional(),
             secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
+            anchorId: z
+              .string()
+              .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
+              .max(80)
+              .optional(),
+            customClass: z.string().max(120).optional(),
+            ariaLabel: z.string().max(120).optional(),
+            sectionLogoUrl: z.string().max(2000).optional(),
+            sectionLogoAlt: z.string().max(160).optional(),
             items: z
               .array(
                 z.object({
@@ -216,6 +435,70 @@ const settingsSchema = z.object({
                 }),
               )
               .max(24)
+              .optional(),
+            pressKit: z
+              .object({
+                updatedAt: z.string().max(80).optional(),
+                sourceNote: z.string().max(240).optional(),
+                metrics: z
+                  .array(
+                    z.object({
+                      id: z.string().max(80),
+                      platform: z.enum([
+                        "youtube",
+                        "tiktok",
+                        "instagram",
+                        "facebook",
+                        "spotify",
+                        "soundcloud",
+                        "x",
+                        "website",
+                        "other",
+                      ]),
+                      label: z.string().max(80).optional(),
+                      handle: z.string().max(120).optional(),
+                      followers: z.number().min(0).max(10_000_000_000).optional(),
+                      subscribers: z.number().min(0).max(10_000_000_000).optional(),
+                      videos: z.number().int().min(0).max(10_000_000).optional(),
+                      posts: z.number().int().min(0).max(10_000_000).optional(),
+                      views: z.number().min(0).max(10_000_000_000_000).optional(),
+                      likes: z.number().min(0).max(10_000_000_000_000).optional(),
+                      engagementRate: z.number().min(0).max(100).optional(),
+                      url: z.string().max(2000).optional(),
+                    }),
+                  )
+                  .max(24),
+                audience: z.object({
+                  gender: z
+                    .array(
+                      z.object({
+                        label: z.string().max(80),
+                        value: z.number().min(0).max(100),
+                      }),
+                    )
+                    .max(12)
+                    .optional(),
+                  age: z
+                    .array(
+                      z.object({
+                        label: z.string().max(80),
+                        value: z.number().min(0).max(100),
+                      }),
+                    )
+                    .max(12)
+                    .optional(),
+                  locations: z
+                    .array(
+                      z.object({
+                        label: z.string().max(120),
+                        value: z.number().min(0).max(100),
+                      }),
+                    )
+                    .max(24)
+                    .optional(),
+                  note: z.string().max(240).optional(),
+                }),
+              })
               .optional(),
             layout: z
               .object({
@@ -232,6 +515,39 @@ const settingsSchema = z.object({
                 imageOverlay: z.enum(["none", "soft", "strong"]).optional(),
                 borderRadius: z.enum(["none", "soft", "rounded"]).optional(),
                 emphasis: z.enum(["standard", "accent", "muted"]).optional(),
+                palette: z.enum(["brand", "mono", "electric", "sunset", "forest"]).optional(),
+                headingScale: z.enum(["compact", "standard", "display", "hero"]).optional(),
+                paddingX: z.enum(["none", "tight", "normal", "wide"]).optional(),
+                shadow: z.enum(["none", "soft", "glow", "dramatic"]).optional(),
+                borderStyle: z
+                  .enum([
+                    "none",
+                    "subtle",
+                    "accent",
+                    "chrome",
+                    "thin",
+                    "double",
+                    "dashed",
+                    "gradient",
+                    "neon",
+                  ])
+                  .optional(),
+                glowColor: z
+                  .string()
+                  .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+                  .optional(),
+                glowAnimation: z.enum(["none", "move", "pulse", "slowFlash"]).optional(),
+                customColor: z
+                  .string()
+                  .regex(/^(?:|#[0-9A-Fa-f]{6})$/)
+                  .optional(),
+                fontFamily: z.enum(BUILDER_FONT_IDS).optional(),
+                bodyFontFamily: z.enum(BUILDER_FONT_IDS).optional(),
+                eyebrowSize: z.enum(["12px", "14px", "16px", "18px", "20px"]).optional(),
+                headingSize: z
+                  .enum(["32px", "40px", "48px", "56px", "64px", "72px", "88px", "104px"])
+                  .optional(),
+                bodySize: z.enum(["14px", "16px", "18px", "20px", "22px", "24px"]).optional(),
               })
               .optional(),
           }),
@@ -239,6 +555,7 @@ const settingsSchema = z.object({
       }),
     )
     .optional(),
+  deletedPageIds: z.array(z.string().max(120)).max(100).optional(),
   fourthwall: z
     .object({
       shopDomain: z.string(),
@@ -247,12 +564,121 @@ const settingsSchema = z.object({
     })
     .partial()
     .optional(),
+  builder: z
+    .object({
+      drafts: z
+        .array(
+          z.object({
+            id: z.string(),
+            pageId: z.string(),
+            updatedAt: z.string(),
+            snapshot: z.record(z.string(), z.unknown()),
+          }),
+        )
+        .max(20)
+        .optional(),
+      templates: z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string().min(1).max(80),
+            description: z.string().max(240).optional(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            sections: z.array(z.record(z.string(), z.unknown())).max(24),
+          }),
+        )
+        .max(30)
+        .optional(),
+      versions: z
+        .array(
+          z.object({
+            id: z.string(),
+            pageId: z.string(),
+            label: z.string().min(1).max(100),
+            createdAt: z.string(),
+            snapshot: z.record(z.string(), z.unknown()),
+          }),
+        )
+        .max(50)
+        .optional(),
+    })
+    .partial()
+    .optional(),
 });
 
 function normalizeFileUrls(files: Record<string, string> | undefined): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(files || {})) out[k] = normalizeKey(v);
+  for (const [k, v] of Object.entries(files || {})) {
+    const normalized = normalizeKey(v);
+    if (normalized) out[k.trim().toLowerCase()] = normalized;
+  }
   return out;
+}
+
+function normalizeText(value: string | null | undefined, fallback = ""): string {
+  return (value || "").trim() || fallback;
+}
+
+function normalizeTags(value: string | null | undefined): string {
+  return [
+    ...new Set(
+      (value || "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    ),
+  ].join(", ");
+}
+
+function normalizeBpm(value: number | null | undefined): number {
+  const bpm = Number.isFinite(value) ? Math.round(value as number) : 0;
+  return Math.min(400, Math.max(0, bpm));
+}
+
+function normalizePrice(value: number | null | undefined): number {
+  const cents = Number.isFinite(value) ? Math.round(value as number) : 2400;
+  return Math.max(0, cents);
+}
+
+function parseStoredFileUrls(raw: string | null | undefined): Record<string, string> {
+  try {
+    const parsed = JSON.parse(raw || "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, string] => typeof entry[1] === "string",
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function normalizeBeatMetadata(input: {
+  title?: string | null;
+  bpm?: number | null;
+  musicalKey?: string | null;
+  genre?: string | null;
+  mood?: string | null;
+  tags?: string | null;
+  artworkUrl?: string | null;
+  audioUrl?: string | null;
+  fileUrls?: Record<string, string> | null;
+  priceFrom?: number | null;
+}) {
+  return {
+    title: normalizeText(input.title),
+    bpm: normalizeBpm(input.bpm),
+    musicalKey: normalizeText(input.musicalKey),
+    genre: normalizeText(input.genre, "Hip-Hop"),
+    mood: normalizeText(input.mood),
+    tags: normalizeTags(input.tags),
+    artworkUrl: normalizeKey(input.artworkUrl),
+    audioUrl: normalizeKey(input.audioUrl),
+    fileUrls: normalizeFileUrls(input.fileUrls || {}),
+    priceFrom: normalizePrice(input.priceFrom),
+  };
 }
 
 export function adminRoutes(app: Hono) {
@@ -265,6 +691,79 @@ export function adminRoutes(app: Hono) {
   });
 
   app.get("/admin/me", requireAdmin, (c) => c.json({ ok: true }, 200));
+
+  app.post("/admin/upload", requireAdmin, async (c) => {
+    if (!S3_CONFIGURED) {
+      return c.json(
+        {
+          error: "storage_not_configured",
+          message:
+            "Object storage is not configured. Set R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY (or the S3_* equivalents) on the server.",
+        },
+        503,
+      );
+    }
+    const body = await c.req.parseBody();
+    const uploaded = body.file;
+    const file = uploaded instanceof File ? uploaded : null;
+    const folder = typeof body.folder === "string" ? body.folder : "uploads";
+    if (!file) return c.json({ error: "missing_file", message: "Choose a file to upload." }, 400);
+    if (!/^[a-zA-Z0-9/_-]+$/.test(folder) || folder.includes("..")) {
+      return c.json({ error: "invalid_folder", message: "Invalid upload folder." }, 400);
+    }
+    const contentType = file.type || "application/octet-stream";
+    if (folder === PAGE_BUILDER_IMAGE_FOLDER) {
+      if (!PAGE_BUILDER_IMAGE_TYPES.has(contentType.toLowerCase())) {
+        return c.json(
+          {
+            error: "unsupported_image_type",
+            message: "Use a JPG, PNG, WebP, GIF, or AVIF image.",
+          },
+          415,
+        );
+      }
+      if (file.size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
+        return c.json(
+          {
+            error: "image_too_large",
+            message: "Page Builder images must be 10 MB or smaller.",
+          },
+          413,
+        );
+      }
+    }
+    if (folder === PAGE_BUILDER_VIDEO_FOLDER) {
+      if (!PAGE_BUILDER_VIDEO_TYPES.has(contentType.toLowerCase())) {
+        return c.json(
+          {
+            error: "unsupported_video_type",
+            message: "Use an MP4, WebM, or MOV video.",
+          },
+          415,
+        );
+      }
+      if (file.size > PAGE_BUILDER_VIDEO_MAX_BYTES) {
+        return c.json(
+          {
+            error: "video_too_large",
+            message: "Page Builder cover videos must be 50 MB or smaller.",
+          },
+          413,
+        );
+      }
+    }
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const key = `${folder}/${Date.now()}-${randomUUID()}-${safe}`;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: key,
+        Body: Buffer.from(await file.arrayBuffer()),
+        ContentType: contentType,
+      }),
+    );
+    return c.json({ key }, 200);
+  });
 
   app.post(
     "/admin/upload/presign",
@@ -284,7 +783,30 @@ export function adminRoutes(app: Hono) {
         }
         if (!size || size > PAGE_BUILDER_IMAGE_MAX_BYTES) {
           return c.json(
-            { error: "image_too_large", message: "Page Builder images must be 10 MB or smaller." },
+            {
+              error: "image_too_large",
+              message: "Page Builder images must be 10 MB or smaller.",
+            },
+            413,
+          );
+        }
+      }
+      if (folder === PAGE_BUILDER_VIDEO_FOLDER) {
+        if (!PAGE_BUILDER_VIDEO_TYPES.has(contentType.toLowerCase())) {
+          return c.json(
+            {
+              error: "unsupported_video_type",
+              message: "Use an MP4, WebM, or MOV video.",
+            },
+            415,
+          );
+        }
+        if (!size || size > PAGE_BUILDER_VIDEO_MAX_BYTES) {
+          return c.json(
+            {
+              error: "video_too_large",
+              message: "Page Builder cover videos must be 50 MB or smaller.",
+            },
             413,
           );
         }
@@ -303,7 +825,11 @@ export function adminRoutes(app: Hono) {
       const key = `${folder || "uploads"}/${Date.now()}-${randomUUID()}-${safe}`;
       const url = await getSignedUrl(
         s3,
-        new PutObjectCommand({ Bucket: S3_BUCKET, Key: key, ContentType: contentType }),
+        new PutObjectCommand({
+          Bucket: S3_BUCKET,
+          Key: key,
+          ContentType: contentType,
+        }),
         { expiresIn: 600 },
       );
       return c.json({ url, key }, 200);
@@ -313,13 +839,38 @@ export function adminRoutes(app: Hono) {
   app.get("/admin/beats", requireAdmin, async (c) => {
     const all = await db.select().from(beats).orderBy(desc(beats.createdAt));
     const withUrls = await Promise.all(
-      all.map(async (b) => ({
-        ...b,
-        // NOTE: never overwrite the raw keys here — the edit form saves these
-        // values straight back, and persisting a presigned url corrupts the row.
-        artworkSignedUrl: await signIfKey(b.artworkUrl),
-        audioSignedUrl: await signIfKey(b.audioUrl),
-      })),
+      all.map(async (b) => {
+        const metadata = normalizeBeatMetadata({
+          ...b,
+          fileUrls: parseStoredFileUrls(b.fileUrls),
+        });
+        const fileUrls = JSON.stringify(metadata.fileUrls);
+        const needsRepair =
+          b.title !== metadata.title ||
+          b.bpm !== metadata.bpm ||
+          b.musicalKey !== metadata.musicalKey ||
+          b.genre !== metadata.genre ||
+          b.mood !== metadata.mood ||
+          b.tags !== metadata.tags ||
+          b.artworkUrl !== metadata.artworkUrl ||
+          b.audioUrl !== metadata.audioUrl ||
+          b.fileUrls !== fileUrls ||
+          b.priceFrom !== metadata.priceFrom;
+        if (needsRepair) {
+          await db
+            .update(beats)
+            .set({ ...metadata, fileUrls })
+            .where(eq(beats.id, b.id));
+        }
+        return {
+          ...b,
+          ...metadata,
+          fileUrls,
+          // Keep raw storage keys in edit fields; signed URLs are display-only.
+          artworkSignedUrl: await signIfKey(metadata.artworkUrl),
+          audioSignedUrl: await signIfKey(metadata.audioUrl),
+        };
+      }),
     );
     return c.json({ beats: withUrls }, 200);
   });
@@ -330,12 +881,35 @@ export function adminRoutes(app: Hono) {
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const b = rows[0];
+    const metadata = normalizeBeatMetadata({
+      ...b,
+      fileUrls: parseStoredFileUrls(b.fileUrls),
+    });
+    const fileUrls = JSON.stringify(metadata.fileUrls);
+    const needsRepair =
+      b.title !== metadata.title ||
+      b.bpm !== metadata.bpm ||
+      b.musicalKey !== metadata.musicalKey ||
+      b.genre !== metadata.genre ||
+      b.mood !== metadata.mood ||
+      b.tags !== metadata.tags ||
+      b.artworkUrl !== metadata.artworkUrl ||
+      b.audioUrl !== metadata.audioUrl ||
+      b.fileUrls !== fileUrls ||
+      b.priceFrom !== metadata.priceFrom;
+    if (needsRepair)
+      await db
+        .update(beats)
+        .set({ ...metadata, fileUrls })
+        .where(eq(beats.id, id));
     return c.json(
       {
         beat: {
           ...b,
-          artworkSignedUrl: await signIfKey(b.artworkUrl),
-          audioSignedUrl: await signIfKey(b.audioUrl),
+          ...metadata,
+          fileUrls,
+          artworkSignedUrl: await signIfKey(metadata.artworkUrl),
+          audioSignedUrl: await signIfKey(metadata.audioUrl),
         },
       },
       200,
@@ -344,21 +918,16 @@ export function adminRoutes(app: Hono) {
 
   app.post("/admin/beats", requireAdmin, zValidator("json", beatInputSchema), async (c) => {
     const input = c.req.valid("json");
+    const metadata = normalizeBeatMetadata(input);
+    if (!metadata.title)
+      return c.json({ error: "title_required", message: "Give the beat a title." }, 400);
     const id = rid("beat");
-    const slug = makeSlug(input.title, id);
+    const slug = makeSlug(metadata.title, id);
     await db.insert(beats).values({
       id,
-      title: input.title,
+      ...metadata,
+      fileUrls: JSON.stringify(metadata.fileUrls),
       slug,
-      bpm: input.bpm,
-      musicalKey: input.musicalKey,
-      genre: input.genre || "Hip-Hop",
-      mood: input.mood,
-      tags: input.tags,
-      artworkUrl: normalizeKey(input.artworkUrl),
-      audioUrl: normalizeKey(input.audioUrl),
-      fileUrls: JSON.stringify(normalizeFileUrls(input.fileUrls)),
-      priceFrom: input.priceFrom ?? 2400,
       soldExclusive: input.soldExclusive ?? false,
       featured: input.featured ?? false,
       published: input.published ?? true,
@@ -373,17 +942,21 @@ export function adminRoutes(app: Hono) {
     if (rows.length === 0) return c.json({ error: "Not found" }, 404);
     const input = c.req.valid("json");
     const patch: Record<string, unknown> = {};
-    if (input.title !== undefined) patch.title = input.title;
-    if (input.bpm !== undefined) patch.bpm = input.bpm;
-    if (input.musicalKey !== undefined) patch.musicalKey = input.musicalKey;
-    if (input.genre !== undefined) patch.genre = input.genre;
-    if (input.mood !== undefined) patch.mood = input.mood;
-    if (input.tags !== undefined) patch.tags = input.tags;
-    if (input.artworkUrl !== undefined) patch.artworkUrl = normalizeKey(input.artworkUrl);
-    if (input.audioUrl !== undefined) patch.audioUrl = normalizeKey(input.audioUrl);
-    if (input.fileUrls !== undefined)
-      patch.fileUrls = JSON.stringify(normalizeFileUrls(input.fileUrls));
-    if (input.priceFrom !== undefined) patch.priceFrom = input.priceFrom;
+    const metadata = normalizeBeatMetadata(input);
+    if (input.title !== undefined) {
+      if (!metadata.title)
+        return c.json({ error: "title_required", message: "Give the beat a title." }, 400);
+      patch.title = metadata.title;
+    }
+    if (input.bpm !== undefined) patch.bpm = metadata.bpm;
+    if (input.musicalKey !== undefined) patch.musicalKey = metadata.musicalKey;
+    if (input.genre !== undefined) patch.genre = metadata.genre;
+    if (input.mood !== undefined) patch.mood = metadata.mood;
+    if (input.tags !== undefined) patch.tags = metadata.tags;
+    if (input.artworkUrl !== undefined) patch.artworkUrl = metadata.artworkUrl;
+    if (input.audioUrl !== undefined) patch.audioUrl = metadata.audioUrl;
+    if (input.fileUrls !== undefined) patch.fileUrls = JSON.stringify(metadata.fileUrls);
+    if (input.priceFrom !== undefined) patch.priceFrom = metadata.priceFrom;
     if (input.soldExclusive !== undefined) patch.soldExclusive = input.soldExclusive;
     if (input.featured !== undefined) patch.featured = input.featured;
     if (input.published !== undefined) patch.published = input.published;
@@ -425,6 +998,159 @@ export function adminRoutes(app: Hono) {
     return c.json({ subscribers: all }, 200);
   });
 
+  app.get("/admin/media-health", requireAdmin, async (c) => {
+    const site = await loadSettings();
+    const references: Omit<MediaHealthEntry, "status" | "detail">[] = [];
+    addMediaReference(
+      references,
+      "brand-square",
+      "Global brand",
+      "image",
+      site.brand.squareLogoUrl,
+    );
+    addMediaReference(references, "brand-full", "Global brand", "image", site.brand.fullLogoUrl);
+    addMediaReference(references, "brand-favicon", "Global brand", "image", site.brand.faviconUrl);
+    for (const page of site.pages) {
+      const prefix = `page:${page.id}`;
+      addMediaReference(
+        references,
+        `${prefix}:background`,
+        `${page.title} background`,
+        "image",
+        page.layout?.backgroundImage,
+      );
+      addMediaReference(
+        references,
+        `${prefix}:header-logo`,
+        `${page.title} header logo`,
+        "image",
+        page.layout?.headerLogoUrl,
+      );
+      addMediaReference(
+        references,
+        `${prefix}:footer-logo`,
+        `${page.title} footer logo`,
+        "image",
+        page.layout?.footerLogoUrl,
+      );
+      addMediaReference(
+        references,
+        `${prefix}:og-image`,
+        `${page.title} OpenGraph image`,
+        "image",
+        page.seo?.ogImageUrl,
+      );
+      for (const section of page.sections) {
+        const sectionPrefix = `${prefix}:section:${section.id}`;
+        addMediaReference(
+          references,
+          `${sectionPrefix}:image`,
+          `${page.title} / ${section.title || section.type}`,
+          "image",
+          section.imageUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:video`,
+          `${page.title} / ${section.title || section.type}`,
+          "video",
+          section.videoUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:cover-image`,
+          `${page.title} / ${section.title || section.type}`,
+          "image",
+          section.coverImageUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:cover-video`,
+          `${page.title} / ${section.title || section.type}`,
+          "video",
+          section.coverVideoUrl,
+        );
+        addMediaReference(
+          references,
+          `${sectionPrefix}:logo`,
+          `${page.title} / ${section.title || section.type}`,
+          "image",
+          section.sectionLogoUrl,
+        );
+        for (const item of section.items || []) {
+          addMediaReference(
+            references,
+            `${sectionPrefix}:item:${item.id}`,
+            `${page.title} / ${item.title}`,
+            "image",
+            item.imageUrl,
+          );
+        }
+      }
+    }
+    const beatRows = await db
+      .select({
+        id: beats.id,
+        title: beats.title,
+        artworkUrl: beats.artworkUrl,
+        audioUrl: beats.audioUrl,
+        fileUrls: beats.fileUrls,
+      })
+      .from(beats);
+    for (const beat of beatRows) {
+      addMediaReference(
+        references,
+        `beat:${beat.id}:artwork`,
+        `Beat: ${beat.title}`,
+        "image",
+        beat.artworkUrl,
+      );
+      addMediaReference(
+        references,
+        `beat:${beat.id}:audio`,
+        `Beat: ${beat.title}`,
+        "audio",
+        beat.audioUrl,
+      );
+      try {
+        const files = JSON.parse(beat.fileUrls || "{}") as Record<string, unknown>;
+        for (const [name, value] of Object.entries(files))
+          addMediaReference(
+            references,
+            `beat:${beat.id}:file:${name}`,
+            `Beat: ${beat.title} / ${name}`,
+            "file",
+            value,
+          );
+      } catch {
+        if (beat.fileUrls)
+          addMediaReference(
+            references,
+            `beat:${beat.id}:files`,
+            `Beat: ${beat.title} / files`,
+            "file",
+            beat.fileUrls,
+          );
+      }
+    }
+    const items = await Promise.all(references.map(probeMediaReference));
+    const summary = items.reduce<Record<MediaHealthStatus, number>>(
+      (counts, item) => {
+        counts[item.status] += 1;
+        return counts;
+      },
+      {
+        healthy: 0,
+        missing: 0,
+        broken: 0,
+        external: 0,
+        public: 0,
+        unavailable: 0,
+      },
+    );
+    return c.json({ checkedAt: new Date().toISOString(), summary, items }, 200);
+  });
+
   app.get("/admin/settings", requireAdmin, async (c) => {
     const s = await loadSettings();
     const preview = await publicSettings(s);
@@ -440,9 +1166,28 @@ export function adminRoutes(app: Hono) {
       brand: { ...current.brand, ...input.brand },
       header: { ...current.header, ...input.header },
       footer: { ...current.footer, ...input.footer },
+      newsletterPopup: {
+        ...current.newsletterPopup,
+        ...input.newsletterPopup,
+      },
+      announcementBanner: input.announcementBanner
+        ? {
+            ...current.announcementBanner,
+            ...input.announcementBanner,
+            pageIds: input.announcementBanner.pageIds ?? current.announcementBanner.pageIds,
+          }
+        : current.announcementBanner,
       socials: input.socials ?? current.socials,
       pages: input.pages ?? current.pages,
+      deletedPageIds: input.deletedPageIds ?? current.deletedPageIds,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
+      builder: input.builder
+        ? {
+            drafts: input.builder.drafts ?? current.builder.drafts,
+            templates: input.builder.templates ?? current.builder.templates,
+            versions: input.builder.versions ?? current.builder.versions,
+          }
+        : current.builder,
     });
     const json = JSON.stringify(merged);
     const existing = await db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).limit(1);

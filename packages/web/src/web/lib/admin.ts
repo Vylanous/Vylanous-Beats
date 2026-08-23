@@ -17,6 +17,40 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+export function formatAdminError(value: unknown, fallback: string): string {
+  if (typeof value === "string" && value.trim()) return value;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const issues = Array.isArray(record.issues)
+      ? record.issues
+      : Array.isArray(record.errors)
+        ? record.errors
+        : [];
+    const details = issues
+      .map((issue) => {
+        if (typeof issue === "string") return issue;
+        if (!issue || typeof issue !== "object") return "";
+        const item = issue as Record<string, unknown>;
+        const path = Array.isArray(item.path)
+          ? item.path.filter((part) => part !== "").join(".")
+          : "";
+        const message = typeof item.message === "string" ? item.message : "Invalid value";
+        return path ? `${path}: ${message}` : message;
+      })
+      .filter(Boolean);
+    if (details.length) return details.join("; ");
+    if (typeof record.message === "string" && record.message.trim()) return record.message;
+    if (typeof record.error === "string" && record.error.trim()) return record.error;
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized && serialized !== "{}") return serialized;
+    } catch {
+      /* noop */
+    }
+  }
+  return fallback;
+}
+
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getToken();
   const res = await fetch(`/api${path}`, {
@@ -35,7 +69,7 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     let msg = `Request failed (${res.status})`;
     try {
       const j = await res.json();
-      msg = j.message || j.error || msg;
+      msg = formatAdminError(j, msg);
     } catch {
       /* noop */
     }
@@ -46,7 +80,10 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 
 export const adminApi = {
   login: (password: string) =>
-    req<{ token: string }>("/admin/login", { method: "POST", body: JSON.stringify({ password }) }),
+    req<{ token: string }>("/admin/login", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
   me: () => req<{ ok: true }>("/admin/me"),
   stats: () =>
     req<{
@@ -65,7 +102,10 @@ export const adminApi = {
       body: JSON.stringify(data),
     }),
   updateBeat: (id: string, data: Partial<BeatInput>) =>
-    req<{ ok: true }>(`/admin/beats/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    req<{ ok: true }>(`/admin/beats/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
   deleteBeat: (id: string) => req<{ ok: true }>(`/admin/beats/${id}`, { method: "DELETE" }),
   listOrders: () => req<{ orders: AdminOrder[] }>("/admin/orders"),
   listSubscribers: () =>
@@ -78,12 +118,15 @@ export const adminApi = {
     }),
   getInboxContent: (id: string) => req<{ text: string }>(`/admin/inbox/${id}/content`),
   sendEmailTest: () =>
-    req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", { method: "POST" }),
+    req<{ ok: true; providerEmailId: string | null }>("/admin/email/test", {
+      method: "POST",
+    }),
   presign: (filename: string, contentType: string, folder: string, size?: number) =>
     req<{ url: string; key: string }>("/admin/upload/presign", {
       method: "POST",
       body: JSON.stringify({ filename, contentType, folder, size }),
     }),
+  mediaHealth: () => req<MediaHealthReport>("/admin/media-health"),
 };
 
 /** Fetch the site customization settings (admin-authenticated).
@@ -107,40 +150,52 @@ export async function saveAdminSettings(
 }
 
 /** Reset site customization back to brand defaults. */
-export async function resetAdminSettings(): Promise<{ settings: SiteSettings }> {
-  return req<{ settings: SiteSettings }>("/admin/settings/reset", { method: "POST" });
+export async function resetAdminSettings(): Promise<{
+  settings: SiteSettings;
+}> {
+  return req<{ settings: SiteSettings }>("/admin/settings/reset", {
+    method: "POST",
+  });
 }
 
-/** Upload a file to Tigris via presigned PUT. Returns the stored object key. */
+/** Upload a file through the same-origin server endpoint and return its durable storage key. */
 export async function uploadFile(file: File, folder: string): Promise<string> {
-  const { url, key } = await adminApi.presign(
-    file.name,
-    file.type || "application/octet-stream",
-    folder,
-    file.size,
-  );
-  let put: Response;
+  const token = getToken();
+  const form = new FormData();
+  form.append("file", file, file.name);
+  form.append("folder", folder);
+  let response: Response;
   try {
-    put = await fetch(url, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": file.type || "application/octet-stream" },
+    response = await fetch("/api/admin/upload", {
+      method: "POST",
+      body: form,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
   } catch {
     throw new Error(
-      "The upload could not reach object storage. Confirm the R2 bucket CORS policy allows this site origin and the Content-Type header.",
+      "The upload request could not reach the site server. Check your connection and try again.",
     );
   }
-  if (!put.ok) {
-    let detail = "";
+  if (response.status === 401) {
+    clearToken();
+    throw new Error("Your admin session expired. Sign in again before uploading.");
+  }
+  if (!response.ok) {
+    let message = `Upload failed (${response.status})`;
     try {
-      detail = (await put.text()).slice(0, 200);
+      const body = (await response.json()) as {
+        message?: string;
+        error?: string;
+      };
+      message = body.message || body.error || message;
     } catch {
       /* noop */
     }
-    throw new Error(`Upload failed (${put.status})${detail ? `: ${detail}` : ""}`);
+    throw new Error(message);
   }
-  return key;
+  const result = (await response.json()) as { key?: string };
+  if (!result.key) throw new Error("Upload completed without a storage key.");
+  return result.key;
 }
 
 export interface AdminBeat {
@@ -179,6 +234,28 @@ export interface BeatInput {
   soldExclusive: boolean;
   featured: boolean;
   published: boolean;
+}
+
+export type MediaHealthStatus =
+  | "healthy"
+  | "missing"
+  | "broken"
+  | "external"
+  | "public"
+  | "unavailable";
+export interface MediaHealthEntry {
+  id: string;
+  source: string;
+  kind: "image" | "video" | "audio" | "file";
+  reference: string;
+  normalizedKey?: string;
+  status: MediaHealthStatus;
+  detail: string;
+}
+export interface MediaHealthReport {
+  checkedAt: string;
+  summary: Record<MediaHealthStatus, number>;
+  items: MediaHealthEntry[];
 }
 
 export interface AdminOrder {

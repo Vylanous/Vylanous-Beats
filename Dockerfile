@@ -1,5 +1,5 @@
 # ── Stage 1: Build ──────────────────────────────────────────────────
-FROM oven/bun:1.1-alpine AS builder
+FROM oven/bun:1.3.14-alpine AS builder
 
 WORKDIR /app
 
@@ -18,13 +18,16 @@ WORKDIR /app/packages/web
 RUN bun run build
 
 # ── Stage 2: Production runtime ─────────────────────────────────────
-FROM oven/bun:1.1-alpine AS runner
+FROM oven/bun:1.3.14-alpine AS runner
 
 WORKDIR /app
 
 # Copy everything needed for runtime
 COPY --from=builder /app/node_modules ./node_modules
+# Keep workspace-local CLI links in the runtime image because `start` runs Drizzle schema bootstrap.
+COPY --from=builder /app/packages/web/node_modules ./packages/web/node_modules
 COPY --from=builder /app/packages/web/package.json ./packages/web/package.json
+COPY --from=builder /app/packages/web/drizzle.config.ts ./packages/web/drizzle.config.ts
 COPY --from=builder /app/packages/web/src ./packages/web/src
 COPY --from=builder /app/packages/web/dist ./packages/web/dist
 COPY --from=builder /app/packages/web/public ./packages/web/public
@@ -36,4 +39,7 @@ ENV PORT=3000
 
 EXPOSE 3000
 
+# The API database entrypoint awaits idempotent schema bootstrap before serving.
+# Avoid `drizzle-kit push` here: Render is non-interactive and Drizzle can prompt
+# on legacy not-null changes, causing an otherwise healthy container to exit.
 CMD ["bun", "src/server.ts"]

@@ -9,7 +9,7 @@ import { TIER_BY_ID, type LicenseTierId } from "../../shared/licenses";
 import { rid, parseFileUrls, appUrl } from "../lib/util";
 import { stripe } from "../lib/stripe";
 import { sendDeliveryEmail } from "../lib/email";
-import { currentCustomer, requireCustomer } from "../lib/customer-auth";
+import { currentCustomer, requireVerifiedCustomer } from "../lib/customer-auth";
 import { activateOrderEntitlements } from "../lib/customer-portal";
 
 const cartItemSchema = z.object({
@@ -17,12 +17,27 @@ const cartItemSchema = z.object({
   tier: z.enum(["free", "mp3", "wav", "unlimited", "exclusive"]),
 });
 
-const checkoutSchema = z.object({
-  items: z.array(cartItemSchema).min(1),
-});
+const checkoutSchema = z
+  .object({
+    items: z.array(cartItemSchema).min(1).max(25),
+  })
+  .superRefine(({ items }, ctx) => {
+    const seen = new Set<string>();
+    items.forEach((item, index) => {
+      const key = `${item.beatId}:${item.tier}`;
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["items", index],
+          message: "Each beat and license tier can only appear once in a checkout.",
+        });
+      }
+      seen.add(key);
+    });
+  });
 
 export function checkoutRoutes(app: Hono) {
-  app.post("/checkout", requireCustomer, zValidator("json", checkoutSchema), async (c) => {
+  app.post("/checkout", requireVerifiedCustomer, zValidator("json", checkoutSchema), async (c) => {
     const body = c.req.valid("json");
     const customer = await currentCustomer(c);
 
@@ -38,32 +53,54 @@ export function checkoutRoutes(app: Hono) {
 
     for (const item of body.items) {
       const rows = await db.select().from(beats).where(eq(beats.id, item.beatId)).limit(1);
-      if (rows.length === 0) continue;
+      if (rows.length === 0 || !rows[0].published) {
+        return c.json(
+          { error: "A beat in your cart is no longer available. Refresh your cart and try again." },
+          409,
+        );
+      }
       const beat = rows[0];
       const tier = TIER_BY_ID[item.tier];
-      if (!tier) continue;
+      if (!tier) return c.json({ error: "An item in your cart has an invalid license tier." }, 400);
       if (item.tier === "exclusive" && beat.soldExclusive) {
         return c.json({ error: `"${beat.title}" is already sold exclusively.` }, 409);
       }
       const files = parseFileUrls(beat.fileUrls);
+      const fileUrl = files[item.tier] || beat.audioUrl;
+      if (!fileUrl) {
+        return c.json(
+          {
+            error: `"${beat.title}" is temporarily unavailable because its delivery file has not been configured.`,
+          },
+          409,
+        );
+      }
       resolved.push({
         beatId: beat.id,
         beatTitle: beat.title,
         tier: item.tier,
         licenseName: tier.name,
         priceCents: tier.priceCents,
-        fileUrl: files[item.tier] || beat.audioUrl,
+        fileUrl,
         artworkUrl: beat.artworkUrl,
       });
     }
-
-    if (resolved.length === 0) return c.json({ error: "No valid items" }, 400);
 
     const totalCents = resolved.reduce((s, i) => s + i.priceCents, 0);
     const orderId = rid("order");
     const downloadToken = randomBytes(24).toString("base64url");
 
     const allFree = totalCents === 0;
+
+    if (!allFree && !stripe) {
+      return c.json(
+        {
+          error: "stripe_not_configured",
+          message: "Checkout is temporarily unavailable. Please contact support@vylanous.com.",
+        },
+        503,
+      );
+    }
 
     await db.transaction(async (tx) => {
       await tx.insert(orders).values({
@@ -107,40 +144,41 @@ export function checkoutRoutes(app: Hono) {
       );
     }
 
-    if (!stripe) {
+    const base = appUrl() || new URL(c.req.url).origin;
+    try {
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer_email: customer!.email,
+        line_items: resolved
+          .filter((i) => i.priceCents > 0)
+          .map((i) => ({
+            quantity: 1,
+            price_data: {
+              currency: "cad",
+              unit_amount: i.priceCents,
+              product_data: {
+                name: `${i.beatTitle} — ${i.licenseName}`,
+                images: i.artworkUrl.startsWith("http") ? [i.artworkUrl] : [],
+              },
+            },
+          })),
+        metadata: { orderId, downloadToken, customerId: customer!.id },
+        success_url: `${base}/success?order=${orderId}&token=${downloadToken}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${base}/cart?cancelled=1`,
+      });
+
+      await db.update(orders).set({ stripeSessionId: session.id }).where(eq(orders.id, orderId));
+      return c.json({ mode: "stripe", orderId, url: session.url }, 200);
+    } catch (error) {
+      await db.update(orders).set({ status: "cancelled" }).where(eq(orders.id, orderId));
+      console.error("[checkout] Stripe session creation failed", error);
       return c.json(
         {
-          error: "stripe_not_configured",
-          message: "Stripe is not configured yet. Add STRIPE_SECRET_KEY to enable real payments.",
+          error: "checkout_unavailable",
+          message: "Checkout could not be started. Please try again.",
         },
         503,
       );
     }
-
-    const base = appUrl() || new URL(c.req.url).origin;
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: customer!.email,
-      line_items: resolved
-        .filter((i) => i.priceCents > 0)
-        .map((i) => ({
-          quantity: 1,
-          price_data: {
-            currency: "cad",
-            unit_amount: i.priceCents,
-            product_data: {
-              name: `${i.beatTitle} — ${i.licenseName}`,
-              images: i.artworkUrl.startsWith("http") ? [i.artworkUrl] : [],
-            },
-          },
-        })),
-      metadata: { orderId, downloadToken, customerId: customer!.id },
-      success_url: `${base}/success?order=${orderId}&token=${downloadToken}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${base}/cart?cancelled=1`,
-    });
-
-    await db.update(orders).set({ stripeSessionId: session.id }).where(eq(orders.id, orderId));
-
-    return c.json({ mode: "stripe", orderId, url: session.url }, 200);
   });
 }

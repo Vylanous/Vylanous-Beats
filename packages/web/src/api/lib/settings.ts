@@ -33,19 +33,17 @@ export async function loadSettings(): Promise<SiteSettings> {
 }
 
 export async function signBrandUrl(value: string): Promise<string> {
-  if (
-    !value ||
-    value.startsWith("/") ||
-    value.startsWith("http://") ||
-    value.startsWith("https://")
-  )
-    return value;
-  return signIfKey(value);
+  // signIfKey handles raw keys, public paths, external URLs, and previously
+  // persisted signed storage URLs. This keeps Builder Studio media durable even
+  // when an older admin session saved a presigned URL instead of its object key.
+  return signIfKey(value || "");
 }
 
 export async function publicSettings(s: SiteSettings) {
+  const { builder: _privateBuilder, ...publicSite } = s;
+  void _privateBuilder;
   return {
-    ...s,
+    ...publicSite,
     brand: {
       squareLogoUrl: await signBrandUrl(s.brand.squareLogoUrl),
       fullLogoUrl: await signBrandUrl(s.brand.fullLogoUrl),
@@ -54,13 +52,27 @@ export async function publicSettings(s: SiteSettings) {
     pages: await Promise.all(
       s.pages.map(async (page) => ({
         ...page,
+        layout: page.layout
+          ? {
+              ...page.layout,
+              backgroundImage: await signBrandUrl(page.layout.backgroundImage || ""),
+              headerLogoUrl: await signBrandUrl(page.layout.headerLogoUrl || ""),
+              footerLogoUrl: await signBrandUrl(page.layout.footerLogoUrl || ""),
+            }
+          : page.layout,
         seo: page.seo
-          ? { ...page.seo, ogImageUrl: await signBrandUrl(page.seo.ogImageUrl || "") }
+          ? {
+              ...page.seo,
+              ogImageUrl: await signBrandUrl(page.seo.ogImageUrl || ""),
+            }
           : page.seo,
         sections: await Promise.all(
           page.sections.map(async (section) => ({
             ...section,
             imageUrl: await signBrandUrl(section.imageUrl || ""),
+            sectionLogoUrl: await signBrandUrl(section.sectionLogoUrl || ""),
+            coverImageUrl: await signBrandUrl(section.coverImageUrl || ""),
+            coverVideoUrl: await signBrandUrl(section.coverVideoUrl || ""),
             items: section.items
               ? await Promise.all(
                   section.items.map(async (item) => ({

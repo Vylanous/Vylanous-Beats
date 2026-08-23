@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "../database";
 import { beats, type Beat } from "../database/schema";
@@ -38,13 +38,13 @@ export function beatsRoutes(app: Hono) {
     return c.json({ beats: await Promise.all(all.map(serializePublicBeat)) }, 200);
   });
 
-  // Featured tracks remain public so visitors can discover the catalog before registering.
+  // Only explicitly featured tracks remain public so visitors can discover the catalog before registering.
   app.get("/beats/featured", async (c) => {
     const list = await db
       .select()
       .from(beats)
       .where(and(eq(beats.published, true), eq(beats.featured, true)))
-      .orderBy(desc(beats.createdAt));
+      .orderBy(desc(beats.featured), desc(beats.createdAt));
     c.header("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=600");
     return c.json({ beats: await Promise.all(list.map(serializePublicBeat)) }, 200);
   });
@@ -54,8 +54,9 @@ export function beatsRoutes(app: Hono) {
     const rows = await db.select().from(beats).where(eq(beats.slug, slug)).limit(1);
     const beat = rows[0];
     if (!beat || !beat.published) return c.json({ error: "Not found" }, 404);
-    if (!beat.featured && !(await customerFromRequest(c))) {
-      return c.json({ error: "customer_auth_required" }, 401);
+    if (!beat.featured) {
+      const customer = await customerFromRequest(c);
+      if (!customer) return c.json({ error: "customer_auth_required" }, 401);
     }
     c.header(
       "Cache-Control",
@@ -70,9 +71,10 @@ export function beatsRoutes(app: Hono) {
     const id = c.req.param("id");
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     const beat = rows[0];
-    if (!beat) return c.json({ error: "Not found" }, 404);
-    if (!beat.featured && !(await customerFromRequest(c))) {
-      return c.json({ error: "customer_auth_required" }, 401);
+    if (!beat || !beat.published) return c.json({ error: "Not found" }, 404);
+    if (!beat.featured) {
+      const customer = await customerFromRequest(c);
+      if (!customer) return c.json({ error: "customer_auth_required" }, 401);
     }
     await db
       .update(beats)

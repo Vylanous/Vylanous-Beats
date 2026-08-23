@@ -4,17 +4,23 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { db } from "../database";
 import { customers, subscribers } from "../database/schema";
+import { appUrl } from "../lib/util";
 import {
   createCustomerSession,
+  createCustomerVerificationToken,
   currentCustomer,
   hashCustomerPassword,
   publicCustomer,
   requireCustomer,
+  requireVerifiedCustomer,
   revokeCustomerSession,
   verifyCustomerPassword,
+  verificationTokenRecentlySent,
+  verifyCustomerEmailToken,
 } from "../lib/customer-auth";
 import { authorizedDownload, claimLegacyOrders, customerDashboard } from "../lib/customer-portal";
 import { rid } from "../lib/util";
+import { sendCustomerVerificationEmail } from "../lib/email";
 
 const registrationSchema = z.object({
   email: z
@@ -26,6 +32,15 @@ const registrationSchema = z.object({
   password: z.string().min(10).max(128),
   displayName: z.string().trim().max(160).optional().default(""),
   marketingOptIn: z.boolean().optional().default(false),
+});
+const verificationTokenSchema = z.object({ token: z.string().min(20).max(200) });
+const resendVerificationSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email()
+    .max(320)
+    .transform((value) => value.toLowerCase()),
 });
 const loginSchema = z.object({
   email: z
@@ -61,10 +76,20 @@ export function customerPortalRoutes(app: Hono) {
       displayName: body.displayName,
       passwordHash: await hashCustomerPassword(body.password),
       marketingOptIn: body.marketingOptIn,
+      emailVerified: false,
+      emailVerifiedAt: null,
     };
     await db.insert(customers).values(customer);
     if (body.marketingOptIn) await syncSubscriber(body.email);
     await claimLegacyOrders(customer);
+    const verification = await createCustomerVerificationToken(customer.id);
+    let verificationEmailSent = false;
+    try {
+      await sendCustomerVerificationEmail(customer.email, verification.token);
+      verificationEmailSent = true;
+    } catch (error) {
+      console.error("[email] customer verification delivery failed", error);
+    }
     const session = await createCustomerSession(customer.id);
     return c.json(
       {
@@ -74,9 +99,66 @@ export function customerPortalRoutes(app: Hono) {
           updatedAt: null,
         }),
         session,
+        verificationRequired: true,
+        verificationEmailSent,
       },
       201,
     );
+  });
+
+  app.post(
+    "/customer/resend-verification",
+    zValidator("json", resendVerificationSchema),
+    async (c) => {
+      const { email } = c.req.valid("json");
+      const [customer] = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.email, email))
+        .limit(1);
+      if (
+        customer &&
+        !customer.emailVerified &&
+        !(await verificationTokenRecentlySent(customer.id))
+      ) {
+        const verification = await createCustomerVerificationToken(customer.id);
+        try {
+          await sendCustomerVerificationEmail(customer.email, verification.token);
+        } catch (error) {
+          console.error("[email] customer verification resend failed", error);
+        }
+      }
+      return c.json(
+        {
+          ok: true,
+          message: "If the account exists and needs verification, a new email is on its way.",
+        },
+        202,
+      );
+    },
+  );
+
+  app.post("/customer/verify-email", zValidator("json", verificationTokenSchema), async (c) => {
+    const customer = await verifyCustomerEmailToken(c.req.valid("json").token);
+    if (!customer) return c.json({ error: "invalid_or_expired_verification_token" }, 400);
+    return c.json({ ok: true, customer: publicCustomer(customer) }, 200);
+  });
+
+  app.get("/customer/verify-email", async (c) => {
+    const base = appUrl() || "https://www.vylanous.com";
+    const resultUrl = new URL("/verify-email", base);
+    const parsed = verificationTokenSchema.safeParse({ token: c.req.query("token") });
+    if (!parsed.success) {
+      resultUrl.searchParams.set("status", "invalid_or_expired");
+      return c.redirect(resultUrl.toString(), 302);
+    }
+    const customer = await verifyCustomerEmailToken(parsed.data.token);
+    if (!customer) {
+      resultUrl.searchParams.set("status", "invalid_or_expired");
+      return c.redirect(resultUrl.toString(), 302);
+    }
+    resultUrl.searchParams.set("status", "success");
+    return c.redirect(resultUrl.toString(), 302);
   });
 
   app.post("/customer/login", zValidator("json", loginSchema), async (c) => {
@@ -106,7 +188,7 @@ export function customerPortalRoutes(app: Hono) {
     return c.json(await customerDashboard(customer!), 200);
   });
 
-  app.get("/customer/entitlements/:id/download", requireCustomer, async (c) => {
+  app.get("/customer/entitlements/:id/download", requireVerifiedCustomer, async (c) => {
     const customer = await currentCustomer(c);
     const url = await authorizedDownload(customer!.id, c.req.param("id"));
     if (!url) return c.json({ error: "entitlement_not_found" }, 404);

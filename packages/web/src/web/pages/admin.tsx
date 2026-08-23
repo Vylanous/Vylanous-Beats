@@ -12,6 +12,7 @@ import {
   Palette,
   PanelsTopLeft,
   Mail,
+  HeartPulse,
 } from "lucide-react";
 import {
   adminApi,
@@ -27,6 +28,7 @@ import { BeatTable } from "../components/admin/beat-table";
 import CustomizationPanel from "../components/admin/customization";
 import PageBuilderPanel from "../components/admin/page-builder";
 import EmailInboxPanel from "../components/admin/email-inbox";
+import MediaHealthPanel from "../components/admin/media-health";
 import { BulkUpload } from "../components/admin/bulk-upload";
 
 type Tab =
@@ -37,6 +39,7 @@ type Tab =
   | "subscribers"
   | "customization"
   | "builder"
+  | "media-health"
   | "inbox";
 
 export default function AdminPage() {
@@ -156,6 +159,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "subscribers", label: "Fan List", icon: Users },
     { id: "customization", label: "Customization", icon: Palette },
     { id: "builder", label: "Page Builder", icon: PanelsTopLeft },
+    { id: "media-health", label: "Media Health", icon: HeartPulse },
     { id: "inbox", label: "Email Inbox", icon: Mail },
   ];
 
@@ -251,6 +255,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {tab === "subscribers" && <SubscribersTab />}
             {tab === "customization" && <CustomizationPanel />}
             {tab === "builder" && <PageBuilderPanel />}
+            {tab === "media-health" && <MediaHealthPanel />}
             {tab === "inbox" && <EmailInboxPanel />}
           </>
         )}
@@ -272,8 +277,16 @@ function Overview({ onAdd, onTab }: { onAdd: () => void; onTab: (t: Tab) => void
   }, []);
 
   const cards = [
-    { label: "Total Beats", value: stats?.beats ?? "—", sub: `${stats?.published ?? 0} live` },
-    { label: "Orders", value: stats?.orders ?? "—", sub: `${stats?.paidOrders ?? 0} paid` },
+    {
+      label: "Total Beats",
+      value: stats?.beats ?? "—",
+      sub: `${stats?.published ?? 0} live`,
+    },
+    {
+      label: "Orders",
+      value: stats?.orders ?? "—",
+      sub: `${stats?.paidOrders ?? 0} paid`,
+    },
     {
       label: "Revenue",
       value: stats ? "$" + (stats.revenueCents / 100).toFixed(0) : "—",

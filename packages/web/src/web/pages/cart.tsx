@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Trash2, Lock, ArrowRight, ShoppingBag } from "lucide-react";
 import { Layout } from "../components/layout";
-import { useCart } from "../lib/cart";
+import { useCart } from "../lib/cart-store";
 import { customerFetch, useCustomer } from "../lib/customer";
 import { formatCad } from "../../shared/licenses";
 
@@ -20,7 +20,10 @@ export default function CartPage() {
       const res = await customerFetch("/api/checkout", {
         method: "POST",
         body: JSON.stringify({
-          items: items.map((item) => ({ beatId: item.beatId, tier: item.tier })),
+          items: items.map((item) => ({
+            beatId: item.beatId,
+            tier: item.tier,
+          })),
         }),
       });
       const data = await res.json();

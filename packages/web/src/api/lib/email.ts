@@ -8,8 +8,32 @@ function emailConfig() {
   return { apiKey, from };
 }
 
+export async function sendCustomerVerificationEmail(email: string, token: string) {
+  const base = appUrl() || "https://www.vylanous.com";
+  const link = `${base}/api/customer/verify-email?token=${encodeURIComponent(token)}`;
+  const { apiKey, from } = emailConfig();
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "Idempotency-Key": `customer-verification/${email}/${token.slice(0, 12)}`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      subject: "Verify your Vylanous Beats account",
+      html: `<div style="font-family:sans-serif;background:#0a0a0c;color:#edeef2;padding:32px;border-radius:12px"><h1 style="color:#a24df5;letter-spacing:1px">VYLANOUS BEATS</h1><p>Confirm your email to unlock the full beat catalog, purchases, licenses, and secure downloads.</p><p><a href="${link}" style="background:#7c2fcb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block">Verify my email</a></p><p style="color:#7a7c88;font-size:13px">This link expires in 24 hours and can only be used once.</p></div>`,
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`verification email failed ${res.status}: ${detail}`);
+  }
+}
+
 export async function sendDeliveryEmail(email: string, orderId: string, token: string) {
-  const base = appUrl();
+  const base = appUrl() || "https://www.vylanous.com";
   const link = `${base}/success?order=${orderId}&token=${token}`;
   const { apiKey, from } = emailConfig();
   const res = await fetch("https://api.resend.com/emails", {

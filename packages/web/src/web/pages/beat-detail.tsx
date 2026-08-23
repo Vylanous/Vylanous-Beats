@@ -5,7 +5,7 @@ import { Play, Pause, ShoppingCart, Check, ArrowLeft } from "lucide-react";
 import { Layout } from "../components/layout";
 import { Waveform } from "../components/waveform";
 import { usePlayer } from "../lib/player";
-import { useCart } from "../lib/cart";
+import { useCart } from "../lib/cart-store";
 import { api } from "../lib/api";
 import { LICENSE_TIERS, formatCad, type LicenseTierId } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";

@@ -1,4 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=League+Gothic&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Bebas+Neue&family=Big+Shoulders+Display:wght@400;600;700;800&family=Black+Ops+One&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=Cormorant+Garamond:wght@400;500;600;700&family=Dela+Gothic+One&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=Dosis:wght@400;500;600;700&family=Exo+2:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fjalla+One&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Josefin+Sans:wght@400;500;600;700&family=Jost:wght@400;500;600;700&family=Karla:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&family=Manrope:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Press+Start+2P&family=Rajdhani:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Roboto+Condensed:wght@400;500;600;700&family=Roboto+Slab:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&family=Russo+One&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Spline+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700&family=Teko:wght@400;500;600;700&family=Titillium+Web:wght@400;600;700&family=Urbanist:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -77,6 +80,19 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+  }
+  #root,
+  .page-style,
+  .page-style main,
+  .page-style section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .page-style img,
+  .page-style video,
+  .page-style iframe {
+    max-width: 100%;
   }
   ::selection {
     background: var(--color-vb-purple);
@@ -245,4 +261,481 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+/* Builder Studio section style presets. These classes are intentionally scoped to
+ * builder sections so page-level brand chrome remains unchanged. */
+.builder-palette-mono {
+  --builder-accent: #c9ccd6;
+  --builder-accent-bright: #ffffff;
+  --builder-surface: rgba(255, 255, 255, 0.06);
+}
+.builder-palette-electric {
+  --builder-accent: #22d3ee;
+  --builder-accent-bright: #67e8f9;
+  --builder-surface: rgba(34, 211, 238, 0.08);
+}
+.builder-palette-sunset {
+  --builder-accent: #fb7185;
+  --builder-accent-bright: #fdba74;
+  --builder-surface: rgba(251, 113, 133, 0.08);
+}
+.builder-palette-forest {
+  --builder-accent: #34d399;
+  --builder-accent-bright: #a7f3d0;
+  --builder-surface: rgba(52, 211, 153, 0.08);
+}
+.builder-palette-electric .text-purple-glow,
+.builder-palette-sunset .text-purple-glow,
+.builder-palette-forest .text-purple-glow,
+.builder-palette-mono .text-purple-glow {
+  color: var(--builder-accent-bright);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--builder-accent) 55%, transparent);
+}
+.builder-palette-electric .text-vb-purple-bright,
+.builder-palette-sunset .text-vb-purple-bright,
+.builder-palette-forest .text-vb-purple-bright,
+.builder-palette-mono .text-vb-purple-bright {
+  color: var(--builder-accent-bright);
+}
+.builder-type-editorial .font-display {
+  font-family: Georgia, "Times New Roman", serif !important;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+.builder-type-mono .font-display,
+.builder-type-mono .font-sub,
+.builder-type-mono .font-body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  letter-spacing: 0.02em;
+}
+.builder-type-condensed .font-display,
+.builder-type-condensed .font-sub,
+.builder-type-condensed .font-body {
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif !important;
+  letter-spacing: 0.015em;
+}
+.builder-heading-compact .font-display {
+  font-size: clamp(2.2rem, 5vw, 4rem) !important;
+}
+.builder-heading-display .font-display {
+  font-size: clamp(3.8rem, 9vw, 8rem) !important;
+}
+.builder-heading-hero .font-display {
+  font-size: clamp(4.5rem, 12vw, 11rem) !important;
+}
+
+.builder-font-anton .font-display,
+.builder-font-anton .font-sub,
+.builder-font-anton .font-body {
+  font-family: "Anton", sans-serif !important;
+}
+.builder-font-league .font-display,
+.builder-font-league .font-sub,
+.builder-font-league .font-body {
+  font-family: "League Gothic", sans-serif !important;
+}
+.builder-font-barlow .font-display,
+.builder-font-barlow .font-sub,
+.builder-font-barlow .font-body {
+  font-family: "Barlow Semi Condensed", sans-serif !important;
+}
+.builder-font-editorial-family .font-display,
+.builder-font-editorial-family .font-sub,
+.builder-font-editorial-family .font-body {
+  font-family: Georgia, "Times New Roman", serif !important;
+}
+.builder-font-mono-family .font-display,
+.builder-font-mono-family .font-sub,
+.builder-font-mono-family .font-body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+.builder-font-condensed-family .font-display,
+.builder-font-condensed-family .font-sub,
+.builder-font-condensed-family .font-body {
+  font-family: "Arial Narrow", "Roboto Condensed", sans-serif !important;
+}
+.builder-custom-color .text-purple-glow,
+.builder-custom-color .text-vb-purple-bright {
+  color: var(--builder-custom-color) !important;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--builder-custom-color) 55%, transparent);
+}
+.builder-custom-color .bg-vb-purple\/15,
+.builder-custom-color .bg-vb-purple\/\[0\.06\] {
+  background-color: color-mix(in srgb, var(--builder-custom-color) 15%, transparent) !important;
+}
+.builder-custom-color .border-vb-purple\/20,
+.builder-custom-color .border-vb-purple\/35 {
+  border-color: color-mix(in srgb, var(--builder-custom-color) 35%, transparent) !important;
+}
+
+.builder-font-selected .font-display,
+.builder-font-selected .font-sub {
+  font-family: var(--builder-heading-font-family) !important;
+}
+.builder-font-selected .font-body {
+  font-family: var(--builder-body-font-family) !important;
+}
+.builder-direct-typography .font-sub,
+.builder-direct-typography .builder-eyebrow {
+  font-size: clamp(12px, 1.7vw, var(--builder-eyebrow-size)) !important;
+}
+.builder-direct-typography .font-display,
+.builder-direct-typography .builder-section-heading {
+  font-size: clamp(32px, 7vw, var(--builder-heading-size)) !important;
+}
+.builder-direct-typography .font-body,
+.builder-direct-typography .builder-section-body {
+  font-size: clamp(14px, 2.2vw, var(--builder-body-size)) !important;
+}
+
+/* Page Builder section finishes. Every border variant uses the section/page glow variable. */
+.builder-border-subtle {
+  border-color: color-mix(in srgb, var(--builder-glow-color) 20%, transparent);
+}
+.builder-border-accent {
+  border-color: color-mix(in srgb, var(--builder-glow-color) 48%, transparent);
+}
+.builder-border-chrome {
+  border-color: color-mix(in srgb, var(--builder-glow-color) 70%, white);
+}
+.builder-border-thin {
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--builder-glow-color) 62%, transparent);
+}
+.builder-border-double {
+  border-style: double;
+  border-width: 4px;
+  border-color: color-mix(in srgb, var(--builder-glow-color) 58%, transparent);
+}
+.builder-border-dashed {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--builder-glow-color) 62%, transparent);
+}
+.builder-border-gradient {
+  border-color: transparent;
+  background:
+    linear-gradient(
+        var(--page-surface, var(--color-vb-ink)),
+        var(--page-surface, var(--color-vb-ink))
+      )
+      padding-box,
+    linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--builder-glow-color) 95%, white),
+        transparent 36%,
+        var(--builder-glow-color)
+      )
+      border-box;
+}
+.builder-border-neon {
+  border-color: color-mix(in srgb, var(--builder-glow-color) 88%, white);
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--builder-glow-color) 55%, transparent),
+    0 0 42px color-mix(in srgb, var(--builder-glow-color) 30%, transparent);
+}
+.builder-glow-pulse,
+.builder-glow-slowFlash,
+.builder-glow-move {
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--builder-glow-color) 44%, transparent),
+    0 0 54px color-mix(in srgb, var(--builder-glow-color) 18%, transparent);
+}
+@keyframes builder-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--builder-glow-color) 30%, transparent),
+      0 0 32px color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 22px color-mix(in srgb, var(--builder-glow-color) 68%, transparent),
+      0 0 68px color-mix(in srgb, var(--builder-glow-color) 34%, transparent);
+  }
+}
+@keyframes builder-glow-flash {
+  0%,
+  78%,
+  100% {
+    box-shadow: 0 0 10px color-mix(in srgb, var(--builder-glow-color) 22%, transparent);
+  }
+  84%,
+  92% {
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--builder-glow-color) 78%, transparent),
+      0 0 72px color-mix(in srgb, var(--builder-glow-color) 34%, transparent);
+  }
+}
+@keyframes builder-glow-move {
+  0% {
+    box-shadow:
+      -26px -10px 26px color-mix(in srgb, var(--builder-glow-color) 48%, transparent),
+      20px 14px 50px color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
+  }
+  50% {
+    box-shadow:
+      26px 10px 30px color-mix(in srgb, var(--builder-glow-color) 58%, transparent),
+      -20px -14px 54px color-mix(in srgb, var(--builder-glow-color) 18%, transparent);
+  }
+  100% {
+    box-shadow:
+      -26px -10px 26px color-mix(in srgb, var(--builder-glow-color) 48%, transparent),
+      20px 14px 50px color-mix(in srgb, var(--builder-glow-color) 12%, transparent);
+  }
+}
+.builder-glow-pulse {
+  animation: builder-glow-pulse 2.8s ease-in-out infinite;
+}
+.builder-glow-slowFlash {
+  animation: builder-glow-flash 5.4s ease-in-out infinite;
+}
+.builder-glow-move {
+  animation: builder-glow-move 5.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .builder-glow-pulse,
+  .builder-glow-slowFlash,
+  .builder-glow-move {
+    animation: none;
+  }
+}
+
+/* Page-level Style Studio variables. These are opt-in so existing pages retain the global theme. */
+main {
+  background-color: var(--page-background, transparent);
+}
+.page-eyebrow {
+  color: var(--page-eyebrow, var(--color-vb-purple-bright)) !important;
+}
+.page-action {
+  border-color: color-mix(
+    in srgb,
+    var(--page-link, var(--color-vb-purple-bright)) 55%,
+    transparent
+  );
+}
+.page-action.bg-vb-purple {
+  background-color: var(--page-primary, var(--color-vb-purple)) !important;
+}
+.page-action:hover {
+  border-color: var(--page-link, var(--color-vb-purple-bright)) !important;
+}
+.page-chrome-header .page-header .text-purple-glow,
+.page-chrome-header .page-header .text-vb-purple-bright,
+.page-chrome-navigation .page-navigation .text-purple-glow,
+.page-chrome-navigation .page-navigation a:hover,
+.page-chrome-footer .page-footer a:hover,
+.page-chrome-footer .page-footer .text-vb-purple-bright {
+  color: var(--page-link, var(--color-vb-purple-bright)) !important;
+}
+.page-chrome-header .page-header .bg-vb-purple,
+.page-chrome-navigation .page-navigation .bg-vb-purple,
+.page-chrome-footer .page-footer .bg-vb-purple {
+  background-color: var(--page-primary, var(--color-vb-purple)) !important;
+}
+.page-chrome-header .page-header .border-vb-purple,
+.page-chrome-navigation .page-navigation .border-vb-purple,
+.page-chrome-footer .page-footer .border-vb-purple {
+  border-color: color-mix(
+    in srgb,
+    var(--page-primary, var(--color-vb-purple)) 65%,
+    transparent
+  ) !important;
+}
+
+.page-style main .text-purple-glow,
+.page-style main .text-vb-purple-bright {
+  color: var(--page-primary, var(--color-vb-purple-bright)) !important;
+  text-shadow: 0 0 24px
+    color-mix(in srgb, var(--page-primary, var(--color-vb-purple)) 45%, transparent);
+}
+.page-style main .bg-vb-purple {
+  background-color: var(--page-primary, var(--color-vb-purple)) !important;
+}
+.page-style main .border-vb-purple,
+.page-style main .border-vb-purple\/20,
+.page-style main .border-vb-purple\/30,
+.page-style main .border-vb-purple\/35 {
+  border-color: color-mix(
+    in srgb,
+    var(--page-primary, var(--color-vb-purple)) 55%,
+    transparent
+  ) !important;
+}
+
+/* Builder page backgrounds sit behind every page area without intercepting content or controls. */
+.page-style {
+  isolation: isolate;
+  position: relative;
+  background-color: var(--page-background, transparent);
+}
+.page-style
+  > :not(.page-background-media):not(.page-background-overlay):not(.page-background-treatment) {
+  position: relative;
+  z-index: 1;
+}
+.page-background-media,
+.page-background-overlay,
+.page-background-treatment {
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+}
+.page-background-media {
+  z-index: -3;
+  background-image: var(--page-background-image, none);
+  background-repeat: no-repeat;
+}
+.page-background-overlay {
+  z-index: -2;
+  background: var(--page-background-overlay, transparent);
+}
+.page-background-treatment {
+  z-index: -1;
+}
+.page-background-fit-cover .page-background-media {
+  background-size: cover;
+}
+.page-background-fit-contain .page-background-media {
+  background-size: contain;
+}
+.page-background-fit-tile .page-background-media {
+  background-repeat: repeat;
+  background-size: auto;
+}
+.page-background-position-center .page-background-media {
+  background-position: center;
+}
+.page-background-position-top .page-background-media {
+  background-position: center top;
+}
+.page-background-position-bottom .page-background-media {
+  background-position: center bottom;
+}
+.page-background-position-left .page-background-media {
+  background-position: left center;
+}
+.page-background-position-right .page-background-media {
+  background-position: right center;
+}
+.page-treatment-grain .page-background-treatment {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+.page-treatment-grid .page-background-treatment {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.page-treatment-spotlight .page-background-treatment {
+  background: radial-gradient(
+    circle at 50% 10%,
+    color-mix(in srgb, var(--page-primary, #7c2fcb) 34%, transparent),
+    transparent 48%
+  );
+}
+@media (max-width: 640px) {
+  .page-background-fit-contain .page-background-media {
+    background-size: cover;
+  }
+}
+
+/* Local Builder navigation uses the active page color instead of storefront purple. */
+.page-sub-navigation {
+  border-color: color-mix(in srgb, var(--page-primary, #7c2fcb) 25%, transparent);
+}
+.page-sub-navigation-button {
+  border-color: color-mix(
+    in srgb,
+    var(--page-border, var(--page-primary, #7c2fcb)) 35%,
+    transparent
+  );
+  color: color-mix(in srgb, var(--page-text, #d8d8d8) 68%, transparent);
+}
+.page-sub-navigation-button:hover,
+.page-sub-navigation-button.is-active {
+  border-color: color-mix(in srgb, var(--page-primary, #7c2fcb) 75%, transparent);
+  color: var(--page-primary, #7c2fcb);
+}
+.page-sub-navigation-button.is-active {
+  background: color-mix(in srgb, var(--page-primary, #7c2fcb) 20%, transparent);
+}
+
+/* Fully isolated Builder pages opt out of the storefront purple aesthetic. */
+.page-style.page-theme-isolated main {
+  color: var(--page-text, inherit);
+}
+.page-style.page-theme-isolated main [class*="text-vb-silver"],
+.page-style.page-theme-isolated main [class*="text-vb-chrome"] {
+  color: var(--page-muted, var(--page-text, inherit)) !important;
+}
+.page-style.page-theme-isolated main .text-purple-glow,
+.page-style.page-theme-isolated main .text-vb-purple-bright,
+.page-style.page-theme-isolated main .text-vb-purple,
+.page-style.page-theme-isolated main .text-vb-purple-deep {
+  color: var(--page-primary, var(--page-text, inherit)) !important;
+  text-shadow: none !important;
+}
+.page-style.page-theme-isolated main .bg-vb-purple,
+.page-style.page-theme-isolated main .bg-vb-purple\/10,
+.page-style.page-theme-isolated main .bg-vb-purple\/20,
+.page-style.page-theme-isolated main .bg-vb-purple\/30 {
+  background-color: color-mix(
+    in srgb,
+    var(--page-primary, var(--page-surface, #171717)) 18%,
+    transparent
+  ) !important;
+}
+.page-style.page-theme-isolated main .border-vb-purple,
+.page-style.page-theme-isolated main .border-vb-purple\/20,
+.page-style.page-theme-isolated main .border-vb-purple\/30,
+.page-style.page-theme-isolated main .border-vb-purple\/35 {
+  border-color: color-mix(
+    in srgb,
+    var(--page-border, var(--page-primary, #777)) 65%,
+    transparent
+  ) !important;
+}
+.page-style.page-theme-isolated main [class*="bg-vb-ink"],
+.page-style.page-theme-isolated main [class*="bg-vb-black"],
+.page-style.page-theme-isolated main [class*="bg-white/"] {
+  background-color: var(--page-surface, transparent) !important;
+}
+.page-style.page-theme-isolated .page-background-treatment {
+  --page-primary: var(--page-primary, transparent);
+}
+.page-style.page-theme-isolated .page-treatment-spotlight .page-background-treatment {
+  background: radial-gradient(
+    circle at 50% 10%,
+    color-mix(in srgb, var(--page-primary, transparent) 24%, transparent),
+    transparent 48%
+  );
+}
+
+/* Page-level isolation also covers shared chrome when a page opts out of the storefront theme. */
+.page-style.page-theme-isolated [class*="text-purple"],
+.page-style.page-theme-isolated [class*="text-vb-purple"] {
+  color: var(--page-primary, var(--page-text, inherit)) !important;
+}
+.page-style.page-theme-isolated [class*="bg-vb-purple"] {
+  background-color: var(--page-primary, var(--page-surface, transparent)) !important;
+}
+.page-style.page-theme-isolated [class*="border-vb-purple"] {
+  border-color: color-mix(
+    in srgb,
+    var(--page-border, var(--page-primary, #777)) 65%,
+    transparent
+  ) !important;
+}
+.page-style.page-theme-isolated [class*="text-vb-silver"] {
+  color: var(--page-muted, var(--page-text, inherit)) !important;
+}
+.page-style.page-theme-isolated [class*="bg-vb-ink"],
+.page-style.page-theme-isolated [class*="bg-vb-black"] {
+  background-color: var(--page-surface, transparent) !important;
+}
+.page-style.page-theme-isolated [class*="border-white"] {
+  border-color: color-mix(in srgb, var(--page-border, #777) 45%, transparent) !important;
 }
