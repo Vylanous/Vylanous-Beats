@@ -14,7 +14,11 @@ import {
   invalidateSettingsCache,
   SETTINGS_ID,
 } from "../lib/settings";
-import { BUILDER_FONT_IDS, mergeSettings } from "../../shared/site-settings";
+import {
+  BUILDER_FONT_IDS,
+  mergeSettings,
+  PAGE_TREATMENT_OPTIONS,
+} from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
@@ -295,7 +299,7 @@ const settingsSchema = z.object({
               .enum(["center", "top", "bottom", "left", "right"])
               .optional(),
             backgroundOverlay: z.enum(["none", "soft", "medium", "strong"]).optional(),
-            pageTreatment: z.enum(["none", "grain", "grid", "spotlight"]).optional(),
+            pageTreatment: z.enum(PAGE_TREATMENT_OPTIONS).optional(),
             pageFont: z.enum(BUILDER_FONT_IDS).optional(),
             contentWidth: z.enum(["narrow", "standard", "wide", "full"]).optional(),
             sectionSpacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),

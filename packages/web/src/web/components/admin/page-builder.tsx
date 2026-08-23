@@ -42,7 +42,12 @@ import {
 } from "lucide-react";
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
 import { parseInlineText } from "../../lib/inline-text";
-import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
+import {
+  BUILDER_FONT_OPTIONS,
+  FONT_PAIRS,
+  PAGE_TREATMENT_OPTIONS,
+  type ThemeColors,
+} from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
   BuilderPage,
@@ -2144,7 +2149,7 @@ function PagePropertiesEditor({
           </select>
         </label>
         <SelectField
-          label="Page background"
+          label="Base canvas preset"
           value={page.layout?.background || "default"}
           options={["default", "mesh", "ink"]}
           onChange={(value) => updateLayout({ background: value as "default" | "mesh" | "ink" })}
@@ -3165,6 +3170,35 @@ function StyleWorkspace({
         </button>
       </StyleGroup>
       <StyleGroup
+        title="Page canvas and texture"
+        description="Choose a base canvas and an optional color-aware texture. Ink and Mesh remain available; every texture uses this page’s selected colors instead of a fixed purple treatment."
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SelectField
+            label="Base canvas preset"
+            value={page.background || "default"}
+            options={["default", "mesh", "ink"]}
+            onChange={(value) =>
+              onPageLayoutChange({ background: value as NonNullable<PageLayout["background"]> })
+            }
+          />
+          <SelectField
+            label="Texture overlay"
+            value={page.pageTreatment || "none"}
+            options={[...PAGE_TREATMENT_OPTIONS]}
+            onChange={(value) =>
+              onPageLayoutChange({
+                pageTreatment: value as NonNullable<PageLayout["pageTreatment"]>,
+              })
+            }
+          />
+        </div>
+        <p className="mt-3 font-body text-xs leading-relaxed text-vb-silver/45">
+          Your background color is always the base layer. Mesh, Spotlight, Halftone, Lines,
+          Topography, and Aurora automatically tint from this page’s action color.
+        </p>
+      </StyleGroup>
+      <StyleGroup
         title="Page background image"
         description="Upload a full-page image, then tune how it sits behind your page content."
       >
@@ -3207,16 +3241,6 @@ function StyleWorkspace({
               onChange={(value) =>
                 onPageLayoutChange({
                   backgroundOverlay: value as NonNullable<PageLayout["backgroundOverlay"]>,
-                })
-              }
-            />
-            <SelectField
-              label="Page texture"
-              value={page.pageTreatment || "none"}
-              options={["none", "grain", "grid", "spotlight"]}
-              onChange={(value) =>
-                onPageLayoutChange({
-                  pageTreatment: value as NonNullable<PageLayout["pageTreatment"]>,
                 })
               }
             />

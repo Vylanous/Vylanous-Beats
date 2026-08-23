@@ -548,6 +548,18 @@ export interface PageHeaderActions {
   showMenu?: boolean;
 }
 
+export const PAGE_TREATMENT_OPTIONS = [
+  "none",
+  "grain",
+  "grid",
+  "spotlight",
+  "halftone",
+  "lines",
+  "topography",
+  "aurora",
+] as const;
+export type PageTreatment = (typeof PAGE_TREATMENT_OPTIONS)[number];
+
 export interface PageLayout {
   showHeader?: boolean;
   showFooter?: boolean;
@@ -566,7 +578,7 @@ export interface PageLayout {
   backgroundImagePosition?: "center" | "top" | "bottom" | "left" | "right";
   backgroundOverlay?: "none" | "soft" | "medium" | "strong";
   /** Decorative treatment layered above the page background and below content. */
-  pageTreatment?: "none" | "grain" | "grid" | "spotlight";
+  pageTreatment?: PageTreatment;
   /** Defaults inherited by untouched sections to make a page visually distinct. */
   pageFont?: BuilderFontId;
   contentWidth?: "narrow" | "standard" | "wide" | "full";

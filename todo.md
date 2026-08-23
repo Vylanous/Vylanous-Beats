@@ -850,4 +850,11 @@ User request: border glow colors remain purple for other border styles; change t
 
 ## Header Navigation and Mobile Menu Repair
 
-- [ ] Inspect and restore the expected header navigation links and mobile menu dropdown control without regressing cart visibility.
+- [x] Inspect and restore the expected header navigation links and mobile menu dropdown control without regressing cart visibility.
+
+## Page Settings Background Color and Texture Controls
+
+- [ ] Add Page Settings controls for page background color and selectable textures while retaining Ink and Mesh.
+- [ ] Add several non-purple texture treatments that layer safely with a selected page color or background image.
+- [ ] Ensure page-level background choices fully override inherited purple backgrounds, including the Artist page and its sections.
+- [ ] Add regression coverage and validate the public renderer across desktop and mobile layouts.

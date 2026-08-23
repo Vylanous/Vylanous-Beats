@@ -220,12 +220,14 @@ export function isCartInteractionTarget(
   panel: Pick<HTMLElement, "contains"> | null,
 ) {
   return Boolean(
-    target &&
-      (triggerRoot?.contains(target as Node) || panel?.contains(target as Node)),
+    target && (triggerRoot?.contains(target as Node) || panel?.contains(target as Node)),
   );
 }
 
-export function resolveMenuVisibility(pageOverride: boolean | undefined, universalSetting: boolean) {
+export function resolveMenuVisibility(
+  pageOverride: boolean | undefined,
+  universalSetting: boolean,
+) {
   return pageOverride ?? universalSetting;
 }
 
@@ -286,10 +288,7 @@ function CartDropdown({ count }: { count: number }) {
         <>
           <ul className="max-h-72 divide-y divide-white/[0.06] overflow-y-auto">
             {items.map((item) => (
-              <li
-                key={`${item.beatId}-${item.tier}`}
-                className="flex items-center gap-3 px-4 py-3"
-              >
+              <li key={`${item.beatId}-${item.tier}`} className="flex items-center gap-3 px-4 py-3">
                 <img
                   src={item.artworkUrl || "/brand/Favicon_sharp.png"}
                   alt=""
@@ -324,9 +323,7 @@ function CartDropdown({ count }: { count: number }) {
               <span className="font-sub text-xs uppercase tracking-wide text-vb-silver/55">
                 Total
               </span>
-              <span className="font-display text-xl text-chrome">
-                {formatCad(totalCents)} CAD
-              </span>
+              <span className="font-display text-xl text-chrome">{formatCad(totalCents)} CAD</span>
             </div>
             <Link
               to="/cart"

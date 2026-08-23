@@ -59,7 +59,7 @@ const PADDING_X: Record<NonNullable<SectionLayout["paddingX"]>, string> = {
 const SHADOW: Record<NonNullable<SectionLayout["shadow"]>, string> = {
   none: "",
   soft: "shadow-[0_18px_55px_rgba(0,0,0,0.18)]",
-  glow: "shadow-[0_18px_70px_rgba(124,47,203,0.24)]",
+  glow: "builder-page-shadow-glow",
   dramatic: "shadow-[0_26px_90px_rgba(0,0,0,0.38)]",
 };
 const BORDER_STYLE: Record<NonNullable<SectionLayout["borderStyle"]>, string> = {
@@ -310,7 +310,8 @@ function BuilderSection({
     return (
       <div
         {...sectionAttributes}
-        className={`${section.customClass || ""} ${PALETTE[layout.palette]} h-px w-full bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
+        style={customStyle}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} builder-page-divider h-px w-full bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
       />
     );
   if (section.type === "spacer")
