@@ -914,3 +914,8 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Track privacy-conscious card clicks and preview plays for Published Beats blocks by managed page, block, and beat.
 - [x] Add a dedicated Analytics section to the admin panel with per-page, block, and beat click/play reporting.
 - [x] Add regression coverage, validate, and publish the analytics feature through the existing GitHub and Render workflow.
+
+## Newsletter Popup Verification
+
+- [x] Verify the saved newsletter popup settings, public display timing and targeting, and fan-list signup request flow.
+- [x] Repair and validate any newsletter popup issue without disrupting existing subscribers or the fan list. No defect was found, so no application repair was required.
