@@ -127,6 +127,8 @@ export const adminApi = {
       body: JSON.stringify({ filename, contentType, folder, size }),
     }),
   mediaHealth: () => req<MediaHealthReport>("/admin/media-health"),
+  publishedBeatAnalytics: (days: 7 | 30 | 90 = 30) =>
+    req<PublishedBeatAnalyticsReport>(`/admin/published-beat-analytics?days=${days}`),
 };
 
 /** Fetch the site customization settings (admin-authenticated).
@@ -256,6 +258,33 @@ export interface MediaHealthReport {
   checkedAt: string;
   summary: Record<MediaHealthStatus, number>;
   items: MediaHealthEntry[];
+}
+
+export interface PublishedBeatAnalyticsRow {
+  pageId: string;
+  pageTitle: string;
+  pagePath: string;
+  blockId: string;
+  blockTitle: string;
+  beatId: string;
+  beatTitle: string;
+  beatSlug: string;
+  clicks: number;
+  plays: number;
+  total: number;
+  lastDay: string;
+}
+
+export interface PublishedBeatAnalyticsReport {
+  days: 7 | 30 | 90;
+  sinceDay: string;
+  summary: {
+    clicks: number;
+    plays: number;
+    trackedBeats: number;
+    trackedBlocks: number;
+  };
+  rows: PublishedBeatAnalyticsRow[];
 }
 
 export interface AdminOrder {

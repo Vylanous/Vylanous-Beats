@@ -128,6 +128,20 @@ export const SCHEMA_STATEMENTS: string[] = [
     "updated_at" text
   )`,
   `create unique index if not exists "order_deliveries_order_id_idx" on "order_deliveries" ("order_id")`,
+  `create table if not exists "published_beat_block_metrics" (
+    "id" text primary key not null,
+    "page_id" text not null,
+    "block_id" text not null,
+    "beat_id" text not null,
+    "event_type" text not null,
+    "day" text not null,
+    "count" integer not null default 0,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "updated_at" text
+  )`,
+  `create unique index if not exists "published_beat_block_metrics_daily_unique_idx" on "published_beat_block_metrics" ("page_id", "block_id", "beat_id", "event_type", "day")`,
+  `create index if not exists "published_beat_block_metrics_page_day_idx" on "published_beat_block_metrics" ("page_id", "day")`,
+  `create index if not exists "published_beat_block_metrics_beat_day_idx" on "published_beat_block_metrics" ("beat_id", "day")`,
   `create table if not exists "mobile_purchase_transactions" (
     "id" text primary key not null,
     "platform" text not null,

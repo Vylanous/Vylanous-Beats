@@ -1,12 +1,19 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { db } from "../database";
-import { beats, orders, orderItems, subscribers, settings } from "../database/schema";
+import {
+  beats,
+  orders,
+  orderItems,
+  publishedBeatBlockMetrics,
+  settings,
+  subscribers,
+} from "../database/schema";
 import { requireAdmin, checkPassword, makeAdminToken } from "../lib/admin-auth";
 import {
   loadSettings,
@@ -1271,6 +1278,100 @@ export function adminRoutes(app: Hono) {
         paidOrders: paid.length,
         revenueCents,
         subscribers: subs.length,
+      },
+      200,
+    );
+  });
+
+  app.get("/admin/published-beat-analytics", requireAdmin, async (c) => {
+    const requestedDays = Number(c.req.query("days") || "30");
+    const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 30;
+    const since = new Date();
+    since.setUTCDate(since.getUTCDate() - (days - 1));
+    const sinceDay = since.toISOString().slice(0, 10);
+    const [metrics, site, catalog] = await Promise.all([
+      db
+        .select()
+        .from(publishedBeatBlockMetrics)
+        .where(gte(publishedBeatBlockMetrics.day, sinceDay)),
+      loadSettings(),
+      db.select({ id: beats.id, title: beats.title, slug: beats.slug }).from(beats),
+    ]);
+    const beatsById = new Map(catalog.map((beat) => [beat.id, beat]));
+    const blocks = new Map(
+      site.pages.flatMap((page) =>
+        page.sections
+          .filter((section) => section.type === "publishedBeats")
+          .map(
+            (section) =>
+              [
+                `${page.id}:${section.id}`,
+                {
+                  pageId: page.id,
+                  pageTitle: page.title,
+                  pagePath: page.path || `/${page.slug}`,
+                  blockId: section.id,
+                  blockTitle: section.title || "Published Beats",
+                },
+              ] as const,
+          ),
+      ),
+    );
+    const rows = new Map<
+      string,
+      {
+        pageId: string;
+        pageTitle: string;
+        pagePath: string;
+        blockId: string;
+        blockTitle: string;
+        beatId: string;
+        beatTitle: string;
+        beatSlug: string;
+        clicks: number;
+        plays: number;
+        total: number;
+        lastDay: string;
+      }
+    >();
+    for (const metric of metrics) {
+      const key = `${metric.pageId}:${metric.blockId}:${metric.beatId}`;
+      const block = blocks.get(`${metric.pageId}:${metric.blockId}`);
+      const beat = beatsById.get(metric.beatId);
+      const current = rows.get(key) || {
+        pageId: metric.pageId,
+        pageTitle: block?.pageTitle || "Removed page",
+        pagePath: block?.pagePath || "",
+        blockId: metric.blockId,
+        blockTitle: block?.blockTitle || "Removed Published Beats block",
+        beatId: metric.beatId,
+        beatTitle: beat?.title || "Removed beat",
+        beatSlug: beat?.slug || "",
+        clicks: 0,
+        plays: 0,
+        total: 0,
+        lastDay: metric.day,
+      };
+      if (metric.eventType === "card_click") current.clicks += metric.count;
+      if (metric.eventType === "preview_play") current.plays += metric.count;
+      current.total += metric.count;
+      if (metric.day > current.lastDay) current.lastDay = metric.day;
+      rows.set(key, current);
+    }
+    const result = [...rows.values()].sort(
+      (left, right) => right.total - left.total || left.pageTitle.localeCompare(right.pageTitle),
+    );
+    return c.json(
+      {
+        days,
+        sinceDay,
+        summary: {
+          clicks: result.reduce((total, row) => total + row.clicks, 0),
+          plays: result.reduce((total, row) => total + row.plays, 0),
+          trackedBeats: result.length,
+          trackedBlocks: new Set(result.map((row) => `${row.pageId}:${row.blockId}`)).size,
+        },
+        rows: result,
       },
       200,
     );

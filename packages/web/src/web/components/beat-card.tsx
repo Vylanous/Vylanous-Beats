@@ -6,8 +6,18 @@ import { useCart } from "../lib/cart-store";
 import { Waveform } from "./waveform";
 import { LICENSE_TIERS, formatCad, type LicenseTierId } from "../../shared/licenses";
 import type { Beat } from "../../api/database/schema";
+import {
+  trackPublishedBeatMetric,
+  type PublishedBeatAnalyticsContext,
+} from "../lib/published-beat-analytics";
 
-export function BeatCard({ beat }: { beat: Beat }) {
+export function BeatCard({
+  beat,
+  publishedBeatAnalytics,
+}: {
+  beat: Beat;
+  publishedBeatAnalytics?: PublishedBeatAnalyticsContext;
+}) {
   const { current, isPlaying, playBeat, progress } = usePlayer();
   const { add, has } = useCart();
   const [tier, setTier] = useState<LicenseTierId>("wav");
@@ -43,14 +53,17 @@ export function BeatCard({ beat }: { beat: Beat }) {
         {/* Play button */}
         <button
           onClick={() =>
-            playBeat({
-              id: beat.id,
-              title: beat.title,
-              artworkUrl: beat.artworkUrl,
-              audioUrl: beat.audioUrl,
-              bpm: beat.bpm,
-              musicalKey: beat.musicalKey,
-            })
+            playBeat(
+              {
+                id: beat.id,
+                title: beat.title,
+                artworkUrl: beat.artworkUrl,
+                audioUrl: beat.audioUrl,
+                bpm: beat.bpm,
+                musicalKey: beat.musicalKey,
+              },
+              publishedBeatAnalytics,
+            )
           }
           className="absolute inset-0 flex items-center justify-center"
           aria-label={playing ? "Pause" : "Play"}
@@ -89,7 +102,11 @@ export function BeatCard({ beat }: { beat: Beat }) {
       {/* Info */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <Link to={`/beats/${beat.slug}`} className="min-w-0">
+          <Link
+            to={`/beats/${beat.slug}`}
+            onClick={() => trackPublishedBeatMetric(publishedBeatAnalytics, beat.id, "card_click")}
+            className="min-w-0"
+          >
             <h3 className="font-display text-xl uppercase leading-none text-vb-silver-bright truncate hover:text-purple-glow transition-colors">
               {beat.title}
             </h3>

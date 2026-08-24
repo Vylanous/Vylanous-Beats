@@ -202,6 +202,39 @@ export const orderDeliveries = sqliteTable(
 );
 
 /**
+ * Privacy-conscious, aggregated engagement metrics for Page Builder Published
+ * Beats blocks. No visitor identifiers, IP addresses, or raw event payloads are
+ * stored; each row is a daily counter for one page, block, beat, and event type.
+ */
+export const publishedBeatBlockMetrics = sqliteTable(
+  "published_beat_block_metrics",
+  {
+    id: text("id").primaryKey(),
+    pageId: text("page_id").notNull(),
+    blockId: text("block_id").notNull(),
+    beatId: text("beat_id").notNull(),
+    eventType: text("event_type").notNull(), // card_click | preview_play
+    day: text("day").notNull(), // UTC ISO date, e.g. 2026-08-23
+    count: integer("count").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    updatedAt: text("updated_at"),
+  },
+  (t) => [
+    uniqueIndex("published_beat_block_metrics_daily_unique_idx").on(
+      t.pageId,
+      t.blockId,
+      t.beatId,
+      t.eventType,
+      t.day,
+    ),
+    index("published_beat_block_metrics_page_day_idx").on(t.pageId, t.day),
+    index("published_beat_block_metrics_beat_day_idx").on(t.beatId, t.day),
+  ],
+);
+
+/**
  * Newsletter / fan list signups.
  */
 /**
@@ -304,6 +337,7 @@ export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type StripeWebhookEvent = typeof stripeWebhookEvents.$inferSelect;
 export type OrderDelivery = typeof orderDeliveries.$inferSelect;
+export type PublishedBeatBlockMetric = typeof publishedBeatBlockMetrics.$inferSelect;
 export type Customer = typeof customers.$inferSelect;
 export type CustomerSession = typeof customerSessions.$inferSelect;
 export type CustomerEntitlement = typeof customerEntitlements.$inferSelect;

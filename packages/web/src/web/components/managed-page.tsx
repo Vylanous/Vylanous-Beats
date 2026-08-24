@@ -190,6 +190,7 @@ export function ManagedPage({ path }: { path: string }) {
         <BuilderSection
           key={section.id}
           section={section}
+          pageId={page.id}
           pageLayout={page.layout}
           currency={fourthwall.currency}
           shopDomain={fourthwall.shopDomain}
@@ -262,11 +263,13 @@ function UnavailablePage() {
 
 function BuilderSection({
   section,
+  pageId,
   pageLayout,
   currency,
   shopDomain,
 }: {
   section: PageSection;
+  pageId: string;
   pageLayout?: BuilderPage["layout"];
   currency: string;
   shopDomain: string;
@@ -345,7 +348,9 @@ function BuilderSection({
           <MerchSection section={section} currency={currency} shopDomain={shopDomain} />
         )}
         {section.type === "featuredBeats" && <FeaturedBeats section={section} layout={layout} />}
-        {section.type === "publishedBeats" && <PublishedBeats section={section} layout={layout} />}
+        {section.type === "publishedBeats" && (
+          <PublishedBeats section={section} pageId={pageId} layout={layout} />
+        )}
         {section.type === "beatCatalog" && <BeatCatalog />}
         {section.type === "licenseTiers" && <LicenseTiers section={section} layout={layout} />}
         {section.type === "licenseComparison" && <LicenseComparison section={section} />}
@@ -940,9 +945,11 @@ function FeaturedBeats({
 
 function PublishedBeats({
   section,
+  pageId,
   layout,
 }: {
   section: PageSection;
+  pageId: string;
   layout: Required<SectionLayout>;
 }) {
   const beatIds = useMemo(
@@ -981,7 +988,11 @@ function PublishedBeats({
       ) : (
         <div className={`mt-8 grid gap-6 ${COLUMNS[layout.columns]}`}>
           {beats.map((beat) => (
-            <BeatCard key={beat.id} beat={beat} />
+            <BeatCard
+              key={beat.id}
+              beat={beat}
+              publishedBeatAnalytics={{ pageId, blockId: section.id }}
+            />
           ))}
         </div>
       )}

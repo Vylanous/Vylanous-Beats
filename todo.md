@@ -908,3 +908,9 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Add a Published Beats option to Page Builder Add Block so published catalog beats can be selected for any managed page.
 - [x] Validate selected beat IDs and ensure only currently published beats render publicly, without changing Beat Vault behavior.
 - [x] Add responsive public beat cards, editor selection controls, and regression coverage for the new reusable page section.
+
+## Published Beats Block Analytics
+
+- [x] Track privacy-conscious card clicks and preview plays for Published Beats blocks by managed page, block, and beat.
+- [x] Add a dedicated Analytics section to the admin panel with per-page, block, and beat click/play reporting.
+- [x] Add regression coverage, validate, and publish the analytics feature through the existing GitHub and Render workflow.

@@ -13,6 +13,7 @@ import {
   PanelsTopLeft,
   Mail,
   HeartPulse,
+  BarChart3,
 } from "lucide-react";
 import {
   adminApi,
@@ -29,6 +30,7 @@ import CustomizationPanel from "../components/admin/customization";
 import PageBuilderPanel from "../components/admin/page-builder";
 import EmailInboxPanel from "../components/admin/email-inbox";
 import MediaHealthPanel from "../components/admin/media-health";
+import PublishedBeatAnalyticsPanel from "../components/admin/published-beat-analytics";
 import { BulkUpload } from "../components/admin/bulk-upload";
 
 type Tab =
@@ -39,6 +41,7 @@ type Tab =
   | "subscribers"
   | "customization"
   | "builder"
+  | "analytics"
   | "media-health"
   | "inbox";
 
@@ -159,6 +162,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "subscribers", label: "Fan List", icon: Users },
     { id: "customization", label: "Customization", icon: Palette },
     { id: "builder", label: "Page Builder", icon: PanelsTopLeft },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "media-health", label: "Media Health", icon: HeartPulse },
     { id: "inbox", label: "Email Inbox", icon: Mail },
   ];
@@ -255,6 +259,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {tab === "subscribers" && <SubscribersTab />}
             {tab === "customization" && <CustomizationPanel />}
             {tab === "builder" && <PageBuilderPanel />}
+            {tab === "analytics" && <PublishedBeatAnalyticsPanel />}
             {tab === "media-health" && <MediaHealthPanel />}
             {tab === "inbox" && <EmailInboxPanel />}
           </>
