@@ -15,7 +15,6 @@ jobs:
   validate-and-build:
     name: Validate and request Android preview APK
     runs-on: ubuntu-latest
-    if: ${{ secrets.EXPO_TOKEN != '' }}
     defaults:
       run:
         working-directory: packages/mobile
