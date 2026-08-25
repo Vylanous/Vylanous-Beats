@@ -829,7 +829,7 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Reproduce the cart failure on production and inventory every cart/menu render, state, and event path.
 - [x] Remove competing cart visibility guards, duplicate controls, stale state, and menu coupling.
 - [x] Implement one minimal deterministic cart trigger/dropdown path.
-- [ ] Interactively verify add, view, remove, and empty states on production at desktop and mobile sizes.
+- [x] Interactively verify add, view, remove, and empty states on production at desktop and mobile sizes.
 - [x] Run tests/build, commit/push, and verify Render deployment before reporting completion.
 
 ## Repository-Wide Production Hardening
@@ -840,3 +840,82 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Delete only merged or clearly obsolete local and remote branches after branch ancestry review.
 - [x] Re-run the complete validation suite, commit/push verified fixes, and confirm the Render deployment.
 - [x] Record that the remaining dependency-audit findings are transitive mobile/desktop/tooling advisories requiring planned upstream major-version upgrades rather than unsafe bulk changes.
+
+## Cross-Viewport Cart Regression Test
+
+- [x] Test desktop cart visibility, independent opening, add/view/total/remove/empty states, and cart-page navigation on production.
+- [x] Test mobile cart visibility, independence from the menu, add/view/remove/empty states, and cart-page navigation on production.
+- [x] Verify checkout gating without initiating payment and document the full regression result.
+- [x] Fix the verified mobile positioning defect: after a customer scrolls to add a beat, the populated cart panel is rendered above the viewport.
+
+## Header Navigation and Mobile Menu Repair
+
+- [x] Inspect and restore the expected header navigation links and mobile menu dropdown control without regressing cart visibility.
+
+## Page Settings Background Color and Texture Controls
+
+- [x] Add Page Settings controls for page background color and selectable textures while retaining Ink and Mesh.
+- [x] Add several non-purple texture treatments that layer safely with a selected page color or background image.
+- [x] Ensure page-level background choices fully override inherited purple backgrounds, including the Artist page and its sections.
+- [x] Add regression coverage and validate the public renderer across desktop and mobile layouts.
+
+## Transitive Dependency Security Review
+
+- [x] Inventory the remaining transitive dependency advisories with severity, affected versions, and dependency paths.
+- [x] Determine which advisories are reachable from the deployed web/API production path versus desktop, mobile, or development-only tooling.
+- [x] Identify safe remediation options and prioritize any materially exposed critical paths.
+
+## Dependency Vulnerability Remediation
+
+- [x] Upgrade the compatible web build and server-adjacent dependency paths that carry audited advisories.
+- [x] Upgrade the Electron and desktop packaging security toolchain through a supported release set.
+- [x] Upgrade the Expo and React Native dependency set with compatible mobile tooling versions.
+- [x] Run the complete audit, lint, typecheck, test, and web/desktop/mobile build suite before deployment.
+
+## Unmerged Branch Review
+
+- [x] Inventory the remaining unmerged remote branches, pull-request state, and unique commits relative to main.
+- [x] Summarize changed areas, merge relevance, and recommended merge-or-delete disposition for each branch without modifying remote branches.
+
+## Approved Stale Branch Cleanup
+
+- [x] Revalidate the eight approved branches against current `origin/main` and confirm the retained webhook branch is excluded.
+- [x] Delete only the approved stale remote branch references without changing `main` or deployed code.
+- [x] Verify the retained webhook branch, `origin/main` revision, and no-deploy-impact result.
+
+## Stripe Webhook Rebuild Review
+
+- [x] Inspect the retained branch's Stripe event verification, idempotency, order fulfillment, entitlement, and email logic.
+- [x] Compare its intended webhook behavior with current `main` checkout, confirmation, entitlement, download, and email flows.
+- [x] Define a conflict-free Stripe webhook rebuild and test plan based on current `main`, without merging stale branch code.
+
+## Stripe Webhook Fulfillment Implementation
+
+- [x] Create a focused implementation branch from current `origin/main` while preserving the existing task-tracker history.
+- [x] Add signed Stripe Checkout webhook handling, durable event idempotency, and shared payment-fulfillment logic compatible with the current customer portal.
+- [x] Correct delivery-email idempotency handling and preserve retry-safe fulfillment and exclusive-beat rules.
+- [x] Add signature, duplicate-event, payment-state, concurrent-confirmation, entitlement, email, and checkout regression coverage.
+- [x] Run the focused suite and complete repository validation; inspect the final diff, commit, and push the implementation.
+- [x] Delete the obsolete `fix/upload-webhook-launch-blockers` remote branch only after the replacement implementation is published and verified.
+
+## Local Stripe Checkout Simulation
+
+- [x] Run an isolated non-production checkout and signed Stripe webhook simulation without creating a live charge or customer order.
+- [x] Verify paid-order state, customer entitlement activation, exclusive-beat handling, delivery idempotency, and duplicate-event protection.
+
+## Page Builder Published Beats Block
+
+- [x] Add a Published Beats option to Page Builder Add Block so published catalog beats can be selected for any managed page.
+- [x] Validate selected beat IDs and ensure only currently published beats render publicly, without changing Beat Vault behavior.
+- [x] Add responsive public beat cards, editor selection controls, and regression coverage for the new reusable page section.
+
+## Published Beats Block Analytics
+
+- [x] Track privacy-conscious card clicks and preview plays for Published Beats blocks by managed page, block, and beat.
+- [x] Add a dedicated Analytics section to the admin panel with per-page, block, and beat click/play reporting.
+- [x] Add regression coverage, validate, and publish the analytics feature through the existing GitHub and Render workflow.
+
+## Newsletter Popup Verification
+
+- [x] Verify the saved newsletter popup settings, public display timing and targeting, and fan-list signup request flow.
+- [x] Repair and validate any newsletter popup issue without disrupting existing subscribers or the fan list. No defect was found, so no application repair was required.

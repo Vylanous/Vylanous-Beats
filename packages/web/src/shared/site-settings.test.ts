@@ -156,7 +156,7 @@ describe("Site Builder settings migration", () => {
             backgroundImageFit: "cover",
             backgroundImagePosition: "top",
             backgroundOverlay: "strong",
-            pageTreatment: "grid",
+            pageTreatment: "halftone",
             pageFont: "space-grotesk",
             contentWidth: "standard",
             sectionSpacing: "relaxed",
@@ -172,7 +172,7 @@ describe("Site Builder settings migration", () => {
       backgroundImageFit: "cover",
       backgroundImagePosition: "top",
       backgroundOverlay: "strong",
-      pageTreatment: "grid",
+      pageTreatment: "halftone",
       pageFont: "space-grotesk",
       contentWidth: "standard",
       sectionSpacing: "relaxed",
@@ -461,6 +461,35 @@ describe("Site Builder settings migration", () => {
       anchorId: "custom-copy",
       customClass: "artist-intro",
       ariaLabel: "Artist introduction",
+    });
+  });
+
+  test("preserves a reusable Published Beats block and its selected catalog order", () => {
+    const settings = mergeSettings({
+      pages: [
+        {
+          id: "page_custom",
+          slug: "custom",
+          title: "Custom",
+          navLabel: "Custom",
+          published: true,
+          showInNav: false,
+          sections: [
+            {
+              id: "selected_beats",
+              type: "publishedBeats",
+              title: "Featured on this page",
+              beatIds: ["beat_second", "beat_first"],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(settings.pages.find((page) => page.id === "page_custom")?.sections[0]).toMatchObject({
+      type: "publishedBeats",
+      title: "Featured on this page",
+      beatIds: ["beat_second", "beat_first"],
     });
   });
 

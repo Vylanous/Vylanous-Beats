@@ -1,4 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import {
+  trackPublishedBeatMetric,
+  type PublishedBeatAnalyticsContext,
+} from "./published-beat-analytics";
 
 export interface PlayingBeat {
   id: string;
@@ -14,7 +18,7 @@ interface PlayerCtx {
   isPlaying: boolean;
   progress: number; // 0..1
   duration: number;
-  playBeat: (beat: PlayingBeat) => void;
+  playBeat: (beat: PlayingBeat, analyticsContext?: PublishedBeatAnalyticsContext) => void;
   toggle: () => void;
   seek: (frac: number) => void;
   stop: () => void;
@@ -28,6 +32,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [currentAnalyticsContext, setCurrentAnalyticsContext] =
+    useState<PublishedBeatAnalyticsContext>();
 
   useEffect(() => {
     const audio = new Audio();
@@ -66,7 +72,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const playBeat = useCallback(
-    (beat: PlayingBeat) => {
+    (beat: PlayingBeat, analyticsContext?: PublishedBeatAnalyticsContext) => {
       const audio = audioRef.current;
       if (!audio) return;
       if (!beat.audioUrl) {
@@ -79,8 +85,17 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
       if (current?.id === beat.id) {
         if (audio.paused) {
-          audio.play();
-          setIsPlaying(true);
+          audio
+            .play()
+            .then(() => {
+              setIsPlaying(true);
+              trackPublishedBeatMetric(
+                analyticsContext || currentAnalyticsContext,
+                beat.id,
+                "preview_play",
+              );
+            })
+            .catch(() => setIsPlaying(false));
         } else {
           audio.pause();
           setIsPlaying(false);
@@ -88,16 +103,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       setCurrent(beat);
+      setCurrentAnalyticsContext(analyticsContext);
       audio.src = beat.audioUrl;
       audio.currentTime = 0;
       audio
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true);
+          trackPublishedBeatMetric(analyticsContext, beat.id, "preview_play");
+        })
         .catch(() => setIsPlaying(false));
       // fire-and-forget play count
       fetch(`/api/beats/${beat.id}/play`, { method: "POST" }).catch(() => {});
     },
-    [current],
+    [current, currentAnalyticsContext],
   );
 
   const toggle = useCallback(() => {

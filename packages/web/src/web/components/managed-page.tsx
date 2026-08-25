@@ -59,7 +59,7 @@ const PADDING_X: Record<NonNullable<SectionLayout["paddingX"]>, string> = {
 const SHADOW: Record<NonNullable<SectionLayout["shadow"]>, string> = {
   none: "",
   soft: "shadow-[0_18px_55px_rgba(0,0,0,0.18)]",
-  glow: "shadow-[0_18px_70px_rgba(124,47,203,0.24)]",
+  glow: "builder-page-shadow-glow",
   dramatic: "shadow-[0_26px_90px_rgba(0,0,0,0.38)]",
 };
 const BORDER_STYLE: Record<NonNullable<SectionLayout["borderStyle"]>, string> = {
@@ -190,6 +190,7 @@ export function ManagedPage({ path }: { path: string }) {
         <BuilderSection
           key={section.id}
           section={section}
+          pageId={page.id}
           pageLayout={page.layout}
           currency={fourthwall.currency}
           shopDomain={fourthwall.shopDomain}
@@ -262,11 +263,13 @@ function UnavailablePage() {
 
 function BuilderSection({
   section,
+  pageId,
   pageLayout,
   currency,
   shopDomain,
 }: {
   section: PageSection;
+  pageId: string;
   pageLayout?: BuilderPage["layout"];
   currency: string;
   shopDomain: string;
@@ -310,7 +313,8 @@ function BuilderSection({
     return (
       <div
         {...sectionAttributes}
-        className={`${section.customClass || ""} ${PALETTE[layout.palette]} h-px w-full bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
+        style={customStyle}
+        className={`${section.customClass || ""} ${PALETTE[layout.palette]} builder-page-divider h-px w-full bg-gradient-to-r from-transparent via-vb-purple/70 to-transparent`}
       />
     );
   if (section.type === "spacer")
@@ -344,6 +348,9 @@ function BuilderSection({
           <MerchSection section={section} currency={currency} shopDomain={shopDomain} />
         )}
         {section.type === "featuredBeats" && <FeaturedBeats section={section} layout={layout} />}
+        {section.type === "publishedBeats" && (
+          <PublishedBeats section={section} pageId={pageId} layout={layout} />
+        )}
         {section.type === "beatCatalog" && <BeatCatalog />}
         {section.type === "licenseTiers" && <LicenseTiers section={section} layout={layout} />}
         {section.type === "licenseComparison" && <LicenseComparison section={section} />}
@@ -932,6 +939,64 @@ function FeaturedBeats({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function PublishedBeats({
+  section,
+  pageId,
+  layout,
+}: {
+  section: PageSection;
+  pageId: string;
+  layout: Required<SectionLayout>;
+}) {
+  const beatIds = useMemo(
+    () => Array.from(new Set(section.beatIds || [])).slice(0, 12),
+    [section.beatIds],
+  );
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["beats", "selected", beatIds],
+    enabled: beatIds.length > 0,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      beatIds.forEach((id) => params.append("id", id));
+      const response = await fetch(`/api/beats/selected?${params.toString()}`);
+      if (!response.ok) throw new Error("Unable to load selected beats.");
+      return response.json() as Promise<{ beats: Beat[] }>;
+    },
+  });
+  const beats = data?.beats || [];
+  return (
+    <div className="w-full">
+      <CopyBlock section={section} layout={layout} />
+      {beatIds.length === 0 ? (
+        <p className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-5 font-body text-sm text-vb-muted">
+          No published beats have been selected for this section yet.
+        </p>
+      ) : isLoading ? (
+        <div className={`mt-8 grid gap-6 ${COLUMNS[layout.columns]}`}>
+          {Array.from({ length: Math.min(beatIds.length, 3) }).map((_, index) => (
+            <div key={index} className="aspect-square animate-pulse rounded-xl bg-vb-ink" />
+          ))}
+        </div>
+      ) : isError || !beats.length ? (
+        <p className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-5 font-body text-sm text-vb-muted">
+          The selected beats are no longer published or available.
+        </p>
+      ) : (
+        <div className={`mt-8 grid gap-6 ${COLUMNS[layout.columns]}`}>
+          {beats.map((beat) => (
+            <BeatCard
+              key={beat.id}
+              beat={beat}
+              publishedBeatAnalytics={{ pageId, blockId: section.id }}
+            />
+          ))}
+        </div>
+      )}
+      <Actions section={section} />
     </div>
   );
 }

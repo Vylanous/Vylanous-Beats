@@ -40,9 +40,14 @@ import {
   Youtube,
   type LucideIcon,
 } from "lucide-react";
-import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
+import { adminApi, getAdminSettings, saveAdminSettings, type AdminBeat } from "../../lib/admin";
 import { parseInlineText } from "../../lib/inline-text";
-import { BUILDER_FONT_OPTIONS, FONT_PAIRS, type ThemeColors } from "../../../shared/site-settings";
+import {
+  BUILDER_FONT_OPTIONS,
+  FONT_PAIRS,
+  PAGE_TREATMENT_OPTIONS,
+  type ThemeColors,
+} from "../../../shared/site-settings";
 import { FileUpload } from "./file-upload";
 import type {
   BuilderPage,
@@ -137,6 +142,7 @@ const SECTION_TYPES: { type: PageSectionType; label: string }[] = [
   { type: "pressKit", label: "Press kit" },
   { type: "merch", label: "Fourthwall merch" },
   { type: "featuredBeats", label: "Featured beats" },
+  { type: "publishedBeats", label: "Published beats" },
   { type: "beatCatalog", label: "Beat catalog" },
   { type: "licenseTiers", label: "License tiers" },
   { type: "licenseComparison", label: "License comparison" },
@@ -182,6 +188,11 @@ function blankSection(type: PageSectionType): PageSection {
     layout: { ...DEFAULT_LAYOUT },
   };
   if (type === "merch") section.collection = "all";
+  if (type === "publishedBeats") {
+    section.title = "Selected beats";
+    section.body = "Hand-picked beats from the catalog.";
+    section.beatIds = [];
+  }
   if (type === "featureCards" || type === "gallery") section.items = [];
   if (type === "marquee") section.title = "MAKE SOME NOISE";
   if (type === "spacer" || type === "divider") section.title = "";
@@ -254,6 +265,7 @@ export default function PageBuilderPanel() {
   );
   const [draggingSectionId, setDraggingSectionId] = useState("");
   const [dragOverSectionId, setDragOverSectionId] = useState("");
+  const [publishedBeats, setPublishedBeats] = useState<AdminBeat[]>([]);
   const historyRef = useRef<{ past: SiteSettings[]; future: SiteSettings[] }>({
     past: [],
     future: [],
@@ -272,6 +284,13 @@ export default function PageBuilderPanel() {
         setDraftSaveState("saved");
       })
       .catch(() => setNotice("Unable to load site-builder settings."));
+  }, []);
+
+  useEffect(() => {
+    adminApi
+      .listBeats()
+      .then(({ beats }) => setPublishedBeats(beats.filter((beat) => beat.published)))
+      .catch(() => setPublishedBeats([]));
   }, []);
 
   const page = useMemo(
@@ -958,6 +977,7 @@ export default function PageBuilderPanel() {
                         preview={previewPage?.sections.find(
                           (candidate) => candidate.id === section.id,
                         )}
+                        publishedBeats={publishedBeats}
                         fourthwall={settings.fourthwall}
                         socials={settings.socials}
                         pageLayout={page.layout}
@@ -2144,7 +2164,7 @@ function PagePropertiesEditor({
           </select>
         </label>
         <SelectField
-          label="Page background"
+          label="Base canvas preset"
           value={page.layout?.background || "default"}
           options={["default", "mesh", "ink"]}
           onChange={(value) => updateLayout({ background: value as "default" | "mesh" | "ink" })}
@@ -2194,6 +2214,7 @@ function PagePropertiesEditor({
 function SectionEditor({
   section,
   preview,
+  publishedBeats,
   fourthwall,
   socials,
   pageLayout,
@@ -2207,6 +2228,7 @@ function SectionEditor({
 }: {
   section: PageSection;
   preview?: PageSection;
+  publishedBeats: AdminBeat[];
   fourthwall: SiteSettings["fourthwall"];
   socials: SocialLink[];
   pageLayout?: PageLayout;
@@ -2232,6 +2254,7 @@ function SectionEditor({
     "featureCards",
     "licenseTiers",
     "featuredBeats",
+    "publishedBeats",
   ].includes(section.type);
   const [activeTab, setActiveTab] = useState<"content" | "style" | "advanced">("content");
   const sectionLabel =
@@ -2504,6 +2527,13 @@ function SectionEditor({
                       </div>
                     </div>
                   )}
+                  {section.type === "publishedBeats" && (
+                    <PublishedBeatsPicker
+                      beats={publishedBeats}
+                      selectedIds={section.beatIds || []}
+                      onChange={(beatIds) => onChange({ beatIds })}
+                    />
+                  )}
                   {supportsCta && (
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <Field
@@ -2579,6 +2609,100 @@ function SectionEditor({
         </div>
       )}
     </article>
+  );
+}
+
+function PublishedBeatsPicker({
+  beats,
+  selectedIds,
+  onChange,
+}: {
+  beats: AdminBeat[];
+  selectedIds: string[];
+  onChange: (beatIds: string[]) => void;
+}) {
+  const selected = new Set(selectedIds);
+  const toggleBeat = (id: string) => {
+    if (selected.has(id)) {
+      onChange(selectedIds.filter((beatId) => beatId !== id));
+      return;
+    }
+    if (selectedIds.length >= 12) return;
+    onChange([...selectedIds, id]);
+  };
+  return (
+    <div className="mt-3 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-sub text-sm uppercase tracking-wide text-vb-purple-bright">
+            Published beats for this page
+          </h3>
+          <p className="mt-1 max-w-xl font-body text-xs leading-relaxed text-vb-silver/50">
+            Select up to 12 currently published catalog beats. They can appear on any Page Builder
+            page without changing the dedicated Beat Vault.
+          </p>
+        </div>
+        <span className="rounded-full border border-white/10 px-2.5 py-1 font-mono text-[10px] text-vb-silver/55">
+          {selectedIds.length}/12 selected
+        </span>
+      </div>
+      {!beats.length ? (
+        <p className="mt-4 rounded-lg border border-dashed border-white/15 bg-vb-black/30 p-3 font-body text-xs text-vb-silver/45">
+          No published beats are available yet. Publish a beat in the Beat Manager, then return here
+          to add it to this page.
+        </p>
+      ) : (
+        <div className="mt-4 grid max-h-80 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+          {beats.map((beat) => {
+            const checked = selected.has(beat.id);
+            const disabled = !checked && selectedIds.length >= 12;
+            return (
+              <label
+                key={beat.id}
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border p-2.5 transition ${checked ? "border-vb-purple/60 bg-vb-purple/15" : "border-white/[0.08] bg-vb-black/35 hover:border-vb-purple/35"} ${disabled ? "cursor-not-allowed opacity-45" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={disabled}
+                  onChange={() => toggleBeat(beat.id)}
+                  aria-label={`Show ${beat.title} on this page`}
+                  className="accent-vb-purple"
+                />
+                {beat.artworkSignedUrl || beat.artworkUrl ? (
+                  <img
+                    src={beat.artworkSignedUrl || beat.artworkUrl}
+                    alt=""
+                    className="h-10 w-10 rounded-md object-cover"
+                  />
+                ) : (
+                  <div className="grid h-10 w-10 place-items-center rounded-md bg-vb-ink font-sub text-[10px] text-vb-silver/45">
+                    VB
+                  </div>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-body text-sm text-vb-silver-bright">
+                    {beat.title}
+                  </span>
+                  <span className="block truncate font-body text-[11px] text-vb-silver/45">
+                    {beat.genre} · {beat.bpm} BPM · {beat.musicalKey}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {selectedIds.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onChange([])}
+          className="mt-3 font-sub text-[10px] uppercase tracking-wide text-vb-silver/55 hover:text-vb-purple-bright"
+        >
+          Clear selected beats
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -3165,6 +3289,35 @@ function StyleWorkspace({
         </button>
       </StyleGroup>
       <StyleGroup
+        title="Page canvas and texture"
+        description="Choose a base canvas and an optional color-aware texture. Ink and Mesh remain available; every texture uses this page’s selected colors instead of a fixed purple treatment."
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SelectField
+            label="Base canvas preset"
+            value={page.background || "default"}
+            options={["default", "mesh", "ink"]}
+            onChange={(value) =>
+              onPageLayoutChange({ background: value as NonNullable<PageLayout["background"]> })
+            }
+          />
+          <SelectField
+            label="Texture overlay"
+            value={page.pageTreatment || "none"}
+            options={[...PAGE_TREATMENT_OPTIONS]}
+            onChange={(value) =>
+              onPageLayoutChange({
+                pageTreatment: value as NonNullable<PageLayout["pageTreatment"]>,
+              })
+            }
+          />
+        </div>
+        <p className="mt-3 font-body text-xs leading-relaxed text-vb-silver/45">
+          Your background color is always the base layer. Mesh, Spotlight, Halftone, Lines,
+          Topography, and Aurora automatically tint from this page’s action color.
+        </p>
+      </StyleGroup>
+      <StyleGroup
         title="Page background image"
         description="Upload a full-page image, then tune how it sits behind your page content."
       >
@@ -3207,16 +3360,6 @@ function StyleWorkspace({
               onChange={(value) =>
                 onPageLayoutChange({
                   backgroundOverlay: value as NonNullable<PageLayout["backgroundOverlay"]>,
-                })
-              }
-            />
-            <SelectField
-              label="Page texture"
-              value={page.pageTreatment || "none"}
-              options={["none", "grain", "grid", "spotlight"]}
-              onChange={(value) =>
-                onPageLayoutChange({
-                  pageTreatment: value as NonNullable<PageLayout["pageTreatment"]>,
                 })
               }
             />

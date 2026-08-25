@@ -1,12 +1,19 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { eq, desc } from "drizzle-orm";
+import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { db } from "../database";
-import { beats, orders, orderItems, subscribers, settings } from "../database/schema";
+import {
+  beats,
+  orders,
+  orderItems,
+  publishedBeatBlockMetrics,
+  settings,
+  subscribers,
+} from "../database/schema";
 import { requireAdmin, checkPassword, makeAdminToken } from "../lib/admin-auth";
 import {
   loadSettings,
@@ -14,7 +21,11 @@ import {
   invalidateSettingsCache,
   SETTINGS_ID,
 } from "../lib/settings";
-import { BUILDER_FONT_IDS, mergeSettings } from "../../shared/site-settings";
+import {
+  BUILDER_FONT_IDS,
+  mergeSettings,
+  PAGE_TREATMENT_OPTIONS,
+} from "../../shared/site-settings";
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
@@ -295,7 +306,7 @@ const settingsSchema = z.object({
               .enum(["center", "top", "bottom", "left", "right"])
               .optional(),
             backgroundOverlay: z.enum(["none", "soft", "medium", "strong"]).optional(),
-            pageTreatment: z.enum(["none", "grain", "grid", "spotlight"]).optional(),
+            pageTreatment: z.enum(PAGE_TREATMENT_OPTIONS).optional(),
             pageFont: z.enum(BUILDER_FONT_IDS).optional(),
             contentWidth: z.enum(["narrow", "standard", "wide", "full"]).optional(),
             sectionSpacing: z.enum(["tight", "normal", "relaxed", "cinematic"]).optional(),
@@ -396,6 +407,7 @@ const settingsSchema = z.object({
               "pressKit",
               "merch",
               "featuredBeats",
+              "publishedBeats",
               "beatCatalog",
               "licenseTiers",
               "licenseComparison",
@@ -414,6 +426,13 @@ const settingsSchema = z.object({
             secondaryCtaLabel: z.string().optional(),
             secondaryCtaHref: z.string().optional(),
             collection: z.string().optional(),
+            beatIds: z
+              .array(z.string().min(1).max(120))
+              .max(12)
+              .refine((ids) => new Set(ids).size === ids.length, {
+                message: "Each selected beat can only appear once in a block.",
+              })
+              .optional(),
             anchorId: z
               .string()
               .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
@@ -1160,6 +1179,32 @@ export function adminRoutes(app: Hono) {
   app.put("/admin/settings", requireAdmin, zValidator("json", settingsSchema), async (c) => {
     const input = c.req.valid("json");
     const current = await loadSettings();
+    const requestedBeatIds = Array.from(
+      new Set(
+        (input.pages || [])
+          .flatMap((page) => page.sections)
+          .filter((section) => section.type === "publishedBeats")
+          .flatMap((section) => section.beatIds || []),
+      ),
+    );
+    let pages = input.pages;
+    if (requestedBeatIds.length) {
+      const published = await db
+        .select({ id: beats.id })
+        .from(beats)
+        .where(and(inArray(beats.id, requestedBeatIds), eq(beats.published, true)));
+      const publishedIds = new Set(published.map((beat) => beat.id));
+      // A beat can become unpublished after an administrator selected it. Prune
+      // stale IDs rather than blocking an otherwise valid Page Builder save.
+      pages = input.pages?.map((page) => ({
+        ...page,
+        sections: page.sections.map((section) =>
+          section.type === "publishedBeats"
+            ? { ...section, beatIds: (section.beatIds || []).filter((id) => publishedIds.has(id)) }
+            : section,
+        ),
+      }));
+    }
     const merged = mergeSettings({
       theme: { ...current.theme, ...input.theme },
       fontId: input.fontId ?? current.fontId,
@@ -1178,7 +1223,7 @@ export function adminRoutes(app: Hono) {
           }
         : current.announcementBanner,
       socials: input.socials ?? current.socials,
-      pages: input.pages ?? current.pages,
+      pages: pages ?? current.pages,
       deletedPageIds: input.deletedPageIds ?? current.deletedPageIds,
       fourthwall: { ...current.fourthwall, ...input.fourthwall },
       builder: input.builder
@@ -1233,6 +1278,100 @@ export function adminRoutes(app: Hono) {
         paidOrders: paid.length,
         revenueCents,
         subscribers: subs.length,
+      },
+      200,
+    );
+  });
+
+  app.get("/admin/published-beat-analytics", requireAdmin, async (c) => {
+    const requestedDays = Number(c.req.query("days") || "30");
+    const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 30;
+    const since = new Date();
+    since.setUTCDate(since.getUTCDate() - (days - 1));
+    const sinceDay = since.toISOString().slice(0, 10);
+    const [metrics, site, catalog] = await Promise.all([
+      db
+        .select()
+        .from(publishedBeatBlockMetrics)
+        .where(gte(publishedBeatBlockMetrics.day, sinceDay)),
+      loadSettings(),
+      db.select({ id: beats.id, title: beats.title, slug: beats.slug }).from(beats),
+    ]);
+    const beatsById = new Map(catalog.map((beat) => [beat.id, beat]));
+    const blocks = new Map(
+      site.pages.flatMap((page) =>
+        page.sections
+          .filter((section) => section.type === "publishedBeats")
+          .map(
+            (section) =>
+              [
+                `${page.id}:${section.id}`,
+                {
+                  pageId: page.id,
+                  pageTitle: page.title,
+                  pagePath: page.path || `/${page.slug}`,
+                  blockId: section.id,
+                  blockTitle: section.title || "Published Beats",
+                },
+              ] as const,
+          ),
+      ),
+    );
+    const rows = new Map<
+      string,
+      {
+        pageId: string;
+        pageTitle: string;
+        pagePath: string;
+        blockId: string;
+        blockTitle: string;
+        beatId: string;
+        beatTitle: string;
+        beatSlug: string;
+        clicks: number;
+        plays: number;
+        total: number;
+        lastDay: string;
+      }
+    >();
+    for (const metric of metrics) {
+      const key = `${metric.pageId}:${metric.blockId}:${metric.beatId}`;
+      const block = blocks.get(`${metric.pageId}:${metric.blockId}`);
+      const beat = beatsById.get(metric.beatId);
+      const current = rows.get(key) || {
+        pageId: metric.pageId,
+        pageTitle: block?.pageTitle || "Removed page",
+        pagePath: block?.pagePath || "",
+        blockId: metric.blockId,
+        blockTitle: block?.blockTitle || "Removed Published Beats block",
+        beatId: metric.beatId,
+        beatTitle: beat?.title || "Removed beat",
+        beatSlug: beat?.slug || "",
+        clicks: 0,
+        plays: 0,
+        total: 0,
+        lastDay: metric.day,
+      };
+      if (metric.eventType === "card_click") current.clicks += metric.count;
+      if (metric.eventType === "preview_play") current.plays += metric.count;
+      current.total += metric.count;
+      if (metric.day > current.lastDay) current.lastDay = metric.day;
+      rows.set(key, current);
+    }
+    const result = [...rows.values()].sort(
+      (left, right) => right.total - left.total || left.pageTitle.localeCompare(right.pageTitle),
+    );
+    return c.json(
+      {
+        days,
+        sinceDay,
+        summary: {
+          clicks: result.reduce((total, row) => total + row.clicks, 0),
+          plays: result.reduce((total, row) => total + row.plays, 0),
+          trackedBeats: result.length,
+          trackedBlocks: new Set(result.map((row) => `${row.pageId}:${row.blockId}`)).size,
+        },
+        rows: result,
       },
       200,
     );

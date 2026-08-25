@@ -9,6 +9,7 @@ import { publicRoutes } from "./routes/public";
 import { adminRoutes } from "./routes/admin";
 import { fourthwallRoutes } from "./routes/fourthwall";
 import { resendWebhookRoutes } from "./routes/resend-webhook";
+import { stripeWebhookRoutes } from "./routes/stripe-webhook";
 import { adminEmailRoutes } from "./routes/admin-email";
 import { mobilePurchaseRoutes } from "./routes/mobile-purchases";
 import { customerPortalRoutes } from "./routes/customer-portal";
@@ -69,6 +70,7 @@ ordersRoutes(app);
 adminRoutes(app);
 fourthwallRoutes(app);
 resendWebhookRoutes(app);
+stripeWebhookRoutes(app);
 adminEmailRoutes(app);
 mobilePurchaseRoutes(app);
 
