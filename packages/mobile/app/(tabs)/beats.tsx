@@ -11,11 +11,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { BeatCard } from "../../components/BeatCard";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { fetchBeats, fetchFeaturedBeats } from "../../lib/api";
 import { useCustomer } from "../../lib/customer";
+import { font, radius, type, vb } from "../../lib/theme";
 
 export default function BeatsScreen() {
   const { customer } = useCustomer();
@@ -35,10 +36,10 @@ export default function BeatsScreen() {
   );
 
   return (
-    <SafeAreaView style={s.page} edges={["top"]}>
+    <ScreenCanvas>
       <View style={s.header}>
         <BrandHeader eyebrow={customer ? "BEAT CATALOG" : "FEATURED BEATS"} />
-        <Text style={s.title}>{customer ? "Find your sound" : "Featured sounds"}</Text>
+        <Text style={s.title}>{customer ? "FIND YOUR SOUND" : "FEATURED SOUNDS"}</Text>
         <Text style={s.copy}>
           {customer
             ? "Live drops, ready for your next release."
@@ -60,12 +61,12 @@ export default function BeatsScreen() {
           value={q}
           onChangeText={setQ}
           placeholder="Search beats, moods, or genres"
-          placeholderTextColor="#77727F"
+          placeholderTextColor={vb.muted}
           style={s.search}
         />
       </View>
       {query.isLoading ? (
-        <ActivityIndicator color="#A855F7" style={{ marginTop: 40 }} />
+        <ActivityIndicator color={vb.purpleBright} style={s.loader} />
       ) : (
         <FlatList
           data={beats}
@@ -77,52 +78,58 @@ export default function BeatsScreen() {
             <RefreshControl
               refreshing={query.isRefetching}
               onRefresh={() => query.refetch()}
-              tintColor="#A855F7"
+              tintColor={vb.purpleBright}
             />
           }
           ListEmptyComponent={<Text style={s.empty}>No beats match that search.</Text>}
         />
       )}
-    </SafeAreaView>
+    </ScreenCanvas>
   );
 }
 
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#0B0A11" },
-  header: { paddingHorizontal: 18, paddingTop: 18 },
-  title: { color: "#F8F6FB", fontSize: 30, fontWeight: "900", marginTop: 20 },
-  copy: { color: "#A9A4B0", marginTop: 6, fontSize: 13, lineHeight: 18 },
+  header: { paddingHorizontal: 22, paddingTop: 18 },
+  title: { ...type.pageTitle, color: vb.silverBright, marginTop: 20 },
+  copy: { ...type.body, color: vb.silver, marginTop: 7 },
   gate: {
-    backgroundColor: "#17141F",
-    borderRadius: 15,
+    backgroundColor: "rgba(74,20,128,0.3)",
+    borderRadius: radius.card,
     borderWidth: 1,
-    borderColor: "rgba(168,85,247,.35)",
+    borderColor: "rgba(162,77,245,0.55)",
     padding: 15,
     marginTop: 16,
+    shadowColor: vb.purple,
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 5,
   },
-  gateTitle: { color: "#DDBDFF", fontSize: 11, fontWeight: "900", letterSpacing: 1 },
-  gateBody: { color: "#ABA6B5", fontSize: 12, lineHeight: 18, marginTop: 6 },
+  gateTitle: { ...type.eyebrow, color: vb.silverBright },
+  gateBody: { ...type.body, color: vb.silver, fontSize: 14, lineHeight: 19, marginTop: 7 },
   gateButton: {
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderColor: "#A855F7",
-    borderRadius: 9,
-    paddingHorizontal: 11,
-    paddingVertical: 9,
-    marginTop: 12,
+    borderColor: "rgba(162,77,245,0.75)",
+    borderRadius: radius.card,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 13,
   },
-  gateButtonText: { color: "#DDBDFF", fontWeight: "900", fontSize: 9, letterSpacing: 0.5 },
+  gateButtonText: { ...type.button, color: vb.purpleBright, fontSize: 10 },
   search: {
-    backgroundColor: "#17141F",
+    backgroundColor: "rgba(19,19,24,0.94)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,.08)",
-    color: "#fff",
-    borderRadius: 14,
+    borderColor: vb.input,
+    color: vb.silverBright,
+    borderRadius: radius.card,
     paddingHorizontal: 15,
     paddingVertical: 13,
     marginTop: 18,
-    fontSize: 14,
+    fontFamily: font.body,
+    fontSize: 16,
   },
-  list: { padding: 18, paddingTop: 14, paddingBottom: 100 },
-  empty: { color: "#A9A4B0", textAlign: "center", marginTop: 50 },
+  list: { padding: 22, paddingTop: 14, paddingBottom: 126 },
+  loader: { marginTop: 40 },
+  empty: { ...type.body, color: vb.silver, textAlign: "center", marginTop: 50 },
 });

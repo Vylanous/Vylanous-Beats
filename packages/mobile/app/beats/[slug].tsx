@@ -10,8 +10,8 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { PreviewButton } from "../../components/PreviewButton";
 import { fetchBeat } from "../../lib/api";
 import { useCart } from "../../lib/cart";
@@ -24,19 +24,19 @@ export default function BeatDetail() {
   const query = useQuery({ queryKey: ["beat", slug], queryFn: () => fetchBeat(slug) });
   if (query.isLoading)
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color="#A855F7" />
-      </View>
+      <ScreenCanvas contentStyle={styles.center}>
+        <ActivityIndicator color={vb.purpleBright} />
+      </ScreenCanvas>
     );
   if (query.isError || !query.data)
     return (
-      <View style={styles.center}>
+      <ScreenCanvas contentStyle={styles.center}>
         <Text style={styles.error}>This beat is unavailable.</Text>
-      </View>
+      </ScreenCanvas>
     );
   const beat = query.data;
   return (
-    <SafeAreaView style={styles.page} edges={["top"]}>
+    <ScreenCanvas>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <BrandHeader eyebrow="LICENSE A BEAT" />
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
@@ -76,13 +76,12 @@ export default function BeatDetail() {
           ),
         )}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenCanvas>
   );
 }
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: vb.black },
-  content: { padding: 20, paddingBottom: 48 },
-  center: { flex: 1, backgroundColor: vb.black, alignItems: "center", justifyContent: "center" },
+  content: { padding: 22, paddingTop: 18, paddingBottom: 130 },
+  center: { alignItems: "center", justifyContent: "center" },
   error: { color: vb.silverBright, fontFamily: font.body },
   backButton: { marginTop: 22, alignSelf: "flex-start" },
   back: { color: vb.purpleBright, fontFamily: font.bodyBold, fontSize: 11, letterSpacing: 1 },

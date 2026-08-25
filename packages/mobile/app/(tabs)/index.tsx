@@ -9,15 +9,15 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { BeatCard } from "../../components/BeatCard";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { fetchFeaturedBeats } from "../../lib/api";
 import { font, vb } from "../../lib/theme";
 export default function HomeScreen() {
   const featured = useQuery({ queryKey: ["featured-beats"], queryFn: fetchFeaturedBeats });
   return (
-    <SafeAreaView style={s.page} edges={["top"]}>
+    <ScreenCanvas>
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <BrandHeader />
         <Text style={s.eyebrow}>PREMIUM HIP-HOP BEATS</Text>
@@ -62,11 +62,10 @@ export default function HomeScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenCanvas>
   );
 }
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: vb.black },
   content: { padding: 22, paddingBottom: 40 },
   eyebrow: {
     color: vb.purpleBright,

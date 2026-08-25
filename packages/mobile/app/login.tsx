@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandHeader } from "../components/BrandHeader";
+import { ScreenCanvas } from "../components/ScreenCanvas";
 import { useCustomer } from "../lib/customer";
 import { font, vb } from "../lib/theme";
 export default function LoginScreen() {
@@ -29,8 +29,9 @@ export default function LoginScreen() {
     }
   };
   return (
-    <SafeAreaView style={s.page} edges={["top"]}>
-      <BrandHeader eyebrow="CUSTOMER PORTAL" />
+    <ScreenCanvas>
+      <View style={s.content}>
+        <BrandHeader eyebrow="CUSTOMER PORTAL" />
       <Pressable style={s.backButton} onPress={() => router.back()}>
         <Text style={s.back}>‹ BACK</Text>
       </Pressable>
@@ -97,16 +98,17 @@ export default function LoginScreen() {
           />
         </View>
       )}
-      <Pressable disabled={busy} style={[s.button, busy && s.disabled]} onPress={submit}>
-        <Text style={s.buttonText}>
-          {busy ? "WORKING…" : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
-        </Text>
-      </Pressable>
-    </SafeAreaView>
+        <Pressable disabled={busy} style={[s.button, busy && s.disabled]} onPress={submit}>
+          <Text style={s.buttonText}>
+            {busy ? "WORKING…" : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
+          </Text>
+        </Pressable>
+      </View>
+    </ScreenCanvas>
   );
 }
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: vb.black, padding: 22 },
+  content: { flex: 1, paddingHorizontal: 22, paddingTop: 18 },
   backButton: { alignSelf: "flex-start", marginTop: 22 },
   back: { color: vb.purpleBright, fontFamily: font.bodyBold, fontSize: 11, letterSpacing: 1 },
   title: {

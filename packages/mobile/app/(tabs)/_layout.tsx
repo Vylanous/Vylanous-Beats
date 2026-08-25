@@ -2,9 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../../lib/cart";
-
-const PURPLE = "#A855F7";
-const INK = "#0B0A11";
+import { font, vb } from "../../lib/theme";
 
 export default function TabLayout() {
   const { items } = useCart();
@@ -15,16 +13,17 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: PURPLE,
-        tabBarInactiveTintColor: "#7B7787",
+        tabBarActiveTintColor: vb.purpleBright,
+        tabBarInactiveTintColor: vb.muted,
         tabBarStyle: {
-          backgroundColor: INK,
-          borderTopColor: "rgba(255,255,255,0.08)",
+          backgroundColor: vb.black,
+          borderTopColor: vb.border,
           height: 56 + bottomInset,
           paddingTop: 7,
           paddingBottom: bottomInset,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarLabelStyle: { fontFamily: font.bodyBold, fontSize: 11, letterSpacing: 0.2 },
+        tabBarBadgeStyle: { backgroundColor: vb.purple, color: vb.white, fontFamily: font.bodyBold },
       }}
     >
       <Tabs.Screen

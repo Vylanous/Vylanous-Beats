@@ -12,9 +12,12 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { BrandHeader } from "../../components/BrandHeader";
+import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { entitlementDownload, updateCustomerPreferences } from "../../lib/api";
 import { useCustomer } from "../../lib/customer";
 import { formatPrice } from "../../lib/models";
+import { font, radius, type, vb } from "../../lib/theme";
 
 export default function ProfileScreen() {
   const { ready, customer, dashboard, refreshDashboard, resendVerification, signOut } =
@@ -24,6 +27,7 @@ export default function ProfileScreen() {
     queryFn: refreshDashboard,
     enabled: Boolean(customer),
   });
+
   const download = useCallback(async (id: string) => {
     try {
       const { url } = await entitlementDownload(id);
@@ -35,6 +39,7 @@ export default function ProfileScreen() {
       );
     }
   }, []);
+
   const resend = useCallback(async () => {
     try {
       await resendVerification();
@@ -62,102 +67,108 @@ export default function ProfileScreen() {
     [refreshDashboard],
   );
 
-  if (!ready) return <View style={s.page} />;
+  if (!ready) return <ScreenCanvas />;
+
   if (!customer || !dashboard) {
     return (
-      <View style={s.page}>
-        <Text style={s.eyebrow}>CUSTOMER PORTAL</Text>
-        <Text style={s.title}>Your music vault</Text>
-        <Text style={s.copy}>
-          Sign in to see your licenses, purchase history, secure downloads, and account insights.
-        </Text>
-        <Pressable style={s.primary} onPress={() => router.push("/login")}>
-          <Text style={s.primaryText}>SIGN IN OR CREATE ACCOUNT</Text>
-        </Pressable>
-      </View>
-    );
-  }
-  return (
-    <FlatList
-      style={s.page}
-      contentContainerStyle={s.content}
-      data={dashboard.entitlements}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl
-          refreshing={dashboardQuery.isRefetching}
-          onRefresh={() => refreshDashboard()}
-          tintColor="#DDBDFF"
-        />
-      }
-      ListHeaderComponent={
-        <>
-          <Text style={s.eyebrow}>CUSTOMER PORTAL</Text>
-          <Text style={s.title}>{customer.displayName || "Your music vault"}</Text>
-          <Text style={s.email}>{customer.email}</Text>
-          {!customer.emailVerified && (
-            <View style={s.verification}>
-              <View style={s.verificationCopy}>
-                <Text style={s.cardTitle}>VERIFY YOUR EMAIL</Text>
-                <Text style={s.cardBody}>
-                  Verify your email to unlock the full catalog, purchases, and mobile license
-                  delivery.
-                </Text>
-              </View>
-              <Pressable onPress={resend} style={s.verifyButton}>
-                <Text style={s.verifyButtonText}>RESEND</Text>
-              </Pressable>
-            </View>
-          )}
-          <View style={s.insights}>
-            <Insight label="LICENSES" value={String(dashboard.insights.licensesOwned)} />
-            <Insight label="ORDERS" value={String(dashboard.insights.paidOrders)} />
-            <Insight label="INVESTED" value={formatPrice(dashboard.insights.totalSpentCents)} />
-          </View>
-          <View style={s.newsletter}>
-            <View style={s.newsletterCopy}>
-              <Text style={s.cardTitle}>Studio notes & early drops</Text>
-              <Text style={s.cardBody}>
-                Control release updates and occasional offers from your account.
-              </Text>
-            </View>
-            <Switch
-              value={customer.marketingOptIn}
-              onValueChange={toggleNewsletter}
-              trackColor={{ false: "#40394A", true: "#7E22CE" }}
-              thumbColor="#F8F6FB"
-            />
-          </View>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>LICENSE LIBRARY</Text>
-            <Pressable onPress={() => router.push("/(tabs)/beats")}>
-              <Text style={s.link}>BROWSE UPSELLS</Text>
-            </Pressable>
-          </View>
-        </>
-      }
-      renderItem={({ item }) => (
-        <View style={s.license}>
-          <View style={s.licenseCopy}>
-            <Text style={s.licenseTitle}>{item.beatTitle}</Text>
-            <Text style={s.licenseTier}>{item.licenseName}</Text>
-          </View>
-          <Pressable style={s.download} onPress={() => download(item.id)}>
-            <Text style={s.downloadText}>DOWNLOAD</Text>
+      <ScreenCanvas>
+        <View style={s.guestContent}>
+          <BrandHeader eyebrow="CUSTOMER PORTAL" />
+          <Text style={s.title}>YOUR MUSIC VAULT</Text>
+          <Text style={s.copy}>
+            Sign in to see your licenses, purchase history, secure downloads, and account insights.
+          </Text>
+          <Pressable style={s.primary} onPress={() => router.push("/login")}>
+            <Text style={s.primaryText}>SIGN IN OR CREATE ACCOUNT</Text>
           </Pressable>
         </View>
-      )}
-      ListEmptyComponent={
-        <Text style={s.empty}>
-          Your confirmed licenses will appear here. Browse the catalog to find your next sound.
-        </Text>
-      }
-      ListFooterComponent={
-        <Pressable style={s.signOut} onPress={signOut}>
-          <Text style={s.signOutText}>SIGN OUT</Text>
-        </Pressable>
-      }
-    />
+      </ScreenCanvas>
+    );
+  }
+
+  return (
+    <ScreenCanvas>
+      <FlatList
+        style={s.list}
+        contentContainerStyle={s.content}
+        data={dashboard.entitlements}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={dashboardQuery.isRefetching}
+            onRefresh={() => refreshDashboard()}
+            tintColor={vb.purpleBright}
+          />
+        }
+        ListHeaderComponent={
+          <>
+            <BrandHeader eyebrow="CUSTOMER PORTAL" />
+            <Text style={s.title}>{customer.displayName || "YOUR MUSIC VAULT"}</Text>
+            <Text style={s.email}>{customer.email}</Text>
+            {!customer.emailVerified && (
+              <View style={s.verification}>
+                <View style={s.verificationCopy}>
+                  <Text style={s.cardTitle}>VERIFY YOUR EMAIL</Text>
+                  <Text style={s.cardBody}>
+                    Verify your email to unlock the full catalog, purchases, and mobile license
+                    delivery.
+                  </Text>
+                </View>
+                <Pressable onPress={resend} style={s.verifyButton}>
+                  <Text style={s.verifyButtonText}>RESEND</Text>
+                </Pressable>
+              </View>
+            )}
+            <View style={s.insights}>
+              <Insight label="LICENSES" value={String(dashboard.insights.licensesOwned)} />
+              <Insight label="ORDERS" value={String(dashboard.insights.paidOrders)} />
+              <Insight label="INVESTED" value={formatPrice(dashboard.insights.totalSpentCents)} />
+            </View>
+            <View style={s.newsletter}>
+              <View style={s.newsletterCopy}>
+                <Text style={s.cardTitle}>STUDIO NOTES & EARLY DROPS</Text>
+                <Text style={s.cardBody}>
+                  Control release updates and occasional offers from your account.
+                </Text>
+              </View>
+              <Switch
+                value={customer.marketingOptIn}
+                onValueChange={toggleNewsletter}
+                trackColor={{ false: "#40394A", true: vb.purple }}
+                thumbColor={vb.silverBright}
+              />
+            </View>
+            <View style={s.sectionHead}>
+              <Text style={s.sectionTitle}>LICENSE LIBRARY</Text>
+              <Pressable onPress={() => router.push("/(tabs)/beats")}>
+                <Text style={s.link}>BROWSE BEATS</Text>
+              </Pressable>
+            </View>
+          </>
+        }
+        renderItem={({ item }) => (
+          <View style={s.license}>
+            <View style={s.licenseCopy}>
+              <Text style={s.licenseTitle}>{item.beatTitle}</Text>
+              <Text style={s.licenseTier}>{item.licenseName}</Text>
+            </View>
+            <Pressable style={s.download} onPress={() => download(item.id)}>
+              <Text style={s.downloadText}>DOWNLOAD</Text>
+            </Pressable>
+          </View>
+        )}
+        ListEmptyComponent={
+          <Text style={s.empty}>
+            Your confirmed licenses will appear here. Browse the catalog to find your next sound.
+          </Text>
+        }
+        ListFooterComponent={
+          <Pressable style={s.signOut} onPress={signOut}>
+            <Text style={s.signOutText}>SIGN OUT</Text>
+          </Pressable>
+        }
+      />
+    </ScreenCanvas>
   );
 }
 
@@ -169,99 +180,126 @@ function Insight({ label, value }: { label: string; value: string }) {
     </View>
   );
 }
+
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#0B0A11" },
-  content: { padding: 22, paddingTop: 24, paddingBottom: 42 },
-  eyebrow: { color: "#B982FF", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 },
-  title: { color: "#F8F6FB", fontSize: 31, fontWeight: "900", marginTop: 7 },
-  email: { color: "#ABA6B5", marginTop: 5 },
-  copy: { color: "#ABA6B5", fontSize: 14, lineHeight: 21, marginTop: 12 },
-  primary: {
-    marginTop: 22,
-    backgroundColor: "#A855F7",
-    borderRadius: 14,
-    alignItems: "center",
-    padding: 16,
+  list: { flex: 1, backgroundColor: "transparent" },
+  content: { paddingHorizontal: 22, paddingTop: 18, paddingBottom: 136 },
+  guestContent: { flex: 1, paddingHorizontal: 22, paddingTop: 18 },
+  title: {
+    ...type.pageTitle,
+    color: vb.silverBright,
+    marginTop: 20,
   },
-  primaryText: { color: "#fff", fontSize: 11, fontWeight: "900", letterSpacing: 0.8 },
-  insights: { flexDirection: "row", gap: 8, marginTop: 22 },
+  email: {
+    fontFamily: font.bodyMedium,
+    color: vb.silver,
+    fontSize: 15,
+    lineHeight: 20,
+    marginTop: 5,
+  },
+  copy: { ...type.body, color: vb.silver, marginTop: 14, maxWidth: 340 },
+  primary: {
+    alignSelf: "flex-start",
+    marginTop: 24,
+    backgroundColor: vb.purple,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: "rgba(162,77,245,0.74)",
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    shadowColor: vb.purpleBright,
+    shadowOpacity: 0.48,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 8,
+  },
+  primaryText: { ...type.button, color: vb.white },
+  insights: { flexDirection: "row", gap: 8, marginTop: 24 },
   insight: {
     flex: 1,
-    padding: 12,
-    backgroundColor: "#17141F",
-    borderRadius: 13,
+    padding: 13,
+    backgroundColor: "rgba(19,19,24,0.92)",
+    borderRadius: radius.card,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,.07)",
+    borderColor: "rgba(124,47,203,0.36)",
   },
-  insightValue: { color: "#F8F6FB", fontSize: 17, fontWeight: "900" },
+  insightValue: { ...type.section, color: vb.silverBright, fontSize: 22, lineHeight: 24 },
   insightLabel: {
-    color: "#817B8B",
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 0.7,
-    marginTop: 5,
+    ...type.eyebrow,
+    color: vb.muted,
+    fontSize: 8,
+    marginTop: 7,
   },
   verification: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#281B36",
-    borderRadius: 14,
+    backgroundColor: "rgba(74,20,128,0.32)",
+    borderRadius: radius.card,
     borderWidth: 1,
-    borderColor: "#7E22CE",
+    borderColor: "rgba(162,77,245,0.62)",
     padding: 14,
     marginTop: 18,
+    shadowColor: vb.purple,
+    shadowOpacity: 0.34,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
   },
   verificationCopy: { flex: 1 },
   verifyButton: {
-    backgroundColor: "#A855F7",
-    borderRadius: 9,
+    backgroundColor: vb.purple,
+    borderRadius: radius.card,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  verifyButtonText: { color: "#fff", fontSize: 10, fontWeight: "900", letterSpacing: 0.7 },
+  verifyButtonText: { ...type.button, color: vb.white, fontSize: 10 },
   newsletter: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     marginTop: 14,
-    backgroundColor: "#17141F",
+    backgroundColor: "rgba(19,19,24,0.92)",
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: vb.border,
     padding: 14,
-    borderRadius: 14,
   },
   newsletterCopy: { flex: 1 },
-  cardTitle: { color: "#F8F6FB", fontSize: 13, fontWeight: "800" },
-  cardBody: { color: "#817B8B", fontSize: 11, lineHeight: 16, marginTop: 3 },
+  cardTitle: { ...type.eyebrow, color: vb.silverBright },
+  cardBody: { ...type.body, color: vb.muted, fontSize: 13, lineHeight: 18, marginTop: 4 },
   sectionHead: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 26,
+    marginTop: 28,
     marginBottom: 10,
   },
-  sectionTitle: { color: "#DDBDFF", fontSize: 11, fontWeight: "900", letterSpacing: 1 },
-  link: { color: "#B982FF", fontSize: 10, fontWeight: "900", letterSpacing: 0.5 },
+  sectionTitle: { ...type.eyebrow, color: vb.silverBright },
+  link: { ...type.button, color: vb.purpleBright, fontSize: 10 },
   license: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#17141F",
-    borderRadius: 14,
+    backgroundColor: "rgba(19,19,24,0.92)",
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: vb.border,
     padding: 14,
     marginTop: 8,
     gap: 10,
   },
   licenseCopy: { flex: 1 },
-  licenseTitle: { color: "#F8F6FB", fontWeight: "900", fontSize: 15 },
-  licenseTier: { color: "#ABA6B5", fontSize: 11, marginTop: 3 },
+  licenseTitle: { ...type.section, color: vb.silverBright, fontSize: 21, lineHeight: 23 },
+  licenseTier: { ...type.body, color: vb.silver, fontSize: 13, lineHeight: 17, marginTop: 3 },
   download: {
     borderWidth: 1,
-    borderColor: "#A855F7",
-    borderRadius: 9,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
+    borderColor: "rgba(162,77,245,0.75)",
+    borderRadius: radius.card,
+    paddingHorizontal: 11,
+    paddingVertical: 10,
   },
-  downloadText: { color: "#DDBDFF", fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
-  empty: { color: "#817B8B", lineHeight: 19, marginTop: 4 },
+  downloadText: { ...type.button, color: vb.purpleBright, fontSize: 10 },
+  empty: { ...type.body, color: vb.muted, marginTop: 4 },
   signOut: { alignSelf: "flex-start", marginTop: 30, paddingVertical: 10 },
-  signOutText: { color: "#A99EB2", fontSize: 10, fontWeight: "900", letterSpacing: 1 },
+  signOutText: { ...type.button, color: vb.silver, fontSize: 10 },
 });
