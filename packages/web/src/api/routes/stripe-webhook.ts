@@ -7,6 +7,7 @@ import {
   fulfillPaidStripeOrder,
 } from "../lib/order-fulfillment";
 import { stripe } from "../lib/stripe";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 const PAYMENT_EVENTS = new Set([
   "checkout.session.completed",
@@ -23,13 +24,19 @@ export function stripeWebhookRoutes(app: Hono) {
     if (!stripe || !secret) return c.json({ error: "webhook_not_configured" }, 503);
 
     const signature = c.req.header("stripe-signature");
-    if (!signature) return c.json({ error: "missing_signature" }, 400);
+    if (!signature) {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.invalidStripeWebhook);
+      if (rateLimited) return rateLimited;
+      return c.json({ error: "missing_signature" }, 400);
+    }
 
     const rawPayload = await c.req.text();
     let event: Stripe.Event;
     try {
       event = await stripe.webhooks.constructEventAsync(rawPayload, signature, secret);
     } catch {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.invalidStripeWebhook);
+      if (rateLimited) return rateLimited;
       return c.json({ error: "invalid_signature" }, 400);
     }
 

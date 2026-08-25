@@ -6,9 +6,12 @@ import { signIfKey } from "../lib/url-sign";
 import { stripe } from "../lib/stripe";
 import { customerFromRequest } from "../lib/customer-auth";
 import { fulfillPaidStripeOrder } from "../lib/order-fulfillment";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 export function ordersRoutes(app: Hono) {
   app.post("/orders/:id/confirm", async (c) => {
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.orderConfirm);
+    if (rateLimited) return rateLimited;
     const id = c.req.param("id");
     const token = c.req.query("token") || "";
     const rows = await db.select().from(orders).where(eq(orders.id, id)).limit(1);

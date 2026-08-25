@@ -6,6 +6,7 @@ import { db } from "../database";
 import { subscribers } from "../database/schema";
 import { loadSettings, publicSettings } from "../lib/settings";
 import { rid } from "../lib/util";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 export function publicRoutes(app: Hono) {
   app.get("/settings", async (c) => {
@@ -20,6 +21,8 @@ export function publicRoutes(app: Hono) {
     "/subscribe",
     zValidator("json", z.object({ email: z.string().trim().email() })),
     async (c) => {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.newsletterSubscribe);
+      if (rateLimited) return rateLimited;
       const email = c.req.valid("json").email.trim().toLowerCase();
       const existing = await db
         .select()

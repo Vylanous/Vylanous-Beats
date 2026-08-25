@@ -183,6 +183,35 @@ export const stripeWebhookEvents = sqliteTable(
   ],
 );
 
+/**
+ * Durable fixed-window request counters for public abuse controls. Identifiers
+ * are HMAC hashes rather than raw IP addresses or email addresses, and rows are
+ * retained only briefly so counters can be shared safely across Render instances.
+ */
+export const rateLimitWindows = sqliteTable(
+  "rate_limit_windows",
+  {
+    id: text("id").primaryKey(),
+    scope: text("scope").notNull(),
+    subjectHash: text("subject_hash").notNull(),
+    windowStart: integer("window_start").notNull(),
+    hits: integer("hits").notNull().default(0),
+    expiresAt: integer("expires_at").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    updatedAt: text("updated_at"),
+  },
+  (t) => [
+    uniqueIndex("rate_limit_windows_scope_subject_window_idx").on(
+      t.scope,
+      t.subjectHash,
+      t.windowStart,
+    ),
+    index("rate_limit_windows_expires_at_idx").on(t.expiresAt),
+  ],
+);
+
 /** Durable delivery state keeps payment fulfillment and email retries separate. */
 export const orderDeliveries = sqliteTable(
   "order_deliveries",

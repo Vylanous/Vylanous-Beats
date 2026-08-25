@@ -4,6 +4,7 @@ import type { Hono } from "hono";
 import { db } from "../database";
 import { emailEvents, inboundEmails } from "../database/schema";
 import { rid } from "../lib/util";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 interface ResendEvent {
   type: string;
@@ -26,7 +27,11 @@ export function resendWebhookRoutes(app: Hono) {
     const eventId = c.req.header("svix-id");
     const timestamp = c.req.header("svix-timestamp");
     const signature = c.req.header("svix-signature");
-    if (!eventId || !timestamp || !signature) return c.json({ error: "missing_signature" }, 400);
+    if (!eventId || !timestamp || !signature) {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.invalidResendWebhook);
+      if (rateLimited) return rateLimited;
+      return c.json({ error: "missing_signature" }, 400);
+    }
 
     let event: ResendEvent;
     try {
@@ -36,6 +41,8 @@ export function resendWebhookRoutes(app: Hono) {
         "svix-signature": signature,
       }) as ResendEvent;
     } catch {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.invalidResendWebhook);
+      if (rateLimited) return rateLimited;
       return c.json({ error: "invalid_signature" }, 401);
     }
 

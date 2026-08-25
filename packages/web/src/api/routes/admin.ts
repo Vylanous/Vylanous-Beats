@@ -29,6 +29,7 @@ import {
 import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 type MediaHealthStatus = "healthy" | "missing" | "broken" | "external" | "public" | "unavailable";
 type MediaHealthEntry = {
@@ -702,6 +703,8 @@ function normalizeBeatMetadata(input: {
 
 export function adminRoutes(app: Hono) {
   app.post("/admin/login", zValidator("json", z.object({ password: z.string() })), async (c) => {
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.adminLogin);
+    if (rateLimited) return rateLimited;
     const { password } = c.req.valid("json");
     if (!checkPassword(password)) {
       return c.json({ error: "invalid_password" }, 401);
@@ -712,6 +715,8 @@ export function adminRoutes(app: Hono) {
   app.get("/admin/me", requireAdmin, (c) => c.json({ ok: true }, 200));
 
   app.post("/admin/upload", requireAdmin, async (c) => {
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.adminUpload);
+    if (rateLimited) return rateLimited;
     if (!S3_CONFIGURED) {
       return c.json(
         {
@@ -789,6 +794,8 @@ export function adminRoutes(app: Hono) {
     requireAdmin,
     zValidator("json", uploadPresignSchema),
     async (c) => {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.adminUpload);
+      if (rateLimited) return rateLimited;
       const { filename, contentType, folder, size } = c.req.valid("json");
       if (folder === PAGE_BUILDER_IMAGE_FOLDER) {
         if (!PAGE_BUILDER_IMAGE_TYPES.has(contentType.toLowerCase())) {

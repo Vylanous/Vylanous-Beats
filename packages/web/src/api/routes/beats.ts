@@ -9,6 +9,7 @@ import { loadSettings } from "../lib/settings";
 import { signIfKey } from "../lib/url-sign";
 import type { PublicBeat } from "../../shared/beats";
 import { customerFromRequest, requireCustomer } from "../lib/customer-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 async function serializePublicBeat(beat: Beat): Promise<PublicBeat> {
   return {
@@ -135,6 +136,8 @@ export function beatsRoutes(app: Hono) {
     "/beats/published-block-event",
     zValidator("json", publishedBlockMetricSchema),
     async (c) => {
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.publishedBeatEvent);
+      if (rateLimited) return rateLimited;
       const input = c.req.valid("json");
       if (!(await isConfiguredPublishedBeatBlockEvent(input))) {
         return c.json({ error: "published_block_metric_not_allowed" }, 404);
@@ -173,6 +176,8 @@ export function beatsRoutes(app: Hono) {
   });
 
   app.post("/beats/:id/play", async (c) => {
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.beatPlay);
+    if (rateLimited) return rateLimited;
     const id = c.req.param("id");
     const rows = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
     const beat = rows[0];

@@ -117,6 +117,18 @@ export const SCHEMA_STATEMENTS: string[] = [
   `create unique index if not exists "stripe_webhook_events_provider_event_id_idx" on "stripe_webhook_events" ("provider_event_id")`,
   `create index if not exists "stripe_webhook_events_order_idx" on "stripe_webhook_events" ("order_id")`,
   `create index if not exists "stripe_webhook_events_session_idx" on "stripe_webhook_events" ("checkout_session_id")`,
+  `create table if not exists "rate_limit_windows" (
+    "id" text primary key not null,
+    "scope" text not null,
+    "subject_hash" text not null,
+    "window_start" integer not null,
+    "hits" integer not null default 0,
+    "expires_at" integer not null,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "updated_at" text
+  )`,
+  `create unique index if not exists "rate_limit_windows_scope_subject_window_idx" on "rate_limit_windows" ("scope", "subject_hash", "window_start")`,
+  `create index if not exists "rate_limit_windows_expires_at_idx" on "rate_limit_windows" ("expires_at")`,
   `create table if not exists "order_deliveries" (
     "id" text primary key not null,
     "order_id" text not null,

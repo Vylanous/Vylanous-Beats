@@ -919,3 +919,21 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Verify the saved newsletter popup settings, public display timing and targeting, and fan-list signup request flow.
 - [x] Repair and validate any newsletter popup issue without disrupting existing subscribers or the fan list. No defect was found, so no application repair was required.
+
+## Strict Publishing QA Review
+
+- [x] Audit production readiness across feasibility, third-party and resource usage limits, security controls, core customer journeys, and operational resilience.
+- [x] Deliver separate needs-attention, recommended-improvements, and UX-feature checklists with the problem, reason, solution, and implementation path for each item.
+
+## Admin Studio Strict Publishing QA Review
+
+- [x] Review the live Admin Studio sections, workflows, and publishing controls without modifying settings, records, uploads, orders, or customer data.
+- [x] Assess administrative data integrity, security, usage-limit prevention, operational resilience, and reporting safeguards.
+- [x] Deliver needs-attention, recommended-improvements, and admin UX-feature checklists with concrete fixes.
+
+## Public Abuse Controls and Stripe Webhook Configuration
+
+- [x] Add application-level, route-specific rate limits for public authentication, subscriber, playback, analytics, checkout, and media-upload abuse paths.
+- [x] Preserve safe Stripe webhook delivery retries while limiting unauthenticated invalid-signature traffic.
+- [x] Document `STRIPE_WEBHOOK_SECRET` in the production environment template and add regression coverage for the new protections.
+- [x] Validate, commit, and publish the security hardening through the GitHub and Render workflow.

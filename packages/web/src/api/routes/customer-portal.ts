@@ -21,6 +21,7 @@ import {
 import { authorizedDownload, claimLegacyOrders, customerDashboard } from "../lib/customer-portal";
 import { rid } from "../lib/util";
 import { sendCustomerVerificationEmail } from "../lib/email";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 const registrationSchema = z.object({
   email: z
@@ -64,6 +65,8 @@ async function syncSubscriber(email: string) {
 export function customerPortalRoutes(app: Hono) {
   app.post("/customer/register", zValidator("json", registrationSchema), async (c) => {
     const body = c.req.valid("json");
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.customerRegister);
+    if (rateLimited) return rateLimited;
     const duplicate = await db
       .select()
       .from(customers)
@@ -111,6 +114,8 @@ export function customerPortalRoutes(app: Hono) {
     zValidator("json", resendVerificationSchema),
     async (c) => {
       const { email } = c.req.valid("json");
+      const rateLimited = await enforceRateLimit(c, RATE_LIMITS.customerResend);
+      if (rateLimited) return rateLimited;
       const [customer] = await db
         .select()
         .from(customers)
@@ -139,6 +144,8 @@ export function customerPortalRoutes(app: Hono) {
   );
 
   app.post("/customer/verify-email", zValidator("json", verificationTokenSchema), async (c) => {
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.customerVerify);
+    if (rateLimited) return rateLimited;
     const customer = await verifyCustomerEmailToken(c.req.valid("json").token);
     if (!customer) return c.json({ error: "invalid_or_expired_verification_token" }, 400);
     return c.json({ ok: true, customer: publicCustomer(customer) }, 200);
@@ -163,6 +170,8 @@ export function customerPortalRoutes(app: Hono) {
 
   app.post("/customer/login", zValidator("json", loginSchema), async (c) => {
     const body = c.req.valid("json");
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.customerLogin, body.email);
+    if (rateLimited) return rateLimited;
     const rows = await db.select().from(customers).where(eq(customers.email, body.email)).limit(1);
     const customer = rows[0];
     if (!customer || !(await verifyCustomerPassword(body.password, customer.passwordHash))) {

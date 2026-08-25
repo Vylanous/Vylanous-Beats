@@ -11,6 +11,7 @@ import { stripe } from "../lib/stripe";
 import { sendDeliveryEmail } from "../lib/email";
 import { currentCustomer, requireVerifiedCustomer } from "../lib/customer-auth";
 import { activateOrderEntitlements } from "../lib/customer-portal";
+import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
 
 const cartItemSchema = z.object({
   beatId: z.string(),
@@ -40,6 +41,8 @@ export function checkoutRoutes(app: Hono) {
   app.post("/checkout", requireVerifiedCustomer, zValidator("json", checkoutSchema), async (c) => {
     const body = c.req.valid("json");
     const customer = await currentCustomer(c);
+    const rateLimited = await enforceRateLimit(c, RATE_LIMITS.checkout, customer!.id);
+    if (rateLimited) return rateLimited;
 
     const resolved: {
       beatId: string;
