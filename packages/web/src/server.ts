@@ -1,5 +1,6 @@
 import app from "./api";
 import { loadSettings } from "./api/lib/settings";
+import { withSecurityHeaders } from "./api/lib/security-headers";
 
 const port = Number(process.env.PORT ?? 3000);
 const distDir = `${import.meta.dir}/../dist`;
@@ -14,26 +15,38 @@ const server = Bun.serve({
       return app.fetch(request);
     }
 
+    if (url.pathname === "/sitemap.xml") {
+      return withSecurityHeaders(
+        new Response(await sitemapXml(url.origin), {
+          headers: { "Content-Type": "application/xml; charset=utf-8" },
+        }),
+      );
+    }
+
     const filePath = getStaticFilePath(url.pathname);
     const file = Bun.file(filePath);
 
     if (url.pathname !== "/" && (await file.exists())) {
-      return new Response(file);
+      return withSecurityHeaders(new Response(file));
     }
 
     const index = Bun.file(indexPath);
     if (await index.exists()) {
       const html = await index.text();
       const metadata = await getPageMetadata(url);
-      return new Response(injectMetadata(html, metadata), {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      });
+      return withSecurityHeaders(
+        new Response(injectMetadata(html, metadata), {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        }),
+      );
     }
 
-    return new Response("Build output not found. Run `bun run build` first.", {
-      status: 500,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    });
+    return withSecurityHeaders(
+      new Response("Build output not found. Run `bun run build` first.", {
+        status: 500,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      }),
+    );
   },
 });
 
@@ -94,6 +107,32 @@ function escapeHtml(value: string) {
       "<": "&lt;",
       ">": "&gt;",
       "'": "&#39;",
+      '"': "&quot;",
+    };
+    return escaped[character];
+  });
+}
+
+async function sitemapXml(origin: string) {
+  const settings = await loadSettings();
+  const staticPaths = ["/", "/beats", "/licensing", "/about", "/privacy", "/terms"];
+  const managedPaths = settings.pages
+    .filter((page) => page.published)
+    .map((page) => page.path || (page.slug === "home" ? "/" : `/${page.slug}`));
+  const paths = [...new Set([...staticPaths, ...managedPaths])].sort();
+  const urls = paths
+    .map((path) => `  <url><loc>${escapeXml(new URL(path, origin).toString())}</loc></url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+}
+
+function escapeXml(value: string) {
+  return value.replace(/[<>&'"]/g, (character) => {
+    const escaped: Record<string, string> = {
+      "<": "&lt;",
+      ">": "&gt;",
+      "&": "&amp;",
+      "'": "&apos;",
       '"': "&quot;",
     };
     return escaped[character];

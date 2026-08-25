@@ -1,21 +1,6 @@
-/**
- * Admin client helpers — token auth + raw fetch wrappers.
- * The token lives in localStorage and is attached as a Bearer header.
- */
+/** Admin client helpers backed by same-origin HttpOnly server sessions. */
 
 import type { SiteSettings } from "../../shared/site-settings";
-
-const TOKEN_KEY = "vb_admin_token";
-
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-export function setToken(t: string) {
-  localStorage.setItem(TOKEN_KEY, t);
-}
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
 
 export function formatAdminError(value: unknown, fallback: string): string {
   if (typeof value === "string" && value.trim()) return value;
@@ -52,17 +37,15 @@ export function formatAdminError(value: unknown, fallback: string): string {
 }
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const token = getToken();
   const res = await fetch(`/api${path}`, {
     ...opts,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...opts.headers,
     },
   });
   if (res.status === 401) {
-    clearToken();
     throw new Error("unauthorized");
   }
   if (!res.ok) {
@@ -80,11 +63,13 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 
 export const adminApi = {
   login: (password: string) =>
-    req<{ token: string }>("/admin/login", {
+    req<{ ok: true }>("/admin/login", {
       method: "POST",
       body: JSON.stringify({ password }),
     }),
   me: () => req<{ ok: true }>("/admin/me"),
+  logout: () => req<{ ok: true }>("/admin/logout", { method: "POST" }),
+  logoutAll: () => req<{ ok: true }>("/admin/logout-all", { method: "POST" }),
   stats: () =>
     req<{
       beats: number;
@@ -129,6 +114,11 @@ export const adminApi = {
   mediaHealth: () => req<MediaHealthReport>("/admin/media-health"),
   publishedBeatAnalytics: (days: 7 | 30 | 90 = 30) =>
     req<PublishedBeatAnalyticsReport>(`/admin/published-beat-analytics?days=${days}`),
+  rollupPublishedBeatAnalytics: () =>
+    req<{ cutoffDay: string; rolledUpRows: number; deletedDailyRows: number }>(
+      "/admin/published-beat-analytics/rollup",
+      { method: "POST" },
+    ),
 };
 
 /** Fetch the site customization settings (admin-authenticated).
@@ -162,7 +152,6 @@ export async function resetAdminSettings(): Promise<{
 
 /** Upload a file through the same-origin server endpoint and return its durable storage key. */
 export async function uploadFile(file: File, folder: string): Promise<string> {
-  const token = getToken();
   const form = new FormData();
   form.append("file", file, file.name);
   form.append("folder", folder);
@@ -171,7 +160,7 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
     response = await fetch("/api/admin/upload", {
       method: "POST",
       body: form,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      credentials: "include",
     });
   } catch {
     throw new Error(
@@ -179,7 +168,6 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
     );
   }
   if (response.status === 401) {
-    clearToken();
     throw new Error("Your admin session expired. Sign in again before uploading.");
   }
   if (!response.ok) {

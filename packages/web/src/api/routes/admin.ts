@@ -14,7 +14,14 @@ import {
   settings,
   subscribers,
 } from "../database/schema";
-import { requireAdmin, checkPassword, makeAdminToken } from "../lib/admin-auth";
+import {
+  checkPassword,
+  createAdminSession,
+  requireAdmin,
+  revokeAllAdminSessions,
+  revokeCurrentAdminSession,
+  setAdminSessionCookie,
+} from "../lib/admin-auth";
 import {
   loadSettings,
   publicSettings,
@@ -30,6 +37,7 @@ import { rid, makeSlug } from "../lib/util";
 import { signIfKey, normalizeKey } from "../lib/url-sign";
 import { s3, S3_BUCKET, S3_CONFIGURED } from "../lib/s3";
 import { enforceRateLimit, RATE_LIMITS } from "../lib/rate-limit";
+import { rollupExpiredPublishedBeatMetrics } from "../lib/published-beat-retention";
 
 type MediaHealthStatus = "healthy" | "missing" | "broken" | "external" | "public" | "unavailable";
 type MediaHealthEntry = {
@@ -709,10 +717,22 @@ export function adminRoutes(app: Hono) {
     if (!checkPassword(password)) {
       return c.json({ error: "invalid_password" }, 401);
     }
-    return c.json({ token: makeAdminToken() }, 200);
+    const { token } = await createAdminSession();
+    setAdminSessionCookie(c, token);
+    return c.json({ ok: true }, 200);
   });
 
   app.get("/admin/me", requireAdmin, (c) => c.json({ ok: true }, 200));
+
+  app.post("/admin/logout", requireAdmin, async (c) => {
+    await revokeCurrentAdminSession(c);
+    return c.json({ ok: true }, 200);
+  });
+
+  app.post("/admin/logout-all", requireAdmin, async (c) => {
+    await revokeAllAdminSessions(c);
+    return c.json({ ok: true }, 200);
+  });
 
   app.post("/admin/upload", requireAdmin, async (c) => {
     const rateLimited = await enforceRateLimit(c, RATE_LIMITS.adminUpload);
@@ -1382,5 +1402,9 @@ export function adminRoutes(app: Hono) {
       },
       200,
     );
+  });
+
+  app.post("/admin/published-beat-analytics/rollup", requireAdmin, async (c) => {
+    return c.json(await rollupExpiredPublishedBeatMetrics(), 200);
   });
 }

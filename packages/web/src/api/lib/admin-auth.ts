@@ -1,75 +1,24 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { and, eq, gt, isNull } from "drizzle-orm";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { Context, Next } from "hono";
+import { db } from "../database";
+import { adminSessions } from "../database/schema";
 
-/**
- * Lightweight single-admin auth. The store owner sets ADMIN_PASSWORD and
- * BETTER_AUTH_SECRET in environment variables. On login we mint an HMAC-signed
- * token (no DB needed) the client stores in localStorage and sends as a Bearer
- * header.
- *
- * Fail-closed: if either secret is missing, auth operations throw instead of
- * silently falling back to a hardcoded default. Set both vars in every
- * environment (see .env.template).
- */
+const ADMIN_SESSION_COOKIE = "vylanous_admin_session";
+const ADMIN_SESSION_ABSOLUTE_TTL_MS = 8 * 60 * 60 * 1000;
+const ADMIN_SESSION_IDLE_TTL_MS = 2 * 60 * 60 * 1000;
 
-function secret(): string {
-  const s = process.env.BETTER_AUTH_SECRET;
-  if (!s) throw new Error("BETTER_AUTH_SECRET is not set");
-  return s;
+type AdminSession = typeof adminSessions.$inferSelect;
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("base64url");
 }
 
 export function adminPassword(): string {
-  const p = process.env.ADMIN_PASSWORD;
-  if (!p) throw new Error("ADMIN_PASSWORD is not set");
-  return p;
-}
-
-const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
-
-interface AdminTokenPayload {
-  sub: string; // unique token id
-  iat: number;
-  exp: number;
-}
-
-export function makeAdminToken(): string {
-  const payload: AdminTokenPayload = {
-    sub: randomBytes(18).toString("base64url"),
-    iat: Date.now(),
-    exp: Date.now() + TOKEN_TTL_MS,
-  };
-  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const sig = createHmac("sha256", secret()).update(body).digest("base64url");
-  return `${body}.${sig}`;
-}
-
-export function verifyAdminToken(token: string | undefined | null): boolean {
-  if (!token) return false;
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [body, sig] = parts;
-  let expected: string;
-  try {
-    expected = createHmac("sha256", secret()).update(body).digest("base64url");
-  } catch {
-    return false;
-  }
-  try {
-    const a = Buffer.from(sig);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-  } catch {
-    return false;
-  }
-  let payload: AdminTokenPayload;
-  try {
-    payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
-  } catch {
-    return false;
-  }
-  if (!payload || typeof payload.exp !== "number" || !Number.isFinite(payload.exp)) return false;
-  if (Date.now() > payload.exp) return false;
-  return true;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) throw new Error("ADMIN_PASSWORD is not set");
+  return password;
 }
 
 export function checkPassword(input: string): boolean {
@@ -80,19 +29,98 @@ export function checkPassword(input: string): boolean {
     return false;
   }
   try {
-    const a = Buffer.from(input);
-    const b = Buffer.from(expected);
-    return a.length === b.length && timingSafeEqual(a, b);
+    const actualBytes = Buffer.from(input);
+    const expectedBytes = Buffer.from(expected);
+    return (
+      actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes)
+    );
   } catch {
     return false;
   }
 }
 
-/** Hono middleware guarding admin routes. */
+export async function createAdminSession(): Promise<{ token: string }> {
+  const now = Date.now();
+  const token = randomBytes(32).toString("base64url");
+  await db.insert(adminSessions).values({
+    id: randomBytes(18).toString("base64url"),
+    tokenHash: hashToken(token),
+    expiresAt: now + ADMIN_SESSION_ABSOLUTE_TTL_MS,
+    idleExpiresAt: now + ADMIN_SESSION_IDLE_TTL_MS,
+    lastSeenAt: new Date(now).toISOString(),
+  });
+  return { token };
+}
+
+function clearAdminSessionCookie(c: Context) {
+  deleteCookie(c, ADMIN_SESSION_COOKIE, {
+    path: "/api",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    sameSite: "Strict",
+  });
+}
+
+export function setAdminSessionCookie(c: Context, token: string) {
+  setCookie(c, ADMIN_SESSION_COOKIE, token, {
+    path: "/api",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    maxAge: Math.floor(ADMIN_SESSION_ABSOLUTE_TTL_MS / 1000),
+  });
+}
+
+async function sessionFromRequest(c: Context): Promise<AdminSession | undefined> {
+  const token = getCookie(c, ADMIN_SESSION_COOKIE);
+  if (!token) return undefined;
+  const now = Date.now();
+  const [session] = await db
+    .select()
+    .from(adminSessions)
+    .where(
+      and(
+        eq(adminSessions.tokenHash, hashToken(token)),
+        isNull(adminSessions.revokedAt),
+        gt(adminSessions.expiresAt, now),
+        gt(adminSessions.idleExpiresAt, now),
+      ),
+    )
+    .limit(1);
+  if (!session) return undefined;
+
+  const refreshedIdleExpiry = Math.min(session.expiresAt, now + ADMIN_SESSION_IDLE_TTL_MS);
+  await db
+    .update(adminSessions)
+    .set({ idleExpiresAt: refreshedIdleExpiry, lastSeenAt: new Date(now).toISOString() })
+    .where(eq(adminSessions.id, session.id));
+  return { ...session, idleExpiresAt: refreshedIdleExpiry };
+}
+
+export async function revokeCurrentAdminSession(c: Context): Promise<void> {
+  const session = await sessionFromRequest(c);
+  if (session) {
+    await db
+      .update(adminSessions)
+      .set({ revokedAt: new Date().toISOString() })
+      .where(eq(adminSessions.id, session.id));
+  }
+  clearAdminSessionCookie(c);
+}
+
+export async function revokeAllAdminSessions(c: Context): Promise<void> {
+  await db
+    .update(adminSessions)
+    .set({ revokedAt: new Date().toISOString() })
+    .where(isNull(adminSessions.revokedAt));
+  clearAdminSessionCookie(c);
+}
+
+/** Hono middleware guarding Admin Studio routes with a server-side session. */
 export async function requireAdmin(c: Context, next: Next) {
-  const header = c.req.header("Authorization") || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : c.req.header("x-admin-token");
-  if (!verifyAdminToken(token)) {
+  const session = await sessionFromRequest(c);
+  if (!session) {
+    clearAdminSessionCookie(c);
     return c.json({ error: "unauthorized" }, 401);
   }
   await next();

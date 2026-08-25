@@ -69,11 +69,23 @@ export async function trackPlay(beatId: string): Promise<void> {
   await request<{ ok: true }>(`/api/beats/${encodeURIComponent(beatId)}/play`, { method: "POST" });
 }
 
+const freeLicenseRequestKeys = new Map<string, string>();
+
 export async function fulfillFreeLicense(input: { beatId: string }): Promise<{ orderId: string }> {
-  return request<{ orderId: string }>("/api/checkout", {
+  const requestKey = input.beatId;
+  const idempotencyKey =
+    freeLicenseRequestKeys.get(requestKey) ||
+    `mobile_${Date.now()}_${Math.random().toString(36).slice(2, 14)}`;
+  freeLicenseRequestKeys.set(requestKey, idempotencyKey);
+  const result = await request<{ orderId: string }>("/api/checkout", {
     method: "POST",
-    body: JSON.stringify({ items: [{ beatId: input.beatId, tier: "free" }] }),
+    body: JSON.stringify({
+      items: [{ beatId: input.beatId, tier: "free" }],
+      idempotencyKey,
+    }),
   });
+  freeLicenseRequestKeys.delete(requestKey);
+  return result;
 }
 
 export interface MobileFulfillmentRequest {

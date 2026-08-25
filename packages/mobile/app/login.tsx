@@ -32,72 +32,75 @@ export default function LoginScreen() {
     <ScreenCanvas>
       <View style={s.content}>
         <BrandHeader eyebrow="CUSTOMER PORTAL" />
-      <Pressable style={s.backButton} onPress={() => router.back()}>
-        <Text style={s.back}>‹ BACK</Text>
-      </Pressable>
-      <Text style={s.title}>{mode === "login" ? "WELCOME BACK" : "CREATE YOUR VAULT"}</Text>
-      <Text style={s.copy}>
-        Sign in to access your licenses, secure downloads, saved purchases, and account preferences.
-      </Text>
-      <View style={s.switcher}>
-        <Pressable
-          style={[s.mode, mode === "login" && s.modeActive]}
-          onPress={() => setMode("login")}
-        >
-          <Text style={[s.modeText, mode === "login" && s.modeTextActive]}>SIGN IN</Text>
+        <Pressable style={s.backButton} onPress={() => router.back()}>
+          <Text style={s.back}>‹ BACK</Text>
         </Pressable>
-        <Pressable
-          style={[s.mode, mode === "register" && s.modeActive]}
-          onPress={() => setMode("register")}
-        >
-          <Text style={[s.modeText, mode === "register" && s.modeTextActive]}>CREATE ACCOUNT</Text>
-        </Pressable>
-      </View>
-      {mode === "register" && (
+        <Text style={s.title}>{mode === "login" ? "WELCOME BACK" : "CREATE YOUR VAULT"}</Text>
+        <Text style={s.copy}>
+          Sign in to access your licenses, secure downloads, saved purchases, and account
+          preferences.
+        </Text>
+        <View style={s.switcher}>
+          <Pressable
+            style={[s.mode, mode === "login" && s.modeActive]}
+            onPress={() => setMode("login")}
+          >
+            <Text style={[s.modeText, mode === "login" && s.modeTextActive]}>SIGN IN</Text>
+          </Pressable>
+          <Pressable
+            style={[s.mode, mode === "register" && s.modeActive]}
+            onPress={() => setMode("register")}
+          >
+            <Text style={[s.modeText, mode === "register" && s.modeTextActive]}>
+              CREATE ACCOUNT
+            </Text>
+          </Pressable>
+        </View>
+        {mode === "register" && (
+          <TextInput
+            value={displayName}
+            onChangeText={setDisplayName}
+            autoCapitalize="words"
+            placeholder="Artist or display name"
+            placeholderTextColor={vb.muted}
+            style={s.input}
+          />
+        )}
         <TextInput
-          value={displayName}
-          onChangeText={setDisplayName}
-          autoCapitalize="words"
-          placeholder="Artist or display name"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          placeholder="Email address"
           placeholderTextColor={vb.muted}
           style={s.input}
         />
-      )}
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="email-address"
-        placeholder="Email address"
-        placeholderTextColor={vb.muted}
-        style={s.input}
-      />
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
-        placeholder="Password (10+ characters)"
-        placeholderTextColor={vb.muted}
-        style={s.input}
-      />
-      {mode === "register" && (
-        <View style={s.preference}>
-          <View style={s.preferenceCopy}>
-            <Text style={s.preferenceTitle}>STUDIO NOTES & EARLY DROPS</Text>
-            <Text style={s.preferenceBody}>
-              Receive releases, useful updates, and occasional offers.
-            </Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          placeholder="Password (10+ characters)"
+          placeholderTextColor={vb.muted}
+          style={s.input}
+        />
+        {mode === "register" && (
+          <View style={s.preference}>
+            <View style={s.preferenceCopy}>
+              <Text style={s.preferenceTitle}>STUDIO NOTES & EARLY DROPS</Text>
+              <Text style={s.preferenceBody}>
+                Receive releases, useful updates, and occasional offers.
+              </Text>
+            </View>
+            <Switch
+              value={marketingOptIn}
+              onValueChange={setMarketingOptIn}
+              trackColor={{ false: vb.ink2, true: vb.purple }}
+              thumbColor={vb.silverBright}
+            />
           </View>
-          <Switch
-            value={marketingOptIn}
-            onValueChange={setMarketingOptIn}
-            trackColor={{ false: vb.ink2, true: vb.purple }}
-            thumbColor={vb.silverBright}
-          />
-        </View>
-      )}
+        )}
         <Pressable disabled={busy} style={[s.button, busy && s.disabled]} onPress={submit}>
           <Text style={s.buttonText}>
             {busy ? "WORKING…" : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}

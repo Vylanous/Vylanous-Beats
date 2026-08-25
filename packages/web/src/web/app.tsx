@@ -15,6 +15,12 @@ const BuilderPage = lazy(() => import("./pages/builder-page"));
 const LoginPage = lazy(() => import("./pages/login"));
 const DashboardPage = lazy(() => import("./pages/dashboard"));
 const VerifyEmailPage = lazy(() => import("./pages/verify-email"));
+const PrivacyPage = lazy(() =>
+  import("./pages/legal").then(({ PrivacyPage }) => ({ default: PrivacyPage })),
+);
+const TermsPage = lazy(() =>
+  import("./pages/legal").then(({ TermsPage }) => ({ default: TermsPage })),
+);
 const AgentFeedback = import.meta.env.DEV
   ? lazy(() =>
       import("@runablehq/website-runtime").then(({ AgentFeedback }) => ({
@@ -49,6 +55,8 @@ function App() {
           <Route path="/login" component={LoginPage} />
           <Route path="/dashboard" component={DashboardPage} />
           <Route path="/verify-email" component={VerifyEmailPage} />
+          <Route path="/privacy" component={PrivacyPage} />
+          <Route path="/terms" component={TermsPage} />
           <Route path="/admin" component={AdminPage} />
           <Route path={MANAGED_PAGE_FALLBACK_ROUTE} component={BuilderPage} />
           <Route>

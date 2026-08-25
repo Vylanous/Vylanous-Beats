@@ -60,10 +60,17 @@ async function seedBeat(overrides: Record<string, unknown> = {}) {
   return row;
 }
 
-async function checkout(email: string, items: { beatId: string; tier: string }[]) {
+async function checkout(
+  email: string,
+  items: { beatId: string; tier: string }[],
+  idempotencyKey = randomUUID(),
+) {
   const registration = await app.request("/api/customer/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "cf-connecting-ip": `198.51.100.${Math.floor(Math.random() * 250) + 1}`,
+    },
     body: JSON.stringify({ email, password: "customer-test-password", displayName: "Test User" }),
   });
   expect(registration.status).toBe(201);
@@ -84,7 +91,7 @@ async function checkout(email: string, items: { beatId: string; tier: string }[]
       Authorization: `Bearer ${account.session.token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ items, idempotencyKey }),
   });
 }
 
@@ -111,6 +118,44 @@ describe("checkout", () => {
     const itemRows = await db.select().from(orderItems).where(eq(orderItems.orderId, body.orderId));
     expect(itemRows.length).toBe(1);
     expect(itemRows[0].licenseTier).toBe("free");
+  });
+
+  test("returns the original free order when the same customer safely retries the same request", async () => {
+    const beat = await seedBeat();
+    const requestKey = randomUUID();
+    const first = await checkout(
+      "idempotent@example.com",
+      [{ beatId: beat.id, tier: "free" }],
+      requestKey,
+    );
+    const firstBody = (await first.json()) as { orderId: string; mode: string };
+    expect(first.status).toBe(200);
+
+    const login = await app.request("/api/customer/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "idempotent@example.com", password: "customer-test-password" }),
+    });
+    expect(login.status).toBe(200);
+    const account = (await login.json()) as { session: { token: string } };
+    const retry = await app.request("/api/checkout", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${account.session.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        items: [{ beatId: beat.id, tier: "free" }],
+        idempotencyKey: requestKey,
+      }),
+    });
+    const retryBody = (await retry.json()) as { orderId: string; mode: string };
+
+    expect(retry.status).toBe(200);
+    expect(retryBody).toMatchObject({ mode: "free", orderId: firstBody.orderId });
+    expect(
+      (await db.select().from(orders)).filter((order) => order.id === firstBody.orderId),
+    ).toHaveLength(1);
   });
 
   test("sold-exclusive beat is rejected with 409", async () => {

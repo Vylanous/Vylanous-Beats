@@ -10,12 +10,21 @@ process.env.DATABASE_URL = `file:${join(dbDir, "test.db")}`;
 process.env.ADMIN_PASSWORD = "integration-test-password";
 process.env.BETTER_AUTH_SECRET = "integration-test-secret-that-is-long-enough";
 
-const [{ default: app }, { db }, { beats }, { makeAdminToken }] = await Promise.all([
+const [{ default: app }, { db }, { beats }] = await Promise.all([
   import("../index"),
   import("../database"),
   import("../database/schema"),
-  import("../lib/admin-auth"),
 ]);
+
+async function adminSessionHeaders() {
+  const login = await app.request("/api/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
+  });
+  expect(login.status).toBe(200);
+  return { Cookie: login.headers.get("set-cookie")!.split(";")[0] };
+}
 
 async function seedBeat({
   title,
@@ -57,7 +66,7 @@ describe("Page Builder selected published beats", () => {
     const unconfiguredPublished = await seedBeat({ title: "Unconfigured beat", published: true });
     const unpublished = await seedBeat({ title: "Draft beat", published: false });
 
-    const headers = { Authorization: `Bearer ${makeAdminToken()}` };
+    const headers = await adminSessionHeaders();
     const settingsResponse = await app.request("/api/admin/settings", { headers });
     expect(settingsResponse.status).toBe(200);
     const current = (await settingsResponse.json()) as {

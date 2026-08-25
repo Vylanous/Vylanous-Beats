@@ -40,8 +40,8 @@ export default function Checkout() {
           </Pressable>
           <Text style={s.title}>SIGN IN TO PURCHASE</Text>
           <Text style={s.copy}>
-            Your account keeps every license, receipt, and secure download together across the app and
-            website.
+            Your account keeps every license, receipt, and secure download together across the app
+            and website.
           </Text>
           <Pressable style={s.button} onPress={() => router.push("/login")}>
             <Text style={s.buttonText}>SIGN IN OR CREATE ACCOUNT</Text>
@@ -120,7 +120,9 @@ export default function Checkout() {
         <Text style={s.tier}>{tier.name}</Text>
         <Text style={s.account}>PURCHASING AS {customer.email}</Text>
         <Pressable disabled={busy} style={[s.button, busy && s.buttonDisabled]} onPress={pay}>
-          <Text style={s.buttonText}>{busy ? "CONFIRMING…" : `BUY ${tier.name.toUpperCase()}`}</Text>
+          <Text style={s.buttonText}>
+            {busy ? "CONFIRMING…" : `BUY ${tier.name.toUpperCase()}`}
+          </Text>
         </Pressable>
         <Text style={s.note}>
           Payment is securely handled by {Platform.OS === "ios" ? "Apple" : "Google Play"}. Verified
@@ -156,5 +158,12 @@ const s = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { ...type.button, color: vb.white, fontFamily: font.bodyBold },
-  note: { ...type.body, color: vb.muted, fontSize: 13, lineHeight: 18, textAlign: "center", marginTop: 17 },
+  note: {
+    ...type.body,
+    color: vb.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 17,
+  },
 });

@@ -212,6 +212,48 @@ export const rateLimitWindows = sqliteTable(
   ],
 );
 
+/** Short-lived, revocable sessions for privileged Admin Studio access. */
+export const adminSessions = sqliteTable(
+  "admin_sessions",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    idleExpiresAt: integer("idle_expires_at").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    lastSeenAt: text("last_seen_at"),
+    revokedAt: text("revoked_at"),
+  },
+  (t) => [
+    uniqueIndex("admin_sessions_token_hash_idx").on(t.tokenHash),
+    index("admin_sessions_expiry_idx").on(t.expiresAt, t.idleExpiresAt),
+  ],
+);
+
+/** A short-lived customer request record that makes checkout retries idempotent. */
+export const checkoutIdempotencyKeys = sqliteTable(
+  "checkout_idempotency_keys",
+  {
+    id: text("id").primaryKey(),
+    customerId: text("customer_id").notNull(),
+    requestKey: text("request_key").notNull(),
+    cartHash: text("cart_hash").notNull(),
+    orderId: text("order_id").notNull(),
+    state: text("state").notNull().default("processing"),
+    expiresAt: integer("expires_at").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    updatedAt: text("updated_at"),
+  },
+  (t) => [
+    uniqueIndex("checkout_idempotency_customer_request_idx").on(t.customerId, t.requestKey),
+    index("checkout_idempotency_expiry_idx").on(t.expiresAt),
+  ],
+);
+
 /** Durable delivery state keeps payment fulfillment and email retries separate. */
 export const orderDeliveries = sqliteTable(
   "order_deliveries",
@@ -260,6 +302,34 @@ export const publishedBeatBlockMetrics = sqliteTable(
     ),
     index("published_beat_block_metrics_page_day_idx").on(t.pageId, t.day),
     index("published_beat_block_metrics_beat_day_idx").on(t.beatId, t.day),
+  ],
+);
+
+/** Monthly roll-ups retain historical interaction trends after daily rows expire. */
+export const publishedBeatBlockMonthlyMetrics = sqliteTable(
+  "published_beat_block_monthly_metrics",
+  {
+    id: text("id").primaryKey(),
+    pageId: text("page_id").notNull(),
+    blockId: text("block_id").notNull(),
+    beatId: text("beat_id").notNull(),
+    eventType: text("event_type").notNull(),
+    month: text("month").notNull(),
+    count: integer("count").notNull().default(0),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    updatedAt: text("updated_at"),
+  },
+  (t) => [
+    uniqueIndex("published_beat_block_monthly_metrics_unique_idx").on(
+      t.pageId,
+      t.blockId,
+      t.beatId,
+      t.eventType,
+      t.month,
+    ),
+    index("published_beat_block_monthly_metrics_month_idx").on(t.month),
   ],
 );
 

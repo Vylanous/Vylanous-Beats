@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Trash2, Lock, ArrowRight, ShoppingBag } from "lucide-react";
 import { Layout } from "../components/layout";
@@ -12,6 +12,18 @@ export default function CartPage() {
   const [, navigate] = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const cartFingerprint = useMemo(
+    () =>
+      items
+        .map((item) => `${item.beatId}:${item.tier}`)
+        .sort()
+        .join("|"),
+    [items],
+  );
+  const idempotencyKey = useRef(crypto.randomUUID());
+  useEffect(() => {
+    idempotencyKey.current = crypto.randomUUID();
+  }, [cartFingerprint]);
   const checkout = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
@@ -24,6 +36,7 @@ export default function CartPage() {
             beatId: item.beatId,
             tier: item.tier,
           })),
+          idempotencyKey: idempotencyKey.current,
         }),
       });
       const data = await res.json();

@@ -4,7 +4,7 @@ import { BrandHeader } from "../../components/BrandHeader";
 import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { useCart } from "../../lib/cart";
 import { TIER_BY_ID, formatPrice } from "../../lib/models";
-import { font, radius, type, vb } from "../../lib/theme";
+import { radius, type, vb } from "../../lib/theme";
 
 export default function CartScreen() {
   const { items, remove, totalCents, hydrated } = useCart();
@@ -16,7 +16,9 @@ export default function CartScreen() {
         <View style={s.empty}>
           <BrandHeader eyebrow="YOUR CART" />
           <Text style={s.emptyTitle}>YOUR CART IS CLEAR.</Text>
-          <Text style={s.emptyCopy}>Choose a beat and the license that fits your next release.</Text>
+          <Text style={s.emptyCopy}>
+            Choose a beat and the license that fits your next release.
+          </Text>
           <Pressable style={s.button} onPress={() => router.push("/(tabs)/beats")}>
             <Text style={s.buttonText}>BROWSE BEATS</Text>
           </Pressable>
@@ -51,8 +53,8 @@ export default function CartScreen() {
           <Text style={s.buttonText}>CONTINUE TO PURCHASE</Text>
         </Pressable>
         <Text style={s.note}>
-          Secure purchases are completed through Apple or Google. License files are delivered to your
-          email.
+          Secure purchases are completed through Apple or Google. License files are delivered to
+          your email.
         </Text>
       </ScrollView>
     </ScreenCanvas>
@@ -77,7 +79,13 @@ const s = StyleSheet.create({
   itemCopy: { flex: 1 },
   itemTitle: { ...type.section, color: vb.silverBright, fontSize: 21, lineHeight: 23 },
   tier: { ...type.body, color: vb.silver, fontSize: 13, lineHeight: 17, marginTop: 3 },
-  itemPrice: { ...type.section, color: vb.purpleBright, fontSize: 20, lineHeight: 22, marginTop: 5 },
+  itemPrice: {
+    ...type.section,
+    color: vb.purpleBright,
+    fontSize: 20,
+    lineHeight: 22,
+    marginTop: 5,
+  },
   remove: { ...type.button, color: vb.silver, fontSize: 9 },
   total: {
     flexDirection: "row",
@@ -104,7 +112,14 @@ const s = StyleSheet.create({
     elevation: 8,
   },
   buttonText: { ...type.button, color: vb.white },
-  note: { ...type.body, color: vb.muted, fontSize: 13, lineHeight: 18, textAlign: "center", marginTop: 14 },
+  note: {
+    ...type.body,
+    color: vb.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 14,
+  },
   empty: { flex: 1, paddingHorizontal: 22, paddingTop: 18, justifyContent: "center" },
   emptyTitle: { ...type.pageTitle, color: vb.silverBright, marginTop: 20 },
   emptyCopy: { ...type.body, color: vb.silver, marginTop: 10 },

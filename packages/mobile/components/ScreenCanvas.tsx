@@ -14,11 +14,7 @@ type ScreenCanvasProps = {
  * Native equivalent of the website's `bg-mesh` utility. The gradients are
  * decorative only; content sits above them within a device-safe canvas.
  */
-export function ScreenCanvas({
-  children,
-  safeEdges = ["top"],
-  contentStyle,
-}: ScreenCanvasProps) {
+export function ScreenCanvas({ children, safeEdges = ["top"], contentStyle }: ScreenCanvasProps) {
   return (
     <View style={s.canvas}>
       <LinearGradient

@@ -84,7 +84,10 @@ describe("shared customer portal", () => {
     const unverifiedCheckout = await app.request("/api/checkout", {
       method: "POST",
       headers: { ...unverifiedHeaders, "Content-Type": "application/json" },
-      body: JSON.stringify({ items: [{ beatId: privateBeat.id, tier: "free" }] }),
+      body: JSON.stringify({
+        items: [{ beatId: privateBeat.id, tier: "free" }],
+        idempotencyKey: "customer-portal-unverified-checkout-key",
+      }),
     });
     expect(unverifiedCheckout.status).toBe(403);
     const verification = await createCustomerVerificationToken(registered.customer.id);
@@ -116,7 +119,10 @@ describe("shared customer portal", () => {
     const checkout = await app.request("/api/checkout", {
       method: "POST",
       headers,
-      body: JSON.stringify({ items: [{ beatId: privateBeat.id, tier: "free" }] }),
+      body: JSON.stringify({
+        items: [{ beatId: privateBeat.id, tier: "free" }],
+        idempotencyKey: "customer-portal-verified-checkout-key",
+      }),
     });
     expect(checkout.status).toBe(200);
 

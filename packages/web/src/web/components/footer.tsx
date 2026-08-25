@@ -136,6 +136,18 @@ export function Footer() {
                 <span>{social.label}</span>
               </a>
             ))}
+            <Link
+              to="/privacy"
+              className="font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/terms"
+              className="font-sub uppercase tracking-wider hover:text-vb-purple-bright"
+            >
+              Terms
+            </Link>
             <p className="font-sub uppercase tracking-wider">{footer.legalLine}</p>
           </div>
         </div>

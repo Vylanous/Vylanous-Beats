@@ -23,7 +23,11 @@ export default function TabLayout() {
           paddingBottom: bottomInset,
         },
         tabBarLabelStyle: { fontFamily: font.bodyBold, fontSize: 11, letterSpacing: 0.2 },
-        tabBarBadgeStyle: { backgroundColor: vb.purple, color: vb.white, fontFamily: font.bodyBold },
+        tabBarBadgeStyle: {
+          backgroundColor: vb.purple,
+          color: vb.white,
+          fontFamily: font.bodyBold,
+        },
       }}
     >
       <Tabs.Screen

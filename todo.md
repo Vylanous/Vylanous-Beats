@@ -937,3 +937,17 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Preserve safe Stripe webhook delivery retries while limiting unauthenticated invalid-signature traffic.
 - [x] Document `STRIPE_WEBHOOK_SECRET` in the production environment template and add regression coverage for the new protections.
 - [x] Validate, commit, and publish the security hardening through the GitHub and Render workflow.
+
+## High-Priority Public QA Remediation
+
+- [x] Extract the exact high-priority findings and recommended solutions from Checklists #1 and #2 of the strict public-site QA review.
+- [x] Repair the mobile workflow’s missing-token handling and add mobile release validation guidance without publishing a mobile update.
+- [x] Apply and test a compatibility-safe production security-header baseline.
+- [x] Classify the remaining dependency advisories, remediate safe reachable production issues, and gate newly introduced reachable high/critical findings in CI.
+- [x] Replace local-storage admin bearer tokens with short-lived, HttpOnly, server-revocable admin sessions and preserve authorized Admin Studio workflows.
+- [x] Add stable Privacy and Terms routes plus real `robots.txt` and `sitemap.xml` crawler artifacts without fabricating legal content.
+- [x] Add safe liveness/readiness diagnostics, structured operational signals, and documented alert/uptime configuration actions without transmitting customer data.
+- [x] Make checkout requests idempotent per customer and request key, returning the original live Stripe session on safe retries.
+- [x] Bound Published Beats analytics with browser deduplication, server controls, retention/roll-up, and accurate interaction terminology.
+- [x] Add operator-facing provider-budget visibility and a documented provider-native quota-alert procedure.
+- [x] Run full validation, publish the remediations to main, and verify the GitHub-to-Render workflow.

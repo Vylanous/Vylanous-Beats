@@ -15,14 +15,7 @@ import {
   HeartPulse,
   BarChart3,
 } from "lucide-react";
-import {
-  adminApi,
-  getToken,
-  setToken,
-  clearToken,
-  type AdminBeat,
-  type AdminOrder,
-} from "../lib/admin";
+import { adminApi, type AdminBeat, type AdminOrder } from "../lib/admin";
 import { formatCad } from "../../shared/licenses";
 import { BeatForm } from "../components/admin/beat-form";
 import { BeatTable } from "../components/admin/beat-table";
@@ -49,11 +42,6 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const t = getToken();
-    if (!t) {
-      setAuthed(false);
-      return;
-    }
     adminApi
       .me()
       .then(() => setAuthed(true))
@@ -72,8 +60,7 @@ export default function AdminPage() {
   return (
     <Dashboard
       onLogout={() => {
-        clearToken();
-        setAuthed(false);
+        void adminApi.logout().finally(() => setAuthed(false));
       }}
     />
   );
@@ -92,8 +79,7 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
     setErr("");
     setLoading(true);
     try {
-      const { token } = await adminApi.login(pw);
-      setToken(token);
+      await adminApi.login(pw);
       onSuccess();
     } catch {
       setErr("Wrong password. Try again.");

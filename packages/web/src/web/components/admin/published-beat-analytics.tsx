@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { BarChart3, Loader2, MousePointerClick, Play, RefreshCw } from "lucide-react";
+import { Archive, BarChart3, Loader2, MousePointerClick, Play, RefreshCw } from "lucide-react";
 import {
   adminApi,
   type PublishedBeatAnalyticsReport,
@@ -62,6 +62,7 @@ export default function PublishedBeatAnalyticsPanel() {
   const [days, setDays] = useState<7 | 30 | 90>(30);
   const [report, setReport] = useState<PublishedBeatAnalyticsReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rollingUp, setRollingUp] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
@@ -82,6 +83,19 @@ export default function PublishedBeatAnalyticsPanel() {
     void load();
   }, [load]);
 
+  const rollup = async () => {
+    setRollingUp(true);
+    setError("");
+    try {
+      await adminApi.rollupPublishedBeatAnalytics();
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to apply analytics retention.");
+    } finally {
+      setRollingUp(false);
+    }
+  };
+
   const summary = report?.summary;
   return (
     <section className="max-w-6xl">
@@ -95,18 +109,28 @@ export default function PublishedBeatAnalyticsPanel() {
           </h1>
           <p className="mt-2 max-w-2xl font-body text-sm leading-relaxed text-vb-silver/60">
             See card-detail clicks and successful preview starts for each beat selected in a Page
-            Builder Published Beats block. Metrics are aggregate counts only; no visitor or customer
-            identifiers are stored.
+            Builder Published Beats block. These are aggregate interactions, not unique visitors; no
+            visitor or customer identifiers are stored.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-silver transition hover:border-vb-purple/50 hover:text-vb-silver-bright disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void rollup()}
+            disabled={rollingUp}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-silver transition hover:border-vb-purple/50 hover:text-vb-silver-bright disabled:opacity-50"
+          >
+            <Archive size={14} className={rollingUp ? "animate-pulse" : ""} /> Retain 90 days
+          </button>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 font-sub text-xs uppercase tracking-wide text-vb-silver transition hover:border-vb-purple/50 hover:text-vb-silver-bright disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2" aria-label="Analytics reporting window">
@@ -141,6 +165,7 @@ export default function PublishedBeatAnalyticsPanel() {
             </h2>
             <p className="mt-1 font-body text-xs text-vb-silver/45">
               {report ? `From ${report.sinceDay} through today.` : "Loading report window…"}
+              {" Daily interactions older than 90 days are retained as monthly totals."}
             </p>
           </div>
           {loading && <Loader2 className="animate-spin text-vb-purple-bright" size={18} />}

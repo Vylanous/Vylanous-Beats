@@ -12,12 +12,23 @@ process.env.DATABASE_URL = `file:${join(dbDir, "test.db")}`;
 process.env.ADMIN_PASSWORD = "integration-test-password";
 process.env.BETTER_AUTH_SECRET = "integration-test-secret-that-is-long-enough";
 
-const [{ default: app }, { db }, { beats }, { makeAdminToken }] = await Promise.all([
+const [{ default: app }, { db }, { beats }] = await Promise.all([
   import("../index"),
   import("../database"),
   import("../database/schema"),
-  import("../lib/admin-auth"),
 ]);
+
+async function adminSessionHeaders() {
+  const login = await app.request("/api/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
+  });
+  expect(login.status).toBe(200);
+  const setCookie = login.headers.get("set-cookie");
+  expect(setCookie).toContain("HttpOnly");
+  return { Cookie: setCookie!.split(";")[0] };
+}
 
 async function seedBeat() {
   const id = `beat_${randomUUID().slice(0, 8)}`;
@@ -52,10 +63,11 @@ describe("admin beat updates", () => {
 
   test("a featured-only update preserves artwork, audio, and download keys", async () => {
     const beat = await seedBeat();
+    const sessionHeaders = await adminSessionHeaders();
     const response = await app.request(`/api/admin/beats/${beat.id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${makeAdminToken()}`,
+        ...sessionHeaders,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ featured: true }),
@@ -90,7 +102,7 @@ describe("admin beat updates", () => {
     });
 
     const response = await app.request("/api/admin/beats", {
-      headers: { Authorization: `Bearer ${makeAdminToken()}` },
+      headers: await adminSessionHeaders(),
     });
     expect(response.status).toBe(200);
     const payload = (await response.json()) as { beats: Array<Record<string, unknown>> };
@@ -111,7 +123,7 @@ describe("admin beat updates", () => {
 
   test("Page Builder image uploads reject unsupported formats and oversized files", async () => {
     const headers = {
-      Authorization: `Bearer ${makeAdminToken()}`,
+      ...(await adminSessionHeaders()),
       "Content-Type": "application/json",
     };
     const unsupported = await app.request("/api/admin/upload/presign", {

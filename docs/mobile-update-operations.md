@@ -15,9 +15,9 @@ Native JavaScript and interface changes are delivered through the Expo update se
 
 ## Automated publishing
 
-The repository workflow `.github/workflows/mobile-update.yml` validates the mobile project and publishes an update when approved mobile-code changes are merged to `main`.
+The repository workflow `.github/workflows/mobile-update.yml` validates the mobile project and publishes an update when approved mobile-code changes are merged to `main`. A manually dispatched workflow defaults to the **preview** channel, so a release can be checked before deliberately selecting production.
 
-The repository must contain an Actions secret named `EXPO_TOKEN`. The secret must be an Expo access token with permission to publish updates to the `vylanouss-team/vylanous-beats` project. Never commit this token to source control or mobile application configuration.
+The repository must contain an Actions secret named `EXPO_TOKEN`. The secret must be an Expo access token with permission to publish updates to the `vylanouss-team/vylanous-beats` project. Never commit this token to source control or mobile application configuration. The workflow always installs dependencies, type-checks the app, and validates public Expo configuration first. If the secret is absent, it fails with an explicit configuration error and does not publish an update.
 
 ## Release decision
 

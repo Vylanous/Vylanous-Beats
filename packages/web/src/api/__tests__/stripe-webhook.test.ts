@@ -323,7 +323,10 @@ describe("Stripe Checkout webhook", () => {
           Authorization: `Bearer ${account.session.token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ items: [{ beatId: beat.beatId, tier: "mp3" }] }),
+        body: JSON.stringify({
+          items: [{ beatId: beat.beatId, tier: "mp3" }],
+          idempotencyKey: `stripe-webhook-checkout-${suffix}`,
+        }),
       });
       expect(checkout.status).toBe(200);
       const body = (await checkout.json()) as { mode: string; orderId: string; url: string | null };

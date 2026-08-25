@@ -5,6 +5,22 @@ export type PublishedBeatAnalyticsContext = {
 
 type PublishedBeatMetricEvent = "card_click" | "preview_play";
 
+const SESSION_STORAGE_KEY = "vylanous_published_beat_interactions_v1";
+const MAX_INTERACTIONS_PER_SESSION = 50;
+
+function canRecordInteraction(key: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const interactions = new Set<string>(raw ? (JSON.parse(raw) as string[]) : []);
+    if (interactions.has(key) || interactions.size >= MAX_INTERACTIONS_PER_SESSION) return false;
+    interactions.add(key);
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify([...interactions]));
+  } catch {
+    // Private browsing or unavailable session storage should not block the feature.
+  }
+  return true;
+}
+
 /**
  * Records only an aggregate page/block/beat interaction. It intentionally sends
  * no account, browser, IP, cart, or purchase information.
@@ -15,6 +31,8 @@ export function trackPublishedBeatMetric(
   eventType: PublishedBeatMetricEvent,
 ) {
   if (!context || !beatId) return;
+  const interactionKey = `${context.pageId}:${context.blockId}:${beatId}:${eventType}`;
+  if (!canRecordInteraction(interactionKey)) return;
   const body = JSON.stringify({ ...context, beatId, eventType });
   try {
     if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {

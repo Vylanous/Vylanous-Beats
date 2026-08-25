@@ -129,6 +129,30 @@ export const SCHEMA_STATEMENTS: string[] = [
   )`,
   `create unique index if not exists "rate_limit_windows_scope_subject_window_idx" on "rate_limit_windows" ("scope", "subject_hash", "window_start")`,
   `create index if not exists "rate_limit_windows_expires_at_idx" on "rate_limit_windows" ("expires_at")`,
+  `create table if not exists "admin_sessions" (
+    "id" text primary key not null,
+    "token_hash" text not null,
+    "expires_at" integer not null,
+    "idle_expires_at" integer not null,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "last_seen_at" text,
+    "revoked_at" text
+  )`,
+  `create unique index if not exists "admin_sessions_token_hash_idx" on "admin_sessions" ("token_hash")`,
+  `create index if not exists "admin_sessions_expiry_idx" on "admin_sessions" ("expires_at", "idle_expires_at")`,
+  `create table if not exists "checkout_idempotency_keys" (
+    "id" text primary key not null,
+    "customer_id" text not null,
+    "request_key" text not null,
+    "cart_hash" text not null,
+    "order_id" text not null,
+    "state" text not null default 'processing',
+    "expires_at" integer not null,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "updated_at" text
+  )`,
+  `create unique index if not exists "checkout_idempotency_customer_request_idx" on "checkout_idempotency_keys" ("customer_id", "request_key")`,
+  `create index if not exists "checkout_idempotency_expiry_idx" on "checkout_idempotency_keys" ("expires_at")`,
   `create table if not exists "order_deliveries" (
     "id" text primary key not null,
     "order_id" text not null,
@@ -154,6 +178,19 @@ export const SCHEMA_STATEMENTS: string[] = [
   `create unique index if not exists "published_beat_block_metrics_daily_unique_idx" on "published_beat_block_metrics" ("page_id", "block_id", "beat_id", "event_type", "day")`,
   `create index if not exists "published_beat_block_metrics_page_day_idx" on "published_beat_block_metrics" ("page_id", "day")`,
   `create index if not exists "published_beat_block_metrics_beat_day_idx" on "published_beat_block_metrics" ("beat_id", "day")`,
+  `create table if not exists "published_beat_block_monthly_metrics" (
+    "id" text primary key not null,
+    "page_id" text not null,
+    "block_id" text not null,
+    "beat_id" text not null,
+    "event_type" text not null,
+    "month" text not null,
+    "count" integer not null default 0,
+    "created_at" text not null default (CURRENT_TIMESTAMP),
+    "updated_at" text
+  )`,
+  `create unique index if not exists "published_beat_block_monthly_metrics_unique_idx" on "published_beat_block_monthly_metrics" ("page_id", "block_id", "beat_id", "event_type", "month")`,
+  `create index if not exists "published_beat_block_monthly_metrics_month_idx" on "published_beat_block_monthly_metrics" ("month")`,
   `create table if not exists "mobile_purchase_transactions" (
     "id" text primary key not null,
     "platform" text not null,
