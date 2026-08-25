@@ -2,7 +2,7 @@
  * Vylanous Site Builder renderer: translates saved page blocks and layout
  * decisions into the public music storefront without sacrificing commerce flows.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { Check, ExternalLink, Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -343,6 +343,9 @@ function BuilderSection({
         {section.type === "gallery" && <GallerySection section={section} layout={layout} />}
         {section.type === "featureCards" && <FeatureCards section={section} layout={layout} />}
         {section.type === "callout" && <CalloutSection section={section} layout={layout} />}
+        {section.type === "emailCaptureForm" && (
+          <EmailCaptureForm section={section} pageId={pageId} layout={layout} />
+        )}
         {section.type === "pressKit" && <PressKitSection section={section} layout={layout} />}
         {section.type === "merch" && (
           <MerchSection section={section} currency={currency} shopDomain={shopDomain} />
@@ -887,6 +890,137 @@ function CalloutSection({
     </div>
   );
 }
+function EmailCaptureForm({
+  section,
+  pageId,
+  layout,
+}: {
+  section: PageSection;
+  pageId: string;
+  layout: Required<SectionLayout>;
+}) {
+  const config = {
+    firstNameLabel: "First name",
+    lastNameLabel: "Last name",
+    emailLabel: "Email address",
+    submitLabel: "Join the list",
+    successMessage: "You're on the list. Watch your inbox for the next drop.",
+    consentText: "By subscribing, you agree to receive new drops and updates by email.",
+    workflowKey: "",
+    ...section.emailCapture,
+  };
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const fieldId = (name: string) => `${section.id}-${name}`;
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus("submitting");
+    setErrorMessage("");
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          sourcePageId: pageId,
+          sourceBlockId: section.id,
+          ...(config.workflowKey.trim()
+            ? { workflowKey: config.workflowKey.trim().toLowerCase() }
+            : {}),
+        }),
+      });
+      if (!response.ok) throw new Error("Subscription could not be completed.");
+      setStatus("success");
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+    } catch {
+      setStatus("error");
+      setErrorMessage("We couldn't save your subscription. Please try again.");
+    }
+  };
+
+  return (
+    <div className={`w-full ${RADIUS[layout.borderRadius]} border border-vb-purple/30 bg-vb-ink/80 p-6 sm:p-8`}>
+      <CopyBlock section={section} layout={layout} />
+      <form className="mt-7 max-w-3xl" onSubmit={submit} aria-label={section.title || "Email signup"}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block font-body text-sm text-vb-silver/80" htmlFor={fieldId("first-name")}>
+            {config.firstNameLabel}
+            <input
+              id={fieldId("first-name")}
+              name="firstName"
+              aria-label={config.firstNameLabel}
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              required
+              disabled={status === "submitting" || status === "success"}
+              className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black/60 px-4 py-3 font-body text-base text-white outline-none transition placeholder:text-vb-silver/35 focus:border-vb-purple-bright disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </label>
+          <label className="block font-body text-sm text-vb-silver/80" htmlFor={fieldId("last-name")}>
+            {config.lastNameLabel}
+            <input
+              id={fieldId("last-name")}
+              name="lastName"
+              aria-label={config.lastNameLabel}
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              required
+              disabled={status === "submitting" || status === "success"}
+              className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black/60 px-4 py-3 font-body text-base text-white outline-none transition placeholder:text-vb-silver/35 focus:border-vb-purple-bright disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </label>
+        </div>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+          <label className="min-w-0 flex-1 font-body text-sm text-vb-silver/80" htmlFor={fieldId("email")}>
+            {config.emailLabel}
+            <input
+              id={fieldId("email")}
+              name="email"
+              aria-label={config.emailLabel}
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+              disabled={status === "submitting" || status === "success"}
+              className="mt-1.5 w-full rounded-lg border border-white/10 bg-vb-black/60 px-4 py-3 font-body text-base text-white outline-none transition placeholder:text-vb-silver/35 focus:border-vb-purple-bright disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={status === "submitting" || status === "success"}
+            className="mt-6 shrink-0 rounded-lg bg-vb-purple px-6 py-3 font-sub text-sm uppercase tracking-wide text-white transition hover:bg-vb-purple-bright disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {status === "submitting" ? "Joining…" : config.submitLabel}
+          </button>
+        </div>
+        {status === "success" ? (
+          <output className="mt-4 block font-body text-sm text-emerald-300" aria-live="polite">
+            {config.successMessage}
+          </output>
+        ) : (
+          <>
+            <p className="mt-3 font-body text-xs leading-relaxed text-vb-silver/50">{config.consentText}</p>
+            {status === "error" && (
+              <p className="mt-3 font-body text-sm text-red-300" role="alert">
+                {errorMessage}
+              </p>
+            )}
+          </>
+        )}
+      </form>
+    </div>
+  );
+}
+
 function MerchSection({
   section,
   currency,

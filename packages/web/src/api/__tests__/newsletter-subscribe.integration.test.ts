@@ -18,7 +18,7 @@ describe("newsletter signup", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
   });
 
-  test("normalizes email addresses and keeps one fan-list record", async () => {
+  test("normalizes email addresses, enriches a fan-list record, and keeps one subscriber", async () => {
     const first = await app.request("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -27,12 +27,27 @@ describe("newsletter signup", () => {
     const duplicate = await app.request("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "fan@example.com" }),
+      body: JSON.stringify({
+        email: "fan@example.com",
+        firstName: "Avery",
+        lastName: "Rhymes",
+        sourcePageId: "page_home",
+        sourceBlockId: "section_capture",
+        workflowKey: "free-beat-download",
+      }),
     });
 
     expect(first.status).toBe(200);
     expect(duplicate.status).toBe(200);
     const rows = await db.select().from(subscribers);
-    expect(rows.filter((row) => row.email === "fan@example.com")).toHaveLength(1);
+    const fans = rows.filter((row) => row.email === "fan@example.com");
+    expect(fans).toHaveLength(1);
+    expect(fans[0]).toMatchObject({
+      firstName: "Avery",
+      lastName: "Rhymes",
+      sourcePageId: "page_home",
+      sourceBlockId: "section_capture",
+      workflowKey: "free-beat-download",
+    });
   });
 });

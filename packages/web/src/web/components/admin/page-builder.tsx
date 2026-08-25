@@ -131,6 +131,7 @@ const PRESS_KIT_PLATFORMS: { value: PressKitPlatform; label: string }[] = [
 const SECTION_TYPES: { type: PageSectionType; label: string }[] = [
   { type: "hero", label: "Hero" },
   { type: "text", label: "Headline & text" },
+  { type: "emailCaptureForm", label: "Email Capture Form" },
   { type: "image", label: "Image" },
   { type: "video", label: "Video" },
   { type: "gallery", label: "Image gallery" },
@@ -197,6 +198,20 @@ function blankSection(type: PageSectionType): PageSection {
   if (type === "marquee") section.title = "MAKE SOME NOISE";
   if (type === "spacer" || type === "divider") section.title = "";
   if (type === "video") section.title = "New video";
+  if (type === "emailCaptureForm") {
+    section.eyebrow = "Stay connected";
+    section.title = "Get the next drop first.";
+    section.body = "Join the list for new beats, studio notes, and private releases.";
+    section.emailCapture = {
+      firstNameLabel: "First name",
+      lastNameLabel: "Last name",
+      emailLabel: "Email address",
+      submitLabel: "Join the list",
+      successMessage: "You're on the list. Watch your inbox for the next drop.",
+      consentText: "By subscribing, you agree to receive new drops and updates by email.",
+      workflowKey: "",
+    };
+  }
   return section;
 }
 
@@ -2484,6 +2499,12 @@ function SectionEditor({
                       onChange={(pressKit) => onChange({ pressKit })}
                     />
                   )}
+                  {section.type === "emailCaptureForm" && (
+                    <EmailCaptureFormEditor
+                      value={section.emailCapture || {}}
+                      onChange={(emailCapture) => onChange({ emailCapture })}
+                    />
+                  )}
                   {section.type === "merch" && (
                     <div className="mt-3 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-3">
                       <div className="mb-3">
@@ -2609,6 +2630,72 @@ function SectionEditor({
         </div>
       )}
     </article>
+  );
+}
+
+function EmailCaptureFormEditor({
+  value,
+  onChange,
+}: {
+  value: NonNullable<PageSection["emailCapture"]>;
+  onChange: (value: NonNullable<PageSection["emailCapture"]>) => void;
+}) {
+  const update = (patch: Partial<NonNullable<PageSection["emailCapture"]>>) =>
+    onChange({ ...value, ...patch });
+  return (
+    <div className="mt-3 rounded-xl border border-vb-purple/20 bg-vb-purple/[0.05] p-4">
+      <div>
+        <h3 className="font-sub text-sm uppercase tracking-wide text-vb-purple-bright">
+          Email capture settings
+        </h3>
+        <p className="mt-1 font-body text-xs leading-relaxed text-vb-silver/50">
+          This block captures first name, last name, and email into your subscriber list. A workflow
+          key is saved with new submissions so a future delivery automation can target this offer.
+        </p>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <Field
+          label="First-name field label"
+          value={value.firstNameLabel || "First name"}
+          onChange={(firstNameLabel) => update({ firstNameLabel })}
+        />
+        <Field
+          label="Last-name field label"
+          value={value.lastNameLabel || "Last name"}
+          onChange={(lastNameLabel) => update({ lastNameLabel })}
+        />
+        <Field
+          label="Email field label"
+          value={value.emailLabel || "Email address"}
+          onChange={(emailLabel) => update({ emailLabel })}
+        />
+        <Field
+          label="Submit button label"
+          value={value.submitLabel || "Join the list"}
+          onChange={(submitLabel) => update({ submitLabel })}
+        />
+        <Field
+          label="Success message"
+          value={value.successMessage || "You're on the list. Watch your inbox for the next drop."}
+          onChange={(successMessage) => update({ successMessage })}
+        />
+        <Field
+          label="Future workflow key"
+          value={value.workflowKey || ""}
+          placeholder="e.g. free-beat-download"
+          hint="Optional internal label only. It does not send a product until a future workflow is connected."
+          onChange={(workflowKey) => update({ workflowKey })}
+        />
+      </div>
+      <div className="mt-3">
+        <Field
+          label="Subscriber consent text"
+          value={value.consentText || "By subscribing, you agree to receive new drops and updates by email."}
+          hint="Shown under the form as a marketing consent disclosure."
+          onChange={(consentText) => update({ consentText })}
+        />
+      </div>
+    </div>
   );
 }
 

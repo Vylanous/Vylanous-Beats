@@ -412,6 +412,7 @@ const settingsSchema = z.object({
               "beatCatalog",
               "licenseTiers",
               "licenseComparison",
+              "emailCaptureForm",
             ]),
             eyebrow: z.string().optional(),
             title: z.string().optional(),
@@ -422,6 +423,22 @@ const settingsSchema = z.object({
             coverImageUrl: z.string().optional(),
             coverVideoUrl: z.string().optional(),
             coverOverlay: z.enum(["none", "soft", "strong"]).optional(),
+            emailCapture: z
+              .object({
+                firstNameLabel: z.string().trim().min(1).max(80).optional(),
+                lastNameLabel: z.string().trim().min(1).max(80).optional(),
+                emailLabel: z.string().trim().min(1).max(80).optional(),
+                submitLabel: z.string().trim().min(1).max(80).optional(),
+                successMessage: z.string().trim().min(1).max(280).optional(),
+                consentText: z.string().trim().min(1).max(280).optional(),
+                workflowKey: z
+                  .string()
+                  .trim()
+                  .regex(/^(?:|[a-z0-9][a-z0-9_-]*)$/)
+                  .max(80)
+                  .optional(),
+              })
+              .optional(),
             ctaLabel: z.string().optional(),
             ctaHref: z.string().optional(),
             secondaryCtaLabel: z.string().optional(),

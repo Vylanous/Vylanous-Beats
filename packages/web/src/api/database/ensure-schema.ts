@@ -178,8 +178,14 @@ export const SCHEMA_STATEMENTS: string[] = [
   `create table if not exists "subscribers" (
     "id" text primary key not null,
     "email" text not null,
+    "first_name" text not null default '',
+    "last_name" text not null default '',
+    "source_page_id" text not null default '',
+    "source_block_id" text not null default '',
+    "workflow_key" text not null default '',
     "created_at" text not null default (CURRENT_TIMESTAMP)
   )`,
+  `create index if not exists "subscribers_workflow_idx" on "subscribers" ("workflow_key")`,
   `create table if not exists "settings" (
     "id" text primary key not null,
     "json" text not null default '{}',
@@ -230,6 +236,27 @@ export async function ensureSchema(client: Client): Promise<void> {
       if (!message.includes("duplicate column")) throw error;
     }
   }
+
+  // Existing installations predate richer subscriber capture. SQLite has no
+  // portable `ADD COLUMN IF NOT EXISTS`, so an already-applied migration is
+  // deliberately ignored while other schema errors remain fatal.
+  for (const statement of [
+    `alter table "subscribers" add column "first_name" text not null default ''`,
+    `alter table "subscribers" add column "last_name" text not null default ''`,
+    `alter table "subscribers" add column "source_page_id" text not null default ''`,
+    `alter table "subscribers" add column "source_block_id" text not null default ''`,
+    `alter table "subscribers" add column "workflow_key" text not null default ''`,
+  ]) {
+    try {
+      await client.execute(statement);
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : "";
+      if (!message.includes("duplicate column")) throw error;
+    }
+  }
+  await client.execute(
+    `create index if not exists "subscribers_workflow_idx" on "subscribers" ("workflow_key")`,
+  );
 
   // Existing installations predate customer-owned orders. SQLite has no
   // portable `ADD COLUMN IF NOT EXISTS`, so an already-applied migration is

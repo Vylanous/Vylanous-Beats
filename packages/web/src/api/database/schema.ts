@@ -305,6 +305,12 @@ export const mobilePurchaseTransactions = sqliteTable(
 export const subscribers = sqliteTable("subscribers", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
+  firstName: text("first_name").notNull().default(""),
+  lastName: text("last_name").notNull().default(""),
+  /** Saved page/source block support attribution and future workflow targeting. */
+  sourcePageId: text("source_page_id").notNull().default(""),
+  sourceBlockId: text("source_block_id").notNull().default(""),
+  workflowKey: text("workflow_key").notNull().default(""),
   createdAt: text("created_at")
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),

@@ -46,7 +46,8 @@ export type PageSectionType =
   | "publishedBeats"
   | "beatCatalog"
   | "licenseTiers"
-  | "licenseComparison";
+  | "licenseComparison"
+  | "emailCaptureForm";
 
 export const BUILDER_FONT_OPTIONS = [
   {
@@ -485,6 +486,18 @@ export interface SectionItem {
   label?: string;
 }
 
+export interface EmailCaptureFormSettings {
+  /** Visitor-facing labels and completion messages, controlled in the Page Builder. */
+  firstNameLabel?: string;
+  lastNameLabel?: string;
+  emailLabel?: string;
+  submitLabel?: string;
+  successMessage?: string;
+  consentText?: string;
+  /** Optional stable key reserved for a future fulfillment workflow or lead magnet. */
+  workflowKey?: string;
+}
+
 export interface PageSection {
   id: string;
   type: PageSectionType;
@@ -518,6 +531,8 @@ export interface PageSection {
   /** Accessible label for the section logo image. */
   sectionLogoAlt?: string;
   items?: SectionItem[];
+  /** Configuration for the reusable on-page email subscriber form. */
+  emailCapture?: EmailCaptureFormSettings;
   pressKit?: PressKitData;
   layout?: SectionLayout;
 }
