@@ -2,7 +2,7 @@
   "expo": {
     "name": "Vylanous Beats",
     "slug": "vylanous-beats",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "vylanousbeats",
@@ -23,10 +23,11 @@
     },
     "android": {
       "package": "com.vylanousbeats.app",
-      "versionCode": 2,
+      "versionCode": 3,
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B0A11"
+        "backgroundColor": "#0A0A0C"
       },
       "intentFilters": [
         {
@@ -56,10 +57,9 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#0B0A11"
+          "backgroundColor": "#0A0A0C"
         }
       ],
-      "expo-status-bar",
       "expo-asset"
     ],
     "extra": {

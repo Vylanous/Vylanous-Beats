@@ -1,47 +1,73 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { BrandHeader } from "../../components/BrandHeader";
+import { ScreenCanvas } from "../../components/ScreenCanvas";
+import { font, radius, type, vb } from "../../lib/theme";
 import { useCustomer } from "../../lib/customer";
 
 export default function LibraryScreen() {
   const { customer, dashboard } = useCustomer();
-  if (!customer)
-    return (
-      <View style={s.page}>
-        <Text style={s.eyebrow}>YOUR MUSIC</Text>
-        <Text style={s.title}>License library</Text>
+  const signedIn = Boolean(customer);
+
+  return (
+    <ScreenCanvas>
+      <View style={s.content}>
+        <BrandHeader eyebrow="YOUR MUSIC" />
+        <Text style={s.title}>LICENSE LIBRARY</Text>
         <Text style={s.copy}>
-          Sign in to see every license and secure download in your account.
+          {signedIn
+            ? `${dashboard?.insights.licensesOwned ?? 0} active license${
+                dashboard?.insights.licensesOwned === 1 ? " is" : "s are"
+              } available in your account.`
+            : "Sign in to see every license and secure download in your account."}
         </Text>
-        <Pressable style={s.button} onPress={() => router.push("/login")}>
-          <Text style={s.buttonText}>SIGN IN</Text>
+        <Pressable
+          accessibilityRole="button"
+          style={s.button}
+          onPress={() => router.push(signedIn ? "/(tabs)/profile" : "/login")}
+        >
+          <Text style={s.buttonText}>{signedIn ? "OPEN MUSIC VAULT" : "SIGN IN"}</Text>
         </Pressable>
       </View>
-    );
-  return (
-    <View style={s.page}>
-      <Text style={s.eyebrow}>YOUR MUSIC</Text>
-      <Text style={s.title}>License library</Text>
-      <Text style={s.copy}>
-        {dashboard?.insights.licensesOwned ?? 0} active license
-        {dashboard?.insights.licensesOwned === 1 ? "" : "s"} are available in your account.
-      </Text>
-      <Pressable style={s.button} onPress={() => router.push("/(tabs)/profile")}>
-        <Text style={s.buttonText}>OPEN MUSIC VAULT</Text>
-      </Pressable>
-    </View>
+    </ScreenCanvas>
   );
 }
+
 const s = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#0B0A11", padding: 22, paddingTop: 22 },
-  eyebrow: { color: "#B982FF", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
-  title: { color: "#F8F6FB", fontSize: 30, fontWeight: "900", marginTop: 6 },
-  copy: { color: "#ABA6B5", fontSize: 13, lineHeight: 20, marginTop: 18 },
-  button: {
-    backgroundColor: "#A855F7",
-    borderRadius: 12,
-    padding: 14,
-    alignItems: "center",
-    marginTop: 22,
+  content: {
+    flex: 1,
+    paddingHorizontal: 22,
+    paddingTop: 18,
   },
-  buttonText: { color: "#fff", fontWeight: "900", fontSize: 11, letterSpacing: 0.8 },
+  title: {
+    ...type.pageTitle,
+    color: vb.silverBright,
+    marginTop: 20,
+  },
+  copy: {
+    ...type.body,
+    color: vb.silver,
+    marginTop: 14,
+    maxWidth: 330,
+  },
+  button: {
+    alignSelf: "flex-start",
+    marginTop: 24,
+    borderRadius: radius.card,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    backgroundColor: vb.purple,
+    borderWidth: 1,
+    borderColor: "rgba(162,77,245,0.74)",
+    shadowColor: vb.purpleBright,
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 8,
+  },
+  buttonText: {
+    ...type.button,
+    color: vb.white,
+    fontFamily: font.bodyBold,
+  },
 });
