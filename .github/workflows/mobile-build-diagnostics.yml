@@ -1,0 +1,30 @@
+name: Inspect mobile build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: "EAS build ID to inspect"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-build:
+    name: Inspect EAS build result
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/mobile
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - name: Retrieve EAS build metadata
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: bunx eas-cli build:view "${{ inputs.build_id }}" --json
