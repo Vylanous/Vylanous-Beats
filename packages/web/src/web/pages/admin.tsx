@@ -10,6 +10,7 @@ import {
   Lock,
   Upload,
   Palette,
+  Smartphone,
   PanelsTopLeft,
   Mail,
   HeartPulse,
@@ -20,6 +21,7 @@ import { formatCad } from "../../shared/licenses";
 import { BeatForm } from "../components/admin/beat-form";
 import { BeatTable } from "../components/admin/beat-table";
 import CustomizationPanel from "../components/admin/customization";
+import MobileAppStudioPanel from "../components/admin/mobile-app-studio";
 import PageBuilderPanel from "../components/admin/page-builder";
 import EmailInboxPanel from "../components/admin/email-inbox";
 import MediaHealthPanel from "../components/admin/media-health";
@@ -33,6 +35,7 @@ type Tab =
   | "orders"
   | "subscribers"
   | "customization"
+  | "mobile-app"
   | "builder"
   | "analytics"
   | "media-health"
@@ -147,6 +150,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "subscribers", label: "Fan List", icon: Users },
     { id: "customization", label: "Customization", icon: Palette },
+    { id: "mobile-app", label: "Mobile App Studio", icon: Smartphone },
     { id: "builder", label: "Page Builder", icon: PanelsTopLeft },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "media-health", label: "Media Health", icon: HeartPulse },
@@ -244,6 +248,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             {tab === "orders" && <OrdersTab />}
             {tab === "subscribers" && <SubscribersTab />}
             {tab === "customization" && <CustomizationPanel />}
+            {tab === "mobile-app" && <MobileAppStudioPanel />}
             {tab === "builder" && <PageBuilderPanel />}
             {tab === "analytics" && <PublishedBeatAnalyticsPanel />}
             {tab === "media-health" && <MediaHealthPanel />}

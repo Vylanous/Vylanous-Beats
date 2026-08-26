@@ -30,6 +30,8 @@ import {
 } from "../lib/settings";
 import {
   BUILDER_FONT_IDS,
+  MOBILE_HOME_SECTION_IDS,
+  MOBILE_TAB_IDS,
   mergeSettings,
   PAGE_TREATMENT_OPTIONS,
 } from "../../shared/site-settings";
@@ -201,6 +203,58 @@ const settingsSchema = z.object({
       ctaHref: z.string().max(2000).optional(),
     })
     .partial()
+    .optional(),
+  mobileApp: z
+    .object({
+      enabled: z.boolean().optional(),
+      visual: z
+        .object({
+          chromeHeaders: z.boolean().optional(),
+          contentDensity: z.enum(["compact", "standard", "relaxed"]).optional(),
+          bottomNavigationStyle: z.enum(["floating", "attached"]).optional(),
+          bottomNavigationOffset: z.number().int().min(0).max(48).optional(),
+        })
+        .optional(),
+      navigation: z
+        .object({
+          tabs: z
+            .array(
+              z.object({
+                id: z.enum(MOBILE_TAB_IDS),
+                label: z.string().trim().min(1).max(18),
+                visible: z.boolean(),
+              }),
+            )
+            .min(MOBILE_TAB_IDS.length)
+            .max(MOBILE_TAB_IDS.length)
+            .optional(),
+        })
+        .optional(),
+      home: z
+        .object({
+          showBrandHeader: z.boolean().optional(),
+          sectionOrder: z.array(z.enum(MOBILE_HOME_SECTION_IDS)).min(1).max(3).optional(),
+          heroEyebrow: z.string().trim().max(60).optional(),
+          heroTitle: z.string().trim().min(1).max(100).optional(),
+          heroBody: z.string().trim().max(320).optional(),
+          primaryCtaLabel: z.string().trim().min(1).max(30).optional(),
+          primaryCtaAction: z.enum(["beats", "cart", "library", "account"]).optional(),
+          featuredEyebrow: z.string().trim().max(60).optional(),
+          featuredTitle: z.string().trim().max(80).optional(),
+          showFeatured: z.boolean().optional(),
+          promiseTitle: z.string().trim().max(100).optional(),
+          promiseBody: z.string().trim().max(320).optional(),
+          showPromise: z.boolean().optional(),
+        })
+        .optional(),
+      features: z
+        .object({
+          customerAccount: z.boolean().optional(),
+          customerLibrary: z.boolean().optional(),
+          nativeCheckout: z.boolean().optional(),
+        })
+        .optional(),
+    })
     .optional(),
   footer: z
     .object({

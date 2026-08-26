@@ -14,6 +14,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { CartProvider } from "../lib/cart";
 import { CustomerProvider } from "../lib/customer";
+import { MobileAppSettingsProvider } from "../lib/app-settings";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 2 } },
@@ -35,23 +36,25 @@ export default function RootLayout() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <CustomerProvider>
-            <CartProvider>
-              <StatusBar style="light" />
-              <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen
-                  name="login"
-                  options={{ presentation: "modal", animation: "slide_from_bottom" }}
-                />
-                <Stack.Screen name="beats/[slug]" options={{ animation: "slide_from_right" }} />
-                <Stack.Screen
-                  name="checkout"
-                  options={{ presentation: "modal", animation: "slide_from_bottom" }}
-                />
-              </Stack>
-            </CartProvider>
-          </CustomerProvider>
+          <MobileAppSettingsProvider>
+            <CustomerProvider>
+              <CartProvider>
+                <StatusBar style="light" />
+                <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen
+                    name="login"
+                    options={{ presentation: "modal", animation: "slide_from_bottom" }}
+                  />
+                  <Stack.Screen name="beats/[slug]" options={{ animation: "slide_from_right" }} />
+                  <Stack.Screen
+                    name="checkout"
+                    options={{ presentation: "modal", animation: "slide_from_bottom" }}
+                  />
+                </Stack>
+              </CartProvider>
+            </CustomerProvider>
+          </MobileAppSettingsProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </ErrorBoundary>

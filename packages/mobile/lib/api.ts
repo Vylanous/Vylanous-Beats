@@ -60,6 +60,12 @@ export async function fetchFeaturedBeats(): Promise<Beat[]> {
   return payload.beats.map(normalizeBeat);
 }
 
+/** Public, admin-approved configuration for native presentation only. */
+export async function fetchMobileAppSettings(): Promise<unknown> {
+  const payload = await request<{ settings?: { mobileApp?: unknown } }>("/api/settings");
+  return payload.settings?.mobileApp;
+}
+
 export async function fetchBeat(slug: string): Promise<Beat> {
   const payload = await request<{ beat: Beat }>(`/api/beats/${encodeURIComponent(slug)}`);
   return normalizeBeat(payload.beat);

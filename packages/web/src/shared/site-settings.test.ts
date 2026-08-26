@@ -670,3 +670,70 @@ describe("system Builder pages", () => {
     });
   });
 });
+
+
+describe("Mobile App Studio settings migration", () => {
+  test("adds compatible mobile defaults to older stored settings", () => {
+    const settings = mergeSettings({});
+
+    expect(settings.mobileApp.navigation.tabs.map((tab) => tab.id)).toEqual([
+      "home",
+      "beats",
+      "cart",
+      "library",
+      "account",
+    ]);
+    expect(settings.mobileApp.visual.bottomNavigationOffset).toBe(14);
+    expect(settings.mobileApp.features.nativeCheckout).toBe(true);
+  });
+
+  test("preserves an approved saved tab order and appends missing tabs", () => {
+    const settings = mergeSettings({
+      mobileApp: {
+        navigation: {
+          tabs: [
+            { id: "cart", label: "Bag", visible: true },
+            { id: "beats", label: "Catalog", visible: true },
+            { id: "cart", label: "Duplicate", visible: false },
+            { id: "not-approved", label: "Injected", visible: true },
+          ],
+        },
+      },
+    } as never);
+
+    expect(settings.mobileApp.navigation.tabs.map((tab) => tab.id)).toEqual([
+      "cart",
+      "beats",
+      "home",
+      "library",
+      "account",
+    ]);
+    expect(settings.mobileApp.navigation.tabs[0]).toEqual({
+      id: "cart",
+      label: "Bag",
+      visible: true,
+    });
+  });
+
+  test("recovers Home when both discovery tabs were hidden", () => {
+    const settings = mergeSettings({
+      mobileApp: {
+        navigation: {
+          tabs: [
+            { id: "home", label: "", visible: false },
+            { id: "beats", label: "Beats", visible: false },
+          ],
+        },
+        visual: { chromeHeaders: false, bottomNavigationOffset: 999 },
+      },
+    });
+
+    expect(settings.mobileApp.navigation.tabs.find((tab) => tab.id === "home")).toEqual({
+      id: "home",
+      label: "Home",
+      visible: true,
+    });
+    expect(settings.mobileApp.visual.chromeHeaders).toBe(false);
+    expect(settings.mobileApp.visual.bottomNavigationOffset).toBe(48);
+  });
+});

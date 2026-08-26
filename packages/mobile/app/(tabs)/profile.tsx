@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ChromeText } from "../../components/ChromeText";
 import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { entitlementDownload, updateCustomerPreferences } from "../../lib/api";
 import { useCustomer } from "../../lib/customer";
@@ -74,7 +75,7 @@ export default function ProfileScreen() {
       <ScreenCanvas>
         <View style={s.guestContent}>
           <BrandHeader eyebrow="CUSTOMER PORTAL" />
-          <Text style={s.title}>YOUR MUSIC VAULT</Text>
+          <ChromeText style={s.title}>YOUR MUSIC VAULT</ChromeText>
           <Text style={s.copy}>
             Sign in to see your licenses, purchase history, secure downloads, and account insights.
           </Text>
@@ -103,7 +104,7 @@ export default function ProfileScreen() {
         ListHeaderComponent={
           <>
             <BrandHeader eyebrow="CUSTOMER PORTAL" />
-            <Text style={s.title}>{customer.displayName || "YOUR MUSIC VAULT"}</Text>
+            <ChromeText style={s.title}>{customer.displayName || "YOUR MUSIC VAULT"}</ChromeText>
             <Text style={s.email}>{customer.email}</Text>
             {!customer.emailVerified && (
               <View style={s.verification}>
@@ -139,7 +140,7 @@ export default function ProfileScreen() {
               />
             </View>
             <View style={s.sectionHead}>
-              <Text style={s.sectionTitle}>LICENSE LIBRARY</Text>
+              <ChromeText style={s.sectionTitle}>LICENSE LIBRARY</ChromeText>
               <Pressable onPress={() => router.push("/(tabs)/beats")}>
                 <Text style={s.link}>BROWSE BEATS</Text>
               </Pressable>
@@ -149,7 +150,7 @@ export default function ProfileScreen() {
         renderItem={({ item }) => (
           <View style={s.license}>
             <View style={s.licenseCopy}>
-              <Text style={s.licenseTitle}>{item.beatTitle}</Text>
+              <ChromeText style={s.licenseTitle}>{item.beatTitle}</ChromeText>
               <Text style={s.licenseTier}>{item.licenseName}</Text>
             </View>
             <Pressable style={s.download} onPress={() => download(item.id)}>
@@ -175,7 +176,7 @@ export default function ProfileScreen() {
 function Insight({ label, value }: { label: string; value: string }) {
   return (
     <View style={s.insight}>
-      <Text style={s.insightValue}>{value}</Text>
+      <ChromeText style={s.insightValue}>{value}</ChromeText>
       <Text style={s.insightLabel}>{label}</Text>
     </View>
   );
@@ -187,7 +188,6 @@ const s = StyleSheet.create({
   guestContent: { flex: 1, paddingHorizontal: 22, paddingTop: 18 },
   title: {
     ...type.pageTitle,
-    color: vb.silverBright,
     marginTop: 20,
   },
   email: {
@@ -223,7 +223,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(124,47,203,0.36)",
   },
-  insightValue: { ...type.section, color: vb.silverBright, fontSize: 22, lineHeight: 24 },
+  insightValue: { ...type.section, fontSize: 22, lineHeight: 24 },
   insightLabel: {
     ...type.eyebrow,
     color: vb.muted,
@@ -275,7 +275,7 @@ const s = StyleSheet.create({
     marginTop: 28,
     marginBottom: 10,
   },
-  sectionTitle: { ...type.eyebrow, color: vb.silverBright },
+  sectionTitle: { ...type.section, fontSize: 20, lineHeight: 22 },
   link: { ...type.button, color: vb.purpleBright, fontSize: 10 },
   license: {
     flexDirection: "row",
@@ -289,7 +289,7 @@ const s = StyleSheet.create({
     gap: 10,
   },
   licenseCopy: { flex: 1 },
-  licenseTitle: { ...type.section, color: vb.silverBright, fontSize: 21, lineHeight: 23 },
+  licenseTitle: { ...type.section, fontSize: 21, lineHeight: 23 },
   licenseTier: { ...type.body, color: vb.silver, fontSize: 13, lineHeight: 17, marginTop: 3 },
   download: {
     borderWidth: 1,

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ChromeText } from "../../components/ChromeText";
 import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { PreviewButton } from "../../components/PreviewButton";
 import { fetchBeat } from "../../lib/api";
@@ -45,14 +46,14 @@ export default function BeatDetail() {
         <Image source={{ uri: beat.artworkUrl }} style={styles.art} />
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{beat.title}</Text>
+            <ChromeText style={styles.title}>{beat.title}</ChromeText>
             <Text style={styles.meta}>
               {beat.genre} · {beat.bpm} BPM · {beat.musicalKey}
             </Text>
           </View>
           <PreviewButton uri={beat.audioUrl} beatId={beat.id} size={54} />
         </View>
-        <Text style={styles.section}>Choose your rights</Text>
+        <ChromeText style={styles.section}>CHOOSE YOUR RIGHTS</ChromeText>
         {LICENSE_TIERS.filter((tier) => tier.id !== "exclusive" || !beat.soldExclusive).map(
           (tier) => (
             <Pressable
@@ -65,11 +66,11 @@ export default function BeatDetail() {
               }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={styles.tierName}>{tier.name}</Text>
+                <ChromeText style={styles.tierName}>{tier.name}</ChromeText>
                 <Text style={styles.desc}>{tier.description}</Text>
               </View>
               <View>
-                <Text style={styles.price}>{formatPrice(tier.priceCents)}</Text>
+                <ChromeText style={styles.price}>{formatPrice(tier.priceCents)}</ChromeText>
                 <Text style={styles.add}>ADD</Text>
               </View>
             </Pressable>
@@ -87,10 +88,9 @@ const styles = StyleSheet.create({
   back: { color: vb.purpleBright, fontFamily: font.bodyBold, fontSize: 11, letterSpacing: 1 },
   art: { width: "100%", aspectRatio: 1, borderRadius: 10, marginTop: 16, backgroundColor: vb.ink2 },
   row: { flexDirection: "row", gap: 14, alignItems: "center", marginTop: 18 },
-  title: { color: vb.silverBright, fontFamily: font.display, fontSize: 32, letterSpacing: 0.35 },
+  title: { fontFamily: font.display, fontSize: 32, letterSpacing: 0.35 },
   meta: { color: vb.muted, fontFamily: font.bodyMedium, fontSize: 13, marginTop: 5 },
   section: {
-    color: vb.silverBright,
     fontFamily: font.display,
     fontSize: 27,
     letterSpacing: 0.3,
@@ -107,9 +107,9 @@ const styles = StyleSheet.create({
     borderColor: vb.border,
     marginBottom: 9,
   },
-  tierName: { color: vb.silverBright, fontFamily: font.display, fontSize: 20, letterSpacing: 0.2 },
+  tierName: { fontFamily: font.display, fontSize: 20, letterSpacing: 0.2 },
   desc: { color: vb.silver, fontFamily: font.body, fontSize: 13, lineHeight: 17, marginTop: 4 },
-  price: { color: vb.silverBright, fontFamily: font.display, fontSize: 21, textAlign: "right" },
+  price: { fontFamily: font.display, fontSize: 21, textAlign: "right" },
   add: {
     color: vb.purpleBright,
     fontFamily: font.bodyBold,
