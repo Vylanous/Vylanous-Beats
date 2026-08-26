@@ -26,9 +26,9 @@ export const type = {
   hero: { fontFamily: font.display, fontSize: 48, lineHeight: 48, letterSpacing: 0.5 },
   pageTitle: { fontFamily: font.display, fontSize: 34, lineHeight: 36, letterSpacing: 0.4 },
   section: { fontFamily: font.display, fontSize: 26, lineHeight: 28, letterSpacing: 0.35 },
-  eyebrow: { fontFamily: font.bodyBold, fontSize: 10, letterSpacing: 1.6 },
+  eyebrow: { fontFamily: font.sub, fontSize: 15, lineHeight: 16, letterSpacing: 1.2 },
   body: { fontFamily: font.body, fontSize: 16, lineHeight: 22 },
-  button: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 1.1 },
+  button: { fontFamily: font.sub, fontSize: 16, lineHeight: 18, letterSpacing: 0.85 },
 };
 
 export const radius = { card: 10, large: 14, pill: 999 };

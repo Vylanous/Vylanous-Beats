@@ -4,6 +4,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Beat } from "../lib/models";
 import { formatPrice } from "../lib/models";
 import { font, vb } from "../lib/theme";
+import { ChromeText } from "./ChromeText";
 import { PreviewButton } from "./PreviewButton";
 export function BeatCard({ beat, compact = false }: { beat: Beat; compact?: boolean }) {
   return (
@@ -14,9 +15,9 @@ export function BeatCard({ beat, compact = false }: { beat: Beat; compact?: bool
       <Image source={{ uri: beat.artworkUrl }} style={[s.art, compact && s.artCompact]} />
       <View style={s.content}>
         <View style={s.metaRow}>
-          <Text numberOfLines={1} style={s.title}>
+          <ChromeText numberOfLines={1} style={s.title}>
             {beat.title}
-          </Text>
+          </ChromeText>
           {beat.featured ? (
             <View style={s.featured}>
               <Text style={s.featuredText}>FEATURED</Text>
@@ -29,7 +30,7 @@ export function BeatCard({ beat, compact = false }: { beat: Beat; compact?: bool
         <View style={s.bottom}>
           <View>
             <Text style={s.label}>LICENSE FROM</Text>
-            <Text style={s.price}>{formatPrice(beat.priceFrom)}</Text>
+            <ChromeText style={s.price}>{formatPrice(beat.priceFrom)}</ChromeText>
           </View>
           <PreviewButton uri={beat.audioUrl} beatId={beat.id} size={42} />
         </View>
@@ -61,7 +62,6 @@ const s = StyleSheet.create({
   },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   title: {
-    color: vb.silverBright,
     fontFamily: font.display,
     fontSize: 21,
     letterSpacing: 0.25,
@@ -75,9 +75,10 @@ const s = StyleSheet.create({
   },
   featuredText: {
     color: vb.purpleBright,
-    fontFamily: font.bodyBold,
-    fontSize: 8,
-    letterSpacing: 0.7,
+    fontFamily: font.sub,
+    fontSize: 14,
+    lineHeight: 15,
+    letterSpacing: 0.6,
   },
   sub: { color: vb.muted, fontFamily: font.bodyMedium, fontSize: 12, marginTop: 4 },
   bottom: {
@@ -86,6 +87,6 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 8,
   },
-  label: { color: vb.muted, fontFamily: font.bodyBold, fontSize: 8, letterSpacing: 0.7 },
-  price: { color: vb.silverBright, fontFamily: font.display, fontSize: 21, marginTop: 1 },
+  label: { color: vb.muted, fontFamily: font.sub, fontSize: 14, lineHeight: 15, letterSpacing: 0.6 },
+  price: { fontFamily: font.display, fontSize: 21, marginTop: 1 },
 });

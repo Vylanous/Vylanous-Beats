@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ChromeText } from "../../components/ChromeText";
 import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { font, radius, type, vb } from "../../lib/theme";
 import { useCustomer } from "../../lib/customer";
@@ -13,7 +14,7 @@ export default function LibraryScreen() {
     <ScreenCanvas>
       <View style={s.content}>
         <BrandHeader eyebrow="YOUR MUSIC" />
-        <Text style={s.title}>LICENSE LIBRARY</Text>
+        <ChromeText style={s.title}>LICENSE LIBRARY</ChromeText>
         <Text style={s.copy}>
           {signedIn
             ? `${dashboard?.insights.licensesOwned ?? 0} active license${
@@ -41,7 +42,6 @@ const s = StyleSheet.create({
   },
   title: {
     ...type.pageTitle,
-    color: vb.silverBright,
     marginTop: 20,
   },
   copy: {

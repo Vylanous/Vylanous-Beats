@@ -2,7 +2,7 @@
   "expo": {
     "name": "Vylanous Beats",
     "slug": "vylanous-beats",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "vylanousbeats",
@@ -17,13 +17,13 @@
     },
     "ios": {
       "bundleIdentifier": "com.vylanousbeats.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "supportsTablet": true,
       "associatedDomains": ["applinks:www.vylanous.com", "applinks:vylanous.com"]
     },
     "android": {
       "package": "com.vylanousbeats.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

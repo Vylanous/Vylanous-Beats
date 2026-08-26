@@ -672,6 +672,57 @@ export interface HeaderSettings {
   ctaHref?: string;
 }
 
+/**
+ * Native App Studio is intentionally declarative: owners can alter approved
+ * presentation, navigation, and built-in actions, but cannot inject code into
+ * customers' installed applications.
+ */
+export const MOBILE_TAB_IDS = ["home", "beats", "cart", "library", "account"] as const;
+export type MobileTabId = (typeof MOBILE_TAB_IDS)[number];
+export const MOBILE_HOME_SECTION_IDS = ["hero", "featured", "promise"] as const;
+export type MobileHomeSectionId = (typeof MOBILE_HOME_SECTION_IDS)[number];
+export type MobileActionId = "beats" | "cart" | "library" | "account";
+
+export interface MobileTabSettings {
+  id: MobileTabId;
+  label: string;
+  visible: boolean;
+}
+
+export interface MobileAppSettings {
+  version: 1;
+  enabled: boolean;
+  visual: {
+    chromeHeaders: boolean;
+    contentDensity: "compact" | "standard" | "relaxed";
+    bottomNavigationStyle: "floating" | "attached";
+    bottomNavigationOffset: number;
+  };
+  navigation: {
+    tabs: MobileTabSettings[];
+  };
+  home: {
+    showBrandHeader: boolean;
+    sectionOrder: MobileHomeSectionId[];
+    heroEyebrow: string;
+    heroTitle: string;
+    heroBody: string;
+    primaryCtaLabel: string;
+    primaryCtaAction: MobileActionId;
+    featuredEyebrow: string;
+    featuredTitle: string;
+    showFeatured: boolean;
+    promiseTitle: string;
+    promiseBody: string;
+    showPromise: boolean;
+  };
+  features: {
+    customerAccount: boolean;
+    customerLibrary: boolean;
+    nativeCheckout: boolean;
+  };
+}
+
 export interface FooterSettings {
   description: string;
   contactEmail: string;
@@ -747,6 +798,7 @@ export interface SiteSettings {
   fontId: string;
   brand: BrandAssets;
   header: HeaderSettings;
+  mobileApp: MobileAppSettings;
   footer: FooterSettings;
   newsletterPopup: NewsletterPopupSettings;
   announcementBanner: AnnouncementBannerSettings;
@@ -784,6 +836,48 @@ export const DEFAULT_HEADER: HeaderSettings = {
   showSocialLinks: false,
   ctaLabel: "",
   ctaHref: "",
+};
+
+export const DEFAULT_MOBILE_APP: MobileAppSettings = {
+  version: 1,
+  enabled: true,
+  visual: {
+    chromeHeaders: true,
+    contentDensity: "standard",
+    bottomNavigationStyle: "floating",
+    bottomNavigationOffset: 14,
+  },
+  navigation: {
+    tabs: [
+      { id: "home", label: "Home", visible: true },
+      { id: "beats", label: "Beats", visible: true },
+      { id: "cart", label: "Cart", visible: true },
+      { id: "library", label: "Library", visible: true },
+      { id: "account", label: "Account", visible: true },
+    ],
+  },
+  home: {
+    showBrandHeader: true,
+    sectionOrder: ["hero", "featured", "promise"],
+    heroEyebrow: "Premium Hip-Hop Beats",
+    heroTitle: "Beats That\nHit Different.",
+    heroBody:
+      "Rhythmic expression, melodious compositions, and street-ready energy for artists who want to stand out.",
+    primaryCtaLabel: "Browse Beats",
+    primaryCtaAction: "beats",
+    featuredEyebrow: "Hand-picked",
+    featuredTitle: "Featured Beats",
+    showFeatured: true,
+    promiseTitle: "Studio Quality. Instant Delivery.",
+    promiseBody:
+      "Preview every beat, choose the license that fits your release, and receive your files by email after confirmation.",
+    showPromise: true,
+  },
+  features: {
+    customerAccount: true,
+    customerLibrary: true,
+    nativeCheckout: true,
+  },
 };
 
 export const DEFAULT_FOOTER: FooterSettings = {
@@ -1317,6 +1411,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   fontId: "graffiti-chrome",
   brand: DEFAULT_BRAND,
   header: DEFAULT_HEADER,
+  mobileApp: DEFAULT_MOBILE_APP,
   footer: DEFAULT_FOOTER,
   newsletterPopup: DEFAULT_NEWSLETTER_POPUP,
   announcementBanner: DEFAULT_ANNOUNCEMENT_BANNER,
@@ -1426,10 +1521,86 @@ function mergePages(storedPages: unknown, deletedPageIds: string[] = []): Builde
 }
 
 /** Merge stored settings over defaults so production data gains new builder controls safely. */
-type StoredSiteSettings = Omit<Partial<SiteSettings>, "newsletterPopup" | "announcementBanner"> & {
+type StoredSiteSettings = Omit<
+  Partial<SiteSettings>,
+  "newsletterPopup" | "announcementBanner" | "mobileApp"
+> & {
   newsletterPopup?: Partial<NewsletterPopupSettings>;
   announcementBanner?: Partial<AnnouncementBannerSettings>;
+  mobileApp?: Partial<MobileAppSettings> & {
+    visual?: Partial<MobileAppSettings["visual"]>;
+    navigation?: Partial<MobileAppSettings["navigation"]>;
+    home?: Partial<MobileAppSettings["home"]>;
+    features?: Partial<MobileAppSettings["features"]>;
+  };
 };
+
+function mergeMobileApp(stored: StoredSiteSettings["mobileApp"] | undefined): MobileAppSettings {
+  const savedTabs = Array.isArray(stored?.navigation?.tabs) ? stored.navigation.tabs : [];
+  const savedOrder = Array.isArray(stored?.home?.sectionOrder) ? stored.home.sectionOrder : [];
+  const savedVisual = stored?.visual;
+  const tabs: MobileTabSettings[] = [];
+  const seenTabIds = new Set<MobileTabId>();
+  for (const candidate of savedTabs) {
+    if (!candidate || !(MOBILE_TAB_IDS as readonly string[]).includes(candidate.id)) continue;
+    const id = candidate.id as MobileTabId;
+    if (seenTabIds.has(id)) continue;
+    const fallback = DEFAULT_MOBILE_APP.navigation.tabs.find((tab) => tab.id === id)!;
+    tabs.push({
+      id,
+      label:
+        typeof candidate.label === "string" && candidate.label.trim()
+          ? candidate.label.trim().slice(0, 18)
+          : fallback.label,
+      visible: typeof candidate.visible === "boolean" ? candidate.visible : fallback.visible,
+    });
+    seenTabIds.add(id);
+  }
+  for (const fallback of DEFAULT_MOBILE_APP.navigation.tabs) {
+    if (!seenTabIds.has(fallback.id)) tabs.push({ ...fallback });
+  }
+  if (!tabs.some((tab) => tab.visible && (tab.id === "home" || tab.id === "beats"))) {
+    const home = tabs.find((tab) => tab.id === "home");
+    if (home) home.visible = true;
+  }
+  const sectionOrder = savedOrder.filter((id): id is MobileHomeSectionId =>
+    (MOBILE_HOME_SECTION_IDS as readonly string[]).includes(id),
+  );
+
+  return {
+    ...DEFAULT_MOBILE_APP,
+    ...stored,
+    version: 1,
+    visual: {
+      chromeHeaders:
+        typeof savedVisual?.chromeHeaders === "boolean"
+          ? savedVisual.chromeHeaders
+          : DEFAULT_MOBILE_APP.visual.chromeHeaders,
+      contentDensity:
+        savedVisual?.contentDensity === "compact" ||
+        savedVisual?.contentDensity === "relaxed" ||
+        savedVisual?.contentDensity === "standard"
+          ? savedVisual.contentDensity
+          : DEFAULT_MOBILE_APP.visual.contentDensity,
+      bottomNavigationStyle:
+        savedVisual?.bottomNavigationStyle === "attached" ? "attached" : "floating",
+      bottomNavigationOffset:
+        typeof savedVisual?.bottomNavigationOffset === "number"
+          ? Math.min(48, Math.max(0, Math.round(savedVisual.bottomNavigationOffset)))
+          : DEFAULT_MOBILE_APP.visual.bottomNavigationOffset,
+    },
+    navigation: { tabs },
+    home: {
+      ...DEFAULT_MOBILE_APP.home,
+      ...stored?.home,
+      sectionOrder:
+        sectionOrder.length > 0
+          ? [...sectionOrder, ...MOBILE_HOME_SECTION_IDS.filter((id) => !sectionOrder.includes(id))]
+          : [...DEFAULT_MOBILE_APP.home.sectionOrder],
+    },
+    features: { ...DEFAULT_MOBILE_APP.features, ...stored?.features },
+  };
+}
 
 export function mergeSettings(stored: StoredSiteSettings | null | undefined): SiteSettings {
   return {
@@ -1437,6 +1608,7 @@ export function mergeSettings(stored: StoredSiteSettings | null | undefined): Si
     fontId: stored?.fontId || DEFAULT_SETTINGS.fontId,
     brand: stored?.brand ? { ...DEFAULT_BRAND, ...stored.brand } : { ...DEFAULT_BRAND },
     header: stored?.header ? { ...DEFAULT_HEADER, ...stored.header } : { ...DEFAULT_HEADER },
+    mobileApp: mergeMobileApp(stored?.mobileApp),
     footer: stored?.footer ? { ...DEFAULT_FOOTER, ...stored.footer } : { ...DEFAULT_FOOTER },
     newsletterPopup: stored?.newsletterPopup
       ? { ...DEFAULT_NEWSLETTER_POPUP, ...stored.newsletterPopup }

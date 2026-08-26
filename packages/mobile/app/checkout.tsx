@@ -3,26 +3,47 @@ import { useIAP } from "expo-iap";
 import { useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BrandHeader } from "../components/BrandHeader";
+import { ChromeText } from "../components/ChromeText";
 import { ScreenCanvas } from "../components/ScreenCanvas";
 import { fulfillFreeLicense, fulfillMobilePurchase } from "../lib/api";
 import { useCart } from "../lib/cart";
 import { useCustomer } from "../lib/customer";
+import { useMobileAppSettings } from "../lib/app-settings";
 import { MOBILE_PRODUCT_BY_TIER, TIER_BY_ID } from "../lib/models";
 import { font, radius, type, vb } from "../lib/theme";
 
 export default function Checkout() {
   const { items, clear } = useCart();
   const { customer, refreshDashboard } = useCustomer();
+  const app = useMobileAppSettings();
   const [busy, setBusy] = useState(false);
   const { requestPurchase, finishTransaction } = useIAP();
   const item = items[0];
+
+  if (!app.features.nativeCheckout) {
+    return (
+      <ScreenCanvas>
+        <View style={s.content}>
+          <BrandHeader eyebrow="SECURE CHECKOUT" />
+          <ChromeText style={s.title}>CHECKOUT IS CURRENTLY OFF</ChromeText>
+          <Text style={s.copy}>
+            Secure native purchases have been temporarily disabled. Your cart remains saved while
+            you browse the catalog or return later.
+          </Text>
+          <Pressable style={s.button} onPress={() => router.replace("/(tabs)/cart")}>
+            <Text style={s.buttonText}>RETURN TO CART</Text>
+          </Pressable>
+        </View>
+      </ScreenCanvas>
+    );
+  }
 
   if (!item) {
     return (
       <ScreenCanvas>
         <View style={s.content}>
           <BrandHeader eyebrow="SECURE CHECKOUT" />
-          <Text style={s.title}>YOUR CART IS EMPTY.</Text>
+          <ChromeText style={s.title}>YOUR CART IS EMPTY.</ChromeText>
         </View>
       </ScreenCanvas>
     );
@@ -38,7 +59,7 @@ export default function Checkout() {
           <Pressable onPress={() => router.back()} style={s.backButton}>
             <Text style={s.back}>‹ BACK</Text>
           </Pressable>
-          <Text style={s.title}>SIGN IN TO PURCHASE</Text>
+          <ChromeText style={s.title}>SIGN IN TO PURCHASE</ChromeText>
           <Text style={s.copy}>
             Your account keeps every license, receipt, and secure download together across the app
             and website.
@@ -115,8 +136,8 @@ export default function Checkout() {
         <Pressable onPress={() => router.back()} style={s.backButton}>
           <Text style={s.back}>‹ BACK</Text>
         </Pressable>
-        <Text style={s.title}>FINISH YOUR LICENSE</Text>
-        <Text style={s.beat}>{item.beat.title}</Text>
+        <ChromeText style={s.title}>FINISH YOUR LICENSE</ChromeText>
+        <ChromeText style={s.beat}>{item.beat.title}</ChromeText>
         <Text style={s.tier}>{tier.name}</Text>
         <Text style={s.account}>PURCHASING AS {customer.email}</Text>
         <Pressable disabled={busy} style={[s.button, busy && s.buttonDisabled]} onPress={pay}>
@@ -137,8 +158,8 @@ const s = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 22, paddingTop: 18 },
   backButton: { alignSelf: "flex-start", marginTop: 18 },
   back: { ...type.button, color: vb.purpleBright, fontSize: 11 },
-  title: { ...type.pageTitle, color: vb.silverBright, marginTop: 20 },
-  beat: { ...type.section, color: vb.silverBright, marginTop: 22 },
+  title: { ...type.pageTitle, marginTop: 20 },
+  beat: { ...type.section, marginTop: 22 },
   tier: { ...type.body, color: vb.purpleBright, marginTop: 5 },
   account: { ...type.eyebrow, color: vb.muted, marginTop: 22 },
   copy: { ...type.body, color: vb.silver, marginTop: 14, maxWidth: 340 },
@@ -157,7 +178,7 @@ const s = StyleSheet.create({
     elevation: 8,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { ...type.button, color: vb.white, fontFamily: font.bodyBold },
+  buttonText: { ...type.button, color: vb.white },
   note: {
     ...type.body,
     color: vb.muted,

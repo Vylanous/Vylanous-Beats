@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { BeatCard } from "../../components/BeatCard";
 import { BrandHeader } from "../../components/BrandHeader";
+import { ChromeText } from "../../components/ChromeText";
 import { ScreenCanvas } from "../../components/ScreenCanvas";
 import { fetchBeats, fetchFeaturedBeats } from "../../lib/api";
 import { useCustomer } from "../../lib/customer";
@@ -39,7 +40,7 @@ export default function BeatsScreen() {
     <ScreenCanvas>
       <View style={s.header}>
         <BrandHeader eyebrow={customer ? "BEAT CATALOG" : "FEATURED BEATS"} />
-        <Text style={s.title}>{customer ? "FIND YOUR SOUND" : "FEATURED SOUNDS"}</Text>
+        <ChromeText style={s.title}>{customer ? "FIND YOUR SOUND" : "FEATURED SOUNDS"}</ChromeText>
         <Text style={s.copy}>
           {customer
             ? "Live drops, ready for your next release."
@@ -90,7 +91,7 @@ export default function BeatsScreen() {
 
 const s = StyleSheet.create({
   header: { paddingHorizontal: 22, paddingTop: 18 },
-  title: { ...type.pageTitle, color: vb.silverBright, marginTop: 20 },
+  title: { ...type.pageTitle, marginTop: 20 },
   copy: { ...type.body, color: vb.silver, marginTop: 7 },
   gate: {
     backgroundColor: "rgba(74,20,128,0.3)",
