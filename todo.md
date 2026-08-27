@@ -962,3 +962,8 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Remove the broken third-party MailerLite universal embed that creates a blank full-screen iframe, while preserving the site’s native Builder-configured newsletter popup.
 - [x] Add regression coverage for the absence of the third-party full-screen newsletter overlay and validate the deployed homepage rendering.
+
+### Confirmed loading failure: static JavaScript served as plain text
+
+- [x] Return correct MIME types for Vite JavaScript, stylesheets, fonts, media, and image assets so browsers can load the application module bundle.
+- [ ] Add static-response regression coverage and validate the deployed JavaScript content type alongside recovered homepage rendering.

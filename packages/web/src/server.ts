@@ -1,6 +1,7 @@
 import app from "./api";
 import { loadSettings } from "./api/lib/settings";
 import { withSecurityHeaders } from "./api/lib/security-headers";
+import { staticContentType } from "./static-content-type";
 
 const port = Number(process.env.PORT ?? 3000);
 const distDir = `${import.meta.dir}/../dist`;
@@ -27,7 +28,11 @@ const server = Bun.serve({
     const file = Bun.file(filePath);
 
     if (url.pathname !== "/" && (await file.exists())) {
-      return withSecurityHeaders(new Response(file));
+      return withSecurityHeaders(
+        new Response(file, {
+          headers: { "Content-Type": staticContentType(url.pathname) },
+        }),
+      );
     }
 
     const index = Bun.file(indexPath);
