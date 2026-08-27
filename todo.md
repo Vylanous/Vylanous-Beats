@@ -956,7 +956,7 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Check public homepage availability, liveness/readiness diagnostics, and the latest Render deployment state after the Stripe webhook configuration change.
 - [x] Identify and correct the minimal safe cause of any production loading failure without changing customer data or payment records.
-- [ ] Verify live recovery and the non-sensitive Stripe readiness status, then report any provider-side action still required.
+- [x] Verify live recovery and the non-sensitive Stripe readiness status, then report any provider-side action still required.
 
 ### Confirmed loading failure: broken MailerLite overlay
 
@@ -966,4 +966,4 @@ User request: border glow colors remain purple for other border styles; change t
 ### Confirmed loading failure: static JavaScript served as plain text
 
 - [x] Return correct MIME types for Vite JavaScript, stylesheets, fonts, media, and image assets so browsers can load the application module bundle.
-- [ ] Add static-response regression coverage and validate the deployed JavaScript content type alongside recovered homepage rendering.
+- [x] Add static-response regression coverage and validate the deployed JavaScript content type alongside recovered homepage rendering.
