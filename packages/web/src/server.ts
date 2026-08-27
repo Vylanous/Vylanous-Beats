@@ -28,7 +28,10 @@ const server = Bun.serve({
       const settings = await loadSettings();
       return withSecurityHeaders(
         new Response(sitemapXml(settings, publicOrigin(url)), {
-          headers: { "Content-Type": "application/xml; charset=utf-8" },
+          headers: {
+            "Cache-Control": "public, max-age=300, must-revalidate",
+            "Content-Type": "application/xml; charset=utf-8",
+          },
         }),
       );
     }
@@ -56,7 +59,10 @@ const server = Bun.serve({
             crawlerSnapshotForPath(settings, url.pathname),
           ),
           {
-            headers: { "Content-Type": "text/html; charset=utf-8" },
+            headers: {
+              "Cache-Control": "no-cache",
+              "Content-Type": "text/html; charset=utf-8",
+            },
           },
         ),
       );

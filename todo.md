@@ -989,3 +989,4 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Remove inherited unused mobile theme imports so the mandatory repository lint gate passes.
 - [x] Normalize inherited mobile and shared-test formatting drift so the mandatory repository formatting gate passes.
 - [x] Restore the EPK route’s server metadata fallback when the optional Builder EPK page has been deleted from saved settings.
+- [x] Add explicit revalidation headers for dynamic HTML and sitemap responses so metadata and crawler snapshots cannot remain stale after Builder updates.
