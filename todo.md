@@ -951,3 +951,14 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Bound Published Beats analytics with browser deduplication, server controls, retention/roll-up, and accurate interaction terminology.
 - [x] Add operator-facing provider-budget visibility and a documented provider-native quota-alert procedure.
 - [x] Run full validation, publish the remediations to main, and verify the GitHub-to-Render workflow.
+
+## Live Availability and Stripe Readiness Follow-up
+
+- [x] Check public homepage availability, liveness/readiness diagnostics, and the latest Render deployment state after the Stripe webhook configuration change.
+- [x] Identify and correct the minimal safe cause of any production loading failure without changing customer data or payment records.
+- [ ] Verify live recovery and the non-sensitive Stripe readiness status, then report any provider-side action still required.
+
+### Confirmed loading failure: broken MailerLite overlay
+
+- [x] Remove the broken third-party MailerLite universal embed that creates a blank full-screen iframe, while preserving the site’s native Builder-configured newsletter popup.
+- [x] Add regression coverage for the absence of the third-party full-screen newsletter overlay and validate the deployed homepage rendering.
