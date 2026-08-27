@@ -967,3 +967,9 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Return correct MIME types for Vite JavaScript, stylesheets, fonts, media, and image assets so browsers can load the application module bundle.
 - [x] Add static-response regression coverage and validate the deployed JavaScript content type alongside recovered homepage rendering.
+
+## Production Performance and SEO Audit
+
+- [x] Measure live delivery timing, response headers, transfer sizes, and key public-route availability without mutating production data.
+- [x] Audit live metadata, canonical URLs, social preview tags, crawl directives, robots, sitemap, and internal-link hygiene.
+- [x] Summarize prioritized performance and SEO findings with practical next actions; do not modify the site during this audit.
