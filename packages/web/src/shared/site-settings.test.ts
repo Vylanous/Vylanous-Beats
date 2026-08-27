@@ -671,7 +671,6 @@ describe("system Builder pages", () => {
   });
 });
 
-
 describe("Mobile App Studio settings migration", () => {
   test("adds compatible mobile defaults to older stored settings", () => {
     const settings = mergeSettings({});

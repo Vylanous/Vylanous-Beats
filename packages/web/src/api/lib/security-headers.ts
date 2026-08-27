@@ -8,7 +8,7 @@ const CONTENT_SECURITY_POLICY = [
   "form-action 'self'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
-  "script-src 'self' 'unsafe-inline' https://assets.mailerlite.com https://www.googletagmanager.com",
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.stripe.com https://storefront-api.fourthwall.com https://*.r2.cloudflarestorage.com",

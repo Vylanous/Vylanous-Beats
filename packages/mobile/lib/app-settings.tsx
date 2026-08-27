@@ -130,7 +130,9 @@ function normalizeSettings(value: unknown): MobileAppSettings {
     visual: {
       chromeHeaders: booleanValue(visual.chromeHeaders, true),
       contentDensity:
-        density === "compact" || density === "relaxed" || density === "standard" ? density : "standard",
+        density === "compact" || density === "relaxed" || density === "standard"
+          ? density
+          : "standard",
       bottomNavigationStyle: visualStyle === "attached" ? "attached" : "floating",
       bottomNavigationOffset:
         typeof visual.bottomNavigationOffset === "number"
@@ -161,9 +163,17 @@ function normalizeSettings(value: unknown): MobileAppSettings {
         DEFAULT_MOBILE_APP_SETTINGS.home.featuredEyebrow,
         60,
       ),
-      featuredTitle: stringValue(home.featuredTitle, DEFAULT_MOBILE_APP_SETTINGS.home.featuredTitle, 80),
+      featuredTitle: stringValue(
+        home.featuredTitle,
+        DEFAULT_MOBILE_APP_SETTINGS.home.featuredTitle,
+        80,
+      ),
       showFeatured: booleanValue(home.showFeatured, true),
-      promiseTitle: stringValue(home.promiseTitle, DEFAULT_MOBILE_APP_SETTINGS.home.promiseTitle, 100),
+      promiseTitle: stringValue(
+        home.promiseTitle,
+        DEFAULT_MOBILE_APP_SETTINGS.home.promiseTitle,
+        100,
+      ),
       promiseBody: stringValue(home.promiseBody, DEFAULT_MOBILE_APP_SETTINGS.home.promiseBody, 320),
       showPromise: booleanValue(home.showPromise, true),
     },
@@ -186,7 +196,9 @@ export function MobileAppSettingsProvider({ children }: { children: ReactNode })
   const normalized = normalizeSettings(settings.data);
   const value = normalized.enabled ? normalized : DEFAULT_MOBILE_APP_SETTINGS;
 
-  return <MobileAppSettingsContext.Provider value={value}>{children}</MobileAppSettingsContext.Provider>;
+  return (
+    <MobileAppSettingsContext.Provider value={value}>{children}</MobileAppSettingsContext.Provider>
+  );
 }
 
 export function useMobileAppSettings() {

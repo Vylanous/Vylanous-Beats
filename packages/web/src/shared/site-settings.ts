@@ -1455,7 +1455,14 @@ function mergePage(
       path: storedPage?.path,
       slug: storedPage?.slug || defaultPage.slug,
     }),
-    seo: { ...defaultPage.seo, ...storedPage?.seo },
+    seo: {
+      ...defaultPage.seo,
+      ...storedPage?.seo,
+      title: storedPage?.seo?.title?.trim() || defaultPage.seo?.title,
+      description: storedPage?.seo?.description?.trim() || defaultPage.seo?.description,
+      canonicalPath: storedPage?.seo?.canonicalPath?.trim() || defaultPage.seo?.canonicalPath,
+      ogImageUrl: storedPage?.seo?.ogImageUrl?.trim() || defaultPage.seo?.ogImageUrl,
+    },
     layout: {
       ...defaultPage.layout,
       ...storedPage?.layout,

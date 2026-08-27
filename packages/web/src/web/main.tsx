@@ -17,7 +17,10 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root")!;
+root.removeAttribute("data-prerendered");
+
+createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Router>

@@ -973,3 +973,18 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Measure live delivery timing, response headers, transfer sizes, and key public-route availability without mutating production data.
 - [x] Audit live metadata, canonical URLs, social preview tags, crawl directives, robots, sitemap, and internal-link hygiene.
 - [x] Summarize prioritized performance and SEO findings with practical next actions; do not modify the site during this audit.
+
+## Ordered Performance and SEO Remediation
+
+- [x] Normalize all public canonical, Open Graph, Twitter, and sitemap URLs to the configured HTTPS public origin and normalize home to `/`.
+- [x] Emit exactly one title, description, canonical, Open Graph, and Twitter metadata set per public document and exclude non-indexable utility routes from the sitemap.
+- [x] Serve versioned Vite assets with immutable cache headers and add bounded public-settings/metadata caching with explicit Builder-save invalidation.
+- [x] Add unique route-specific SEO titles and descriptions for EPK, Privacy, and Terms through the supported settings model.
+- [x] Implement safe server prerendering for compatible public pages or document and test the smallest compatible alternative without exposing account, checkout, or admin data.
+- [x] Add deterministic SEO/performance regression coverage, run full validation, publish to main, and verify the live result.
+
+### Release validation corrections
+
+- [x] Resolve the inherited Mobile App Studio accessibility-label lint failures without changing Mobile App Studio behavior.
+- [x] Remove inherited unused mobile theme imports so the mandatory repository lint gate passes.
+- [x] Normalize inherited mobile and shared-test formatting drift so the mandatory repository formatting gate passes.

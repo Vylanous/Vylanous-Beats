@@ -5,7 +5,8 @@ import { mergeSettings, type SiteSettings } from "../../shared/site-settings";
 import { signIfKey } from "./url-sign";
 
 export const SETTINGS_ID = "site";
-const SETTINGS_TTL_MS = 30_000;
+/** Short in-process cache for anonymous rendering; all Builder writes explicitly invalidate it. */
+export const SETTINGS_TTL_MS = 60_000;
 let settingsCache: { value: SiteSettings; at: number } | null = null;
 export function invalidateSettingsCache(): void {
   settingsCache = null;

@@ -36,7 +36,9 @@ export default function LoginScreen() {
         <Pressable style={s.backButton} onPress={() => router.back()}>
           <Text style={s.back}>‹ BACK</Text>
         </Pressable>
-        <ChromeText style={s.title}>{mode === "login" ? "WELCOME BACK" : "CREATE YOUR VAULT"}</ChromeText>
+        <ChromeText style={s.title}>
+          {mode === "login" ? "WELCOME BACK" : "CREATE YOUR VAULT"}
+        </ChromeText>
         <Text style={s.copy}>
           Sign in to access your licenses, secure downloads, saved purchases, and account
           preferences.
@@ -114,7 +116,13 @@ export default function LoginScreen() {
 const s = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 22, paddingTop: 18 },
   backButton: { alignSelf: "flex-start", marginTop: 22 },
-  back: { color: vb.purpleBright, fontFamily: font.sub, fontSize: 15, lineHeight: 16, letterSpacing: 0.85 },
+  back: {
+    color: vb.purpleBright,
+    fontFamily: font.sub,
+    fontSize: 15,
+    lineHeight: 16,
+    letterSpacing: 0.85,
+  },
   title: {
     fontFamily: font.display,
     fontSize: 38,
@@ -142,7 +150,13 @@ const s = StyleSheet.create({
   },
   mode: { flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 7 },
   modeActive: { backgroundColor: vb.ink2 },
-  modeText: { color: vb.muted, fontFamily: font.sub, fontSize: 15, lineHeight: 16, letterSpacing: 0.7 },
+  modeText: {
+    color: vb.muted,
+    fontFamily: font.sub,
+    fontSize: 15,
+    lineHeight: 16,
+    letterSpacing: 0.7,
+  },
   modeTextActive: { color: vb.silverBright },
   input: {
     backgroundColor: vb.ink,
@@ -189,5 +203,11 @@ const s = StyleSheet.create({
     marginTop: 20,
   },
   disabled: { opacity: 0.6 },
-  buttonText: { color: vb.white, fontFamily: font.sub, fontSize: 16, lineHeight: 18, letterSpacing: 0.85 },
+  buttonText: {
+    color: vb.white,
+    fontFamily: font.sub,
+    fontSize: 16,
+    lineHeight: 18,
+    letterSpacing: 0.85,
+  },
 });

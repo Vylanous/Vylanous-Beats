@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { BeatCard } from "../../components/BeatCard";
 import { BrandHeader } from "../../components/BrandHeader";
 import { ChromeText } from "../../components/ChromeText";
@@ -11,7 +19,7 @@ import {
   useMobileAppSettings,
   type MobileActionId,
 } from "../../lib/app-settings";
-import { font, type, vb } from "../../lib/theme";
+import { type, vb } from "../../lib/theme";
 
 export default function HomeScreen() {
   const featured = useQuery({ queryKey: ["featured-beats"], queryFn: fetchFeaturedBeats });
@@ -25,7 +33,10 @@ export default function HomeScreen() {
       (requestedAction !== "library" || app.features.customerLibrary) &&
       (requestedAction !== "account" || app.features.customerAccount);
     const action = tab?.visible && featureAvailable ? requestedAction : "beats";
-    const routes: Record<MobileActionId, "/(tabs)/beats" | "/(tabs)/cart" | "/(tabs)/library" | "/(tabs)/profile"> = {
+    const routes: Record<
+      MobileActionId,
+      "/(tabs)/beats" | "/(tabs)/cart" | "/(tabs)/library" | "/(tabs)/profile"
+    > = {
       beats: "/(tabs)/beats",
       cart: "/(tabs)/cart",
       library: "/(tabs)/library",
@@ -61,7 +72,9 @@ export default function HomeScreen() {
                 <View style={s.sectionHead}>
                   <View>
                     <Text style={s.eyebrow}>{home.featuredEyebrow.toUpperCase()}</Text>
-                    <ChromeText style={s.sectionTitle}>{home.featuredTitle.toUpperCase()}</ChromeText>
+                    <ChromeText style={s.sectionTitle}>
+                      {home.featuredTitle.toUpperCase()}
+                    </ChromeText>
                   </View>
                   <Pressable onPress={() => openAction("beats")}>
                     <Text style={s.link}>ALL BEATS →</Text>

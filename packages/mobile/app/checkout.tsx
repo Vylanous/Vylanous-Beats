@@ -10,7 +10,7 @@ import { useCart } from "../lib/cart";
 import { useCustomer } from "../lib/customer";
 import { useMobileAppSettings } from "../lib/app-settings";
 import { MOBILE_PRODUCT_BY_TIER, TIER_BY_ID } from "../lib/models";
-import { font, radius, type, vb } from "../lib/theme";
+import { radius, type, vb } from "../lib/theme";
 
 export default function Checkout() {
   const { items, clear } = useCart();

@@ -3,8 +3,6 @@ import { ArrowDown, ArrowUp, Check, Loader2, RotateCcw, Save, Smartphone } from 
 import { getAdminSettings, saveAdminSettings } from "../../lib/admin";
 import {
   DEFAULT_MOBILE_APP,
-  MOBILE_HOME_SECTION_IDS,
-  MOBILE_TAB_IDS,
   type MobileAppSettings,
   type MobileHomeSectionId,
   type MobileTabId,
@@ -42,7 +40,9 @@ export default function MobileAppStudioPanel() {
   useEffect(() => {
     getAdminSettings()
       .then((result) => setSettings(result.settings.mobileApp || DEFAULT_MOBILE_APP))
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "Failed to load app settings"))
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : "Failed to load app settings"),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -74,9 +74,14 @@ export default function MobileAppStudioPanel() {
     setError("");
   };
 
-  const updateTab = (id: MobileTabId, patch: Partial<MobileAppSettings["navigation"]["tabs"][number]>) => {
+  const updateTab = (
+    id: MobileTabId,
+    patch: Partial<MobileAppSettings["navigation"]["tabs"][number]>,
+  ) => {
     setSettings((current) => {
-      const tabs = current.navigation.tabs.map((tab) => (tab.id === id ? { ...tab, ...patch } : tab));
+      const tabs = current.navigation.tabs.map((tab) =>
+        tab.id === id ? { ...tab, ...patch } : tab,
+      );
       if (!tabs.some((tab) => tab.visible && (tab.id === "home" || tab.id === "beats"))) {
         const home = tabs.find((tab) => tab.id === "home");
         if (home) home.visible = true;
@@ -128,7 +133,9 @@ export default function MobileAppStudioPanel() {
             <Smartphone size={21} />
           </div>
           <div>
-            <h2 className="font-display text-2xl uppercase tracking-wide text-chrome">Mobile App Studio</h2>
+            <h2 className="font-display text-2xl uppercase tracking-wide text-chrome">
+              Mobile App Studio
+            </h2>
             <p className="font-body text-sm text-vb-silver/60 mt-1 max-w-2xl">
               Configure the approved native UI, bottom menu, Home modules, and built-in customer
               features. Settings are served live to compatible Android and iPhone builds.
@@ -148,7 +155,13 @@ export default function MobileAppStudioPanel() {
             disabled={saving}
             className="flex items-center gap-1.5 font-sub uppercase tracking-wider text-sm px-5 py-2.5 rounded-lg bg-vb-purple text-white hover:bg-vb-purple-bright transition-colors disabled:opacity-50"
           >
-            {saving ? <Loader2 className="animate-spin" size={15} /> : saved ? <Check size={15} /> : <Save size={15} />}
+            {saving ? (
+              <Loader2 className="animate-spin" size={15} />
+            ) : saved ? (
+              <Check size={15} />
+            ) : (
+              <Save size={15} />
+            )}
             {saved ? "Saved" : "Publish app settings"}
           </button>
         </div>
@@ -157,13 +170,15 @@ export default function MobileAppStudioPanel() {
       {error && <p className="font-body text-sm text-red-400 mb-5">{error}</p>}
 
       <div className="rounded-xl border border-vb-purple/30 bg-vb-purple/[0.07] px-4 py-3 mb-8 font-body text-sm text-vb-silver/80">
-        <strong className="text-vb-silver-bright">Safe by design:</strong> this studio controls approved
-        native components and routes. New custom code, permissions, payment providers, or entirely new
-        screens still require an app update and a new binary.
+        <strong className="text-vb-silver-bright">Safe by design:</strong> this studio controls
+        approved native components and routes. New custom code, permissions, payment providers, or
+        entirely new screens still require an app update and a new binary.
       </div>
 
       <section className="mb-8">
-        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Visual system</h3>
+        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+          Visual system
+        </h3>
         <div className="grid md:grid-cols-2 gap-4">
           <ToggleCard
             label="Use live Mobile App Studio configuration"
@@ -179,12 +194,15 @@ export default function MobileAppStudioPanel() {
           />
           <label className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
             <span className="font-body text-sm text-vb-silver-bright block">Content density</span>
-            <span className="font-body text-xs text-vb-silver/40 block mt-0.5">Horizontal screen spacing</span>
+            <span className="font-body text-xs text-vb-silver/40 block mt-0.5">
+              Horizontal screen spacing
+            </span>
             <select
               value={settings.visual.contentDensity}
               onChange={(event) =>
                 updateVisual({
-                  contentDensity: event.target.value as MobileAppSettings["visual"]["contentDensity"],
+                  contentDensity: event.target
+                    .value as MobileAppSettings["visual"]["contentDensity"],
                 })
               }
               className="mt-3 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none"
@@ -195,13 +213,18 @@ export default function MobileAppStudioPanel() {
             </select>
           </label>
           <label className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
-            <span className="font-body text-sm text-vb-silver-bright block">Bottom navigation style</span>
-            <span className="font-body text-xs text-vb-silver/40 block mt-0.5">Floating clears device controls</span>
+            <span className="font-body text-sm text-vb-silver-bright block">
+              Bottom navigation style
+            </span>
+            <span className="font-body text-xs text-vb-silver/40 block mt-0.5">
+              Floating clears device controls
+            </span>
             <select
               value={settings.visual.bottomNavigationStyle}
               onChange={(event) =>
                 updateVisual({
-                  bottomNavigationStyle: event.target.value as MobileAppSettings["visual"]["bottomNavigationStyle"],
+                  bottomNavigationStyle: event.target
+                    .value as MobileAppSettings["visual"]["bottomNavigationStyle"],
                 })
               }
               className="mt-3 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none"
@@ -211,17 +234,26 @@ export default function MobileAppStudioPanel() {
             </select>
           </label>
           <label className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
-            <span className="font-body text-sm text-vb-silver-bright block">Extra bottom clearance</span>
-            <span className="font-body text-xs text-vb-silver/40 block mt-0.5">0–48 px above the device navigation area</span>
+            <span className="font-body text-sm text-vb-silver-bright block">
+              Extra bottom clearance
+            </span>
+            <span className="font-body text-xs text-vb-silver/40 block mt-0.5">
+              0–48 px above the device navigation area
+            </span>
             <input
               type="range"
+              aria-label="Extra bottom clearance"
               min="0"
               max="48"
               value={settings.visual.bottomNavigationOffset}
-              onChange={(event) => updateVisual({ bottomNavigationOffset: Number(event.target.value) })}
+              onChange={(event) =>
+                updateVisual({ bottomNavigationOffset: Number(event.target.value) })
+              }
               className="mt-4 w-full accent-vb-purple"
             />
-            <div className="font-sub text-vb-purple-bright text-base mt-1">{settings.visual.bottomNavigationOffset}px</div>
+            <div className="font-sub text-vb-purple-bright text-base mt-1">
+              {settings.visual.bottomNavigationOffset}px
+            </div>
           </label>
         </div>
       </section>
@@ -229,16 +261,24 @@ export default function MobileAppStudioPanel() {
       <section className="mb-8">
         <div className="flex items-baseline justify-between gap-4 mb-4">
           <div>
-            <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg">Bottom menu</h3>
-            <p className="font-body text-xs text-vb-silver/40 mt-1">{visibleTabs} of 5 approved tabs visible. Home or Beats always remains available.</p>
+            <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg">
+              Bottom menu
+            </h3>
+            <p className="font-body text-xs text-vb-silver/40 mt-1">
+              {visibleTabs} of 5 approved tabs visible. Home or Beats always remains available.
+            </p>
           </div>
         </div>
         <div className="space-y-2">
           {settings.navigation.tabs.map((tab, index) => (
-            <div key={tab.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3 flex flex-wrap sm:flex-nowrap items-center gap-3">
+            <div
+              key={tab.id}
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-3 flex flex-wrap sm:flex-nowrap items-center gap-3"
+            >
               <label className="flex items-center gap-2 shrink-0">
                 <input
                   type="checkbox"
+                  aria-label={`Show ${TAB_NAMES[tab.id]} in the bottom menu`}
                   checked={tab.visible}
                   onChange={(event) => updateTab(tab.id, { visible: event.target.checked })}
                   className="accent-vb-purple h-4 w-4"
@@ -286,16 +326,25 @@ export default function MobileAppStudioPanel() {
       </section>
 
       <section className="mb-8">
-        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Home layout and calls to action</h3>
+        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+          Home layout and calls to action
+        </h3>
         <div className="space-y-2 mb-4">
           {settings.home.sectionOrder.map((section, index) => (
-            <div key={section} className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 flex items-center justify-between gap-3">
-              <span className="font-body text-sm text-vb-silver-bright">{SECTION_NAMES[section]}</span>
+            <div
+              key={section}
+              className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 flex items-center justify-between gap-3"
+            >
+              <span className="font-body text-sm text-vb-silver-bright">
+                {SECTION_NAMES[section]}
+              </span>
               <div className="flex gap-1">
                 <button
                   aria-label={`Move ${SECTION_NAMES[section]} earlier`}
                   disabled={index === 0}
-                  onClick={() => updateHome({ sectionOrder: move(settings.home.sectionOrder, index, -1) })}
+                  onClick={() =>
+                    updateHome({ sectionOrder: move(settings.home.sectionOrder, index, -1) })
+                  }
                   className="p-2 rounded-lg border border-white/10 text-vb-silver hover:text-vb-silver-bright disabled:opacity-30"
                 >
                   <ArrowUp size={15} />
@@ -303,7 +352,9 @@ export default function MobileAppStudioPanel() {
                 <button
                   aria-label={`Move ${SECTION_NAMES[section]} later`}
                   disabled={index === settings.home.sectionOrder.length - 1}
-                  onClick={() => updateHome({ sectionOrder: move(settings.home.sectionOrder, index, 1) })}
+                  onClick={() =>
+                    updateHome({ sectionOrder: move(settings.home.sectionOrder, index, 1) })
+                  }
                   className="p-2 rounded-lg border border-white/10 text-vb-silver hover:text-vb-silver-bright disabled:opacity-30"
                 >
                   <ArrowDown size={15} />
@@ -313,64 +364,179 @@ export default function MobileAppStudioPanel() {
           ))}
         </div>
         <div className="grid md:grid-cols-2 gap-4">
-          <ToggleCard label="Show brand header" hint="Logo and Vylanous wordmark at the top of Home." checked={settings.home.showBrandHeader} onChange={(value) => updateHome({ showBrandHeader: value })} />
-          <ToggleCard label="Show featured beats" hint="Horizontal rail driven by the live featured catalog." checked={settings.home.showFeatured} onChange={(value) => updateHome({ showFeatured: value })} />
-          <ToggleCard label="Show delivery promise" hint="The Studio Quality / Instant Delivery information card." checked={settings.home.showPromise} onChange={(value) => updateHome({ showPromise: value })} />
+          <ToggleCard
+            label="Show brand header"
+            hint="Logo and Vylanous wordmark at the top of Home."
+            checked={settings.home.showBrandHeader}
+            onChange={(value) => updateHome({ showBrandHeader: value })}
+          />
+          <ToggleCard
+            label="Show featured beats"
+            hint="Horizontal rail driven by the live featured catalog."
+            checked={settings.home.showFeatured}
+            onChange={(value) => updateHome({ showFeatured: value })}
+          />
+          <ToggleCard
+            label="Show delivery promise"
+            hint="The Studio Quality / Instant Delivery information card."
+            checked={settings.home.showPromise}
+            onChange={(value) => updateHome({ showPromise: value })}
+          />
         </div>
         <div className="grid md:grid-cols-2 gap-4 mt-4">
-          <Field label="Hero eyebrow" value={settings.home.heroEyebrow} onChange={(value) => updateHome({ heroEyebrow: value })} />
-          <Field label="Hero title" value={settings.home.heroTitle} onChange={(value) => updateHome({ heroTitle: value })} />
-          <Field label="Hero body" value={settings.home.heroBody} textarea onChange={(value) => updateHome({ heroBody: value })} />
+          <Field
+            label="Hero eyebrow"
+            value={settings.home.heroEyebrow}
+            onChange={(value) => updateHome({ heroEyebrow: value })}
+          />
+          <Field
+            label="Hero title"
+            value={settings.home.heroTitle}
+            onChange={(value) => updateHome({ heroTitle: value })}
+          />
+          <Field
+            label="Hero body"
+            value={settings.home.heroBody}
+            textarea
+            onChange={(value) => updateHome({ heroBody: value })}
+          />
           <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
-            <label className="font-body text-sm text-vb-silver-bright block">Primary button</label>
-            <input value={settings.home.primaryCtaLabel} maxLength={30} onChange={(event) => updateHome({ primaryCtaLabel: event.target.value })} className="mt-3 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60" />
-            <select value={settings.home.primaryCtaAction} onChange={(event) => updateHome({ primaryCtaAction: event.target.value as MobileAppSettings["home"]["primaryCtaAction"] })} className="mt-2 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none">
+            <span className="font-body text-sm text-vb-silver-bright block">Primary button</span>
+            <input
+              aria-label="Primary button label"
+              value={settings.home.primaryCtaLabel}
+              maxLength={30}
+              onChange={(event) => updateHome({ primaryCtaLabel: event.target.value })}
+              className="mt-3 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+            />
+            <select
+              aria-label="Primary button action"
+              value={settings.home.primaryCtaAction}
+              onChange={(event) =>
+                updateHome({
+                  primaryCtaAction: event.target
+                    .value as MobileAppSettings["home"]["primaryCtaAction"],
+                })
+              }
+              className="mt-2 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none"
+            >
               <option value="beats">Open Beats</option>
               <option value="cart">Open Cart</option>
               <option value="library">Open Library</option>
               <option value="account">Open Account</option>
             </select>
           </div>
-          <Field label="Featured eyebrow" value={settings.home.featuredEyebrow} onChange={(value) => updateHome({ featuredEyebrow: value })} />
-          <Field label="Featured title" value={settings.home.featuredTitle} onChange={(value) => updateHome({ featuredTitle: value })} />
-          <Field label="Promise title" value={settings.home.promiseTitle} onChange={(value) => updateHome({ promiseTitle: value })} />
-          <Field label="Promise body" value={settings.home.promiseBody} textarea onChange={(value) => updateHome({ promiseBody: value })} />
+          <Field
+            label="Featured eyebrow"
+            value={settings.home.featuredEyebrow}
+            onChange={(value) => updateHome({ featuredEyebrow: value })}
+          />
+          <Field
+            label="Featured title"
+            value={settings.home.featuredTitle}
+            onChange={(value) => updateHome({ featuredTitle: value })}
+          />
+          <Field
+            label="Promise title"
+            value={settings.home.promiseTitle}
+            onChange={(value) => updateHome({ promiseTitle: value })}
+          />
+          <Field
+            label="Promise body"
+            value={settings.home.promiseBody}
+            textarea
+            onChange={(value) => updateHome({ promiseBody: value })}
+          />
         </div>
       </section>
 
       <section>
-        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">Built-in functions</h3>
+        <h3 className="font-sub uppercase tracking-widest text-vb-silver text-lg mb-4">
+          Built-in functions
+        </h3>
         <div className="grid md:grid-cols-3 gap-4">
-          <ToggleCard label="Customer account" hint="Show Account controls and customer sign-in routes." checked={settings.features.customerAccount} onChange={(value) => updateFeature("customerAccount", value)} />
-          <ToggleCard label="Customer library" hint="Show purchase history and protected downloads." checked={settings.features.customerLibrary} onChange={(value) => updateFeature("customerLibrary", value)} />
-          <ToggleCard label="Native checkout" hint="Enable the existing Apple / Google native purchase flow." checked={settings.features.nativeCheckout} onChange={(value) => updateFeature("nativeCheckout", value)} />
+          <ToggleCard
+            label="Customer account"
+            hint="Show Account controls and customer sign-in routes."
+            checked={settings.features.customerAccount}
+            onChange={(value) => updateFeature("customerAccount", value)}
+          />
+          <ToggleCard
+            label="Customer library"
+            hint="Show purchase history and protected downloads."
+            checked={settings.features.customerLibrary}
+            onChange={(value) => updateFeature("customerLibrary", value)}
+          />
+          <ToggleCard
+            label="Native checkout"
+            hint="Enable the existing Apple / Google native purchase flow."
+            checked={settings.features.nativeCheckout}
+            onChange={(value) => updateFeature("nativeCheckout", value)}
+          />
         </div>
       </section>
     </div>
   );
 }
 
-function ToggleCard({ label, hint, checked, onChange }: { label: string; hint: string; checked: boolean; onChange: (value: boolean) => void }) {
+function ToggleCard({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
   return (
-    <label className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 flex items-start gap-3 cursor-pointer">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="accent-vb-purple h-4 w-4 mt-0.5" />
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 flex items-start gap-3">
+      <input
+        aria-label={label}
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="accent-vb-purple h-4 w-4 mt-0.5"
+      />
       <span>
         <span className="font-body text-sm text-vb-silver-bright block">{label}</span>
         <span className="font-body text-xs text-vb-silver/40 block mt-0.5">{hint}</span>
       </span>
-    </label>
+    </div>
   );
 }
 
-function Field({ label, value, onChange, textarea = false }: { label: string; value: string; onChange: (value: string) => void; textarea?: boolean }) {
+function Field({
+  label,
+  value,
+  onChange,
+  textarea = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  textarea?: boolean;
+}) {
   return (
-    <label className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 block">
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 block">
       <span className="font-body text-sm text-vb-silver-bright block">{label}</span>
       {textarea ? (
-        <textarea value={value} onChange={(event) => onChange(event.target.value)} rows={4} className="mt-3 w-full resize-y bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60" />
+        <textarea
+          aria-label={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          rows={4}
+          className="mt-3 w-full resize-y bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+        />
       ) : (
-        <input value={value} onChange={(event) => onChange(event.target.value)} className="mt-3 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60" />
+        <input
+          aria-label={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="mt-3 w-full bg-vb-black border border-white/10 rounded-lg px-3 py-2 font-body text-sm text-vb-silver-bright outline-none focus:border-vb-purple-bright/60"
+        />
       )}
-    </label>
+    </div>
   );
 }

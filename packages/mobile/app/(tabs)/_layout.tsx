@@ -86,7 +86,9 @@ export default function TabLayout() {
               title: setting?.label || tab.id,
               href: isVisible(tab.id) ? undefined : null,
               tabBarBadge: tab.id === "cart" ? items.length || undefined : undefined,
-              tabBarIcon: ({ color, size }) => <Ionicons name={tab.icon} color={color} size={size} />,
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name={tab.icon} color={color} size={size} />
+              ),
             }}
           />
         );

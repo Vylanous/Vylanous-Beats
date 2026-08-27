@@ -87,6 +87,12 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 8,
   },
-  label: { color: vb.muted, fontFamily: font.sub, fontSize: 14, lineHeight: 15, letterSpacing: 0.6 },
+  label: {
+    color: vb.muted,
+    fontFamily: font.sub,
+    fontSize: 14,
+    lineHeight: 15,
+    letterSpacing: 0.6,
+  },
   price: { fontFamily: font.display, fontSize: 21, marginTop: 1 },
 });
