@@ -990,3 +990,9 @@ User request: border glow colors remain purple for other border styles; change t
 - [x] Normalize inherited mobile and shared-test formatting drift so the mandatory repository formatting gate passes.
 - [x] Restore the EPK route’s server metadata fallback when the optional Builder EPK page has been deleted from saved settings.
 - [x] Add explicit revalidation headers for dynamic HTML and sitemap responses so metadata and crawler snapshots cannot remain stale after Builder updates.
+
+## Live Admin Studio Recovery
+
+- [x] Check the live Admin Studio route, static admin bundle delivery, browser console, and authentication requests without changing administrative data.
+- [x] Identify and repair the minimal source-level cause of the Admin Studio loading failure while preserving session security and settings behavior.
+- [ ] Add regression coverage, publish the recovery, and verify authenticated live Admin Studio access without altering any site settings.

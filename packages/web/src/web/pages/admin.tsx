@@ -96,7 +96,7 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img
-            src="/brand/skull-mark.png"
+            src="/brand/Favicon_sharp.png"
             alt=""
             className="h-16 w-16 mx-auto object-contain mb-4"
           />
@@ -167,7 +167,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       {/* Sidebar */}
       <aside className="w-60 shrink-0 border-r border-white/[0.06] bg-vb-black/60 hidden md:flex flex-col fixed inset-y-0">
         <div className="px-5 h-16 flex items-center gap-2.5 border-b border-white/[0.06]">
-          <img src="/brand/skull-mark.png" alt="" className="h-8 w-8 object-contain" />
+          <img src="/brand/Favicon_sharp.png" alt="" className="h-8 w-8 object-contain" />
           <span className="font-display uppercase tracking-wide text-lg">Studio</span>
         </div>
         <nav className="flex-1 p-3 space-y-1">
