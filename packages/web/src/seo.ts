@@ -15,6 +15,11 @@ const ROUTE_METADATA: Record<string, { title: string; description: string }> = {
     description:
       "Premium hip-hop beats, flexible licensing, and instant delivery for independent artists.",
   },
+  "/epk": {
+    title: "Vylanous EPK | Press & Booking",
+    description:
+      "Official electronic press kit for Vylanous, including artist bio, press materials, and booking details.",
+  },
   "/privacy": {
     title: "Privacy Policy | Vylanous Beats",
     description:
