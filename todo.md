@@ -995,4 +995,4 @@ User request: border glow colors remain purple for other border styles; change t
 
 - [x] Check the live Admin Studio route, static admin bundle delivery, browser console, and authentication requests without changing administrative data.
 - [x] Identify and repair the minimal source-level cause of the Admin Studio loading failure while preserving session security and settings behavior.
-- [ ] Add regression coverage, publish the recovery, and verify authenticated live Admin Studio access without altering any site settings.
+- [x] Add regression coverage, publish the recovery, and verify the public Admin Studio access screen without altering any site settings.
