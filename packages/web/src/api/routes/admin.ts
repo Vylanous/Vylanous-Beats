@@ -471,6 +471,7 @@ const settingsSchema = z.object({
               "merch",
               "featuredBeats",
               "publishedBeats",
+              "musicPlayer",
               "beatCatalog",
               "licenseTiers",
               "licenseComparison",
