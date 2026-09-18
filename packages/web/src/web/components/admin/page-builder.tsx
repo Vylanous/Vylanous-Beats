@@ -143,6 +143,7 @@ const SECTION_TYPES: { type: PageSectionType; label: string }[] = [
   { type: "merch", label: "Fourthwall merch" },
   { type: "featuredBeats", label: "Featured beats" },
   { type: "publishedBeats", label: "Published beats" },
+  { type: "musicPlayer", label: "Music player" },
   { type: "beatCatalog", label: "Beat catalog" },
   { type: "licenseTiers", label: "License tiers" },
   { type: "licenseComparison", label: "License comparison" },
@@ -191,6 +192,11 @@ function blankSection(type: PageSectionType): PageSection {
   if (type === "publishedBeats") {
     section.title = "Selected beats";
     section.body = "Hand-picked beats from the catalog.";
+    section.beatIds = [];
+  }
+  if (type === "musicPlayer") {
+    section.title = "Beat playlist";
+    section.body = "Scroll through the selected beats and press play to preview.";
     section.beatIds = [];
   }
   if (type === "featureCards" || type === "gallery") section.items = [];
@@ -2527,7 +2533,7 @@ function SectionEditor({
                       </div>
                     </div>
                   )}
-                  {section.type === "publishedBeats" && (
+                  {(section.type === "publishedBeats" || section.type === "musicPlayer") && (
                     <PublishedBeatsPicker
                       beats={publishedBeats}
                       selectedIds={section.beatIds || []}

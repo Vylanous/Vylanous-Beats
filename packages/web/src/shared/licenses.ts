@@ -34,7 +34,7 @@ export const LICENSE_TIERS: LicenseTier[] = [
   {
     id: "mp3",
     name: "MP3 Lease",
-    priceCents: 2400,
+    priceCents: 1900,
     blurb: "Entry-level lease for releases.",
     fileFormat: "Untagged MP3",
     features: [
@@ -49,7 +49,7 @@ export const LICENSE_TIERS: LicenseTier[] = [
   {
     id: "wav",
     name: "WAV Lease",
-    priceCents: 4900,
+    priceCents: 3900,
     blurb: "Higher quality + bigger caps.",
     fileFormat: "WAV + MP3",
     features: [
@@ -60,13 +60,11 @@ export const LICENSE_TIERS: LicenseTier[] = [
       "Non-profit + for-profit use",
       "Must credit \u201CProd. Vylanous Beats\u201D",
     ],
-    highlight: true,
-    badge: "Most Popular",
   },
   {
     id: "unlimited",
     name: "Unlimited Lease",
-    priceCents: 9900,
+    priceCents: 6900,
     blurb: "No caps. Still non-exclusive.",
     fileFormat: "WAV + MP3 + Stems",
     features: [
@@ -77,11 +75,13 @@ export const LICENSE_TIERS: LicenseTier[] = [
       "Non-profit + for-profit use",
       "Must credit \u201CProd. Vylanous Beats\u201D",
     ],
+    highlight: true,
+    badge: "Most Popular",
   },
   {
     id: "exclusive",
     name: "Exclusive License",
-    priceCents: 29900,
+    priceCents: 14900,
     blurb: "You own it. Beat removed from store.",
     fileFormat: "WAV + MP3 + Stems",
     features: [

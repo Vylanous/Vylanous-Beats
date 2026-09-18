@@ -44,6 +44,7 @@ export type PageSectionType =
   | "merch"
   | "featuredBeats"
   | "publishedBeats"
+  | "musicPlayer"
   | "beatCatalog"
   | "licenseTiers"
   | "licenseComparison";

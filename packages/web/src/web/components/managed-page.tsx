@@ -4,10 +4,11 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { Check, ExternalLink, Search, SlidersHorizontal } from "lucide-react";
+import { Check, ExternalLink, Pause, Play, Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "./layout";
 import { BeatCard } from "./beat-card";
+import { usePlayer } from "../lib/player";
 import { FourthwallMerch } from "./fourthwall-merch";
 import { Marquee } from "./marquee";
 import { api } from "../lib/api";
@@ -350,6 +351,9 @@ function BuilderSection({
         {section.type === "featuredBeats" && <FeaturedBeats section={section} layout={layout} />}
         {section.type === "publishedBeats" && (
           <PublishedBeats section={section} pageId={pageId} layout={layout} />
+        )}
+        {section.type === "musicPlayer" && (
+          <MusicPlayer section={section} pageId={pageId} layout={layout} />
         )}
         {section.type === "beatCatalog" && <BeatCatalog />}
         {section.type === "licenseTiers" && <LicenseTiers section={section} layout={layout} />}
@@ -995,6 +999,118 @@ function PublishedBeats({
             />
           ))}
         </div>
+      )}
+      <Actions section={section} />
+    </div>
+  );
+}
+
+function MusicPlayer({
+  section,
+  pageId,
+  layout,
+}: {
+  section: PageSection;
+  pageId: string;
+  layout: Required<SectionLayout>;
+}) {
+  const beatIds = useMemo(
+    () => Array.from(new Set(section.beatIds || [])).slice(0, 12),
+    [section.beatIds],
+  );
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["beats", "music-player", beatIds],
+    enabled: beatIds.length > 0,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      beatIds.forEach((id) => params.append("id", id));
+      const response = await fetch(`/api/beats/selected?${params.toString()}`);
+      if (!response.ok) throw new Error("Unable to load playlist beats.");
+      return response.json() as Promise<{ beats: Beat[] }>;
+    },
+  });
+  const beats = data?.beats || [];
+  const { current, isPlaying, playBeat } = usePlayer();
+  return (
+    <div className="w-full">
+      <CopyBlock section={section} layout={layout} />
+      {beatIds.length === 0 ? (
+        <p className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-5 font-body text-sm text-vb-muted">
+          Select published beats in the Site Builder to create this playlist.
+        </p>
+      ) : isLoading ? (
+        <div className="mt-8 space-y-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="h-16 animate-pulse rounded-xl bg-vb-ink" />
+          ))}
+        </div>
+      ) : isError || !beats.length ? (
+        <p className="mt-8 rounded-xl border border-dashed border-white/15 bg-vb-ink/60 p-5 font-body text-sm text-vb-muted">
+          The selected beats are no longer published or available.
+        </p>
+      ) : (
+        <ol className="mt-8 overflow-hidden rounded-2xl border border-white/[0.08] bg-vb-ink/70">
+          {beats.map((beat, index) => {
+            const active = current?.id === beat.id;
+            return (
+              <li
+                key={beat.id}
+                className="flex items-center gap-3 border-b border-white/[0.06] p-3 last:border-0 sm:gap-4 sm:p-4"
+              >
+                <span className="w-6 text-center font-mono text-xs text-vb-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                {beat.artworkUrl ? (
+                  <img
+                    src={beat.artworkUrl}
+                    alt=""
+                    loading="lazy"
+                    className="h-12 w-12 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-vb-black font-sub text-[10px] text-vb-muted">
+                    VB
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/beats/${beat.slug}`}
+                    className="block truncate font-display text-lg uppercase text-vb-silver-bright hover:text-purple-glow"
+                  >
+                    {beat.title}
+                  </Link>
+                  <p className="truncate font-body text-xs text-vb-muted">
+                    {beat.mood || beat.genre} · {beat.bpm} BPM · {beat.musicalKey}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`${active && isPlaying ? "Pause" : "Play"} ${beat.title}`}
+                  onClick={() =>
+                    playBeat(
+                      {
+                        id: beat.id,
+                        title: beat.title,
+                        artworkUrl: beat.artworkUrl,
+                        audioUrl: beat.audioUrl,
+                        bpm: beat.bpm,
+                        musicalKey: beat.musicalKey,
+                      },
+                      { pageId, blockId: section.id },
+                    )
+                  }
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-vb-purple text-white transition hover:bg-vb-purple-bright"
+                >
+                  {active && isPlaying ? (
+                    <Pause size={16} fill="currentColor" />
+                  ) : (
+                    <Play size={16} fill="currentColor" className="ml-0.5" />
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
       )}
       <Actions section={section} />
     </div>
