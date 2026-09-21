@@ -1428,7 +1428,11 @@ export function getFontPair(id: string | undefined): FontPair {
 }
 
 function pagePath(page: Pick<BuilderPage, "path" | "slug">): string {
-  return page.path || (page.slug === "home" ? "/" : `/${page.slug}`);
+  // Home is the canonical root entry point. Older saved settings may contain
+  // `/home` after the page was edited in the Builder; never let that legacy
+  // value hide the landing page at `www.vylanous.com/`.
+  if (page.slug === "home") return "/";
+  return page.path || `/${page.slug}`;
 }
 
 function mergeSectionItems(

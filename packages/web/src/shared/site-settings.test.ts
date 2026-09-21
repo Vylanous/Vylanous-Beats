@@ -653,6 +653,15 @@ test("keeps Clear Licensing artwork through repeated settings normalization", ()
 });
 
 describe("system Builder pages", () => {
+  test("keeps legacy Home settings routed at the domain root", () => {
+    const settings = mergeSettings({
+      pages: [{ id: "page_home", slug: "home", path: "/home", published: true }],
+    });
+    const home = settings.pages.find((page) => page.id === "page_home");
+    expect(home?.path).toBe("/");
+    expect(home?.seo?.canonicalPath).toBe("/");
+  });
+
   test("includes the Sign In page with editable login hero content", () => {
     const settings = mergeSettings({});
     const loginPage = settings.pages.find((page) => page.path === "/login");
