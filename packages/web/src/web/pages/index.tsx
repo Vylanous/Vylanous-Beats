@@ -13,7 +13,7 @@ import { useSiteSettings } from "../lib/site-settings";
 const BEATS_URL = "/home/vylanous-beats";
 const ARTIST_URL = "/home/artist";
 const BEATS_LOGO = "/brand/Logo_full_transparent.png";
-const ARTIST_LOGO = "/brand/Logo_skull_transparent.png";
+const ARTIST_LOGO = "/brand/Logo_artist_transparent.png";
 
 export default function Index() {
   const { footer } = useSiteSettings();
