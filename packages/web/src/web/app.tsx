@@ -73,6 +73,11 @@ function App() {
         <Switch>
           <Route path="/" component={Index} />
           <Route path="/beats" component={BeatsPage} />
+          {/* Builder pages under /beats/ must match before /beats/:slug,
+              or "featured"/"dark" are treated as beat slugs and the pages
+              render "Beat not found" instead of their content. */}
+          <Route path="/beats/featured" component={BuilderPage} />
+          <Route path="/beats/dark" component={BuilderPage} />
           <Route path="/beats/:slug" component={BeatDetail} />
           <Route path="/licensing" component={Licensing} />
           <Route path="/cart" component={CartPage} />
