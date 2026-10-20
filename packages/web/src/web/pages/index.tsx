@@ -10,7 +10,7 @@ import { Layout } from "../components/layout";
 import { Marquee } from "../components/marquee";
 import { useSiteSettings } from "../lib/site-settings";
 
-const BEATS_URL = "/home/vylanous-beats";
+const BEATS_URL = "/home/beats";
 const ARTIST_URL = "/home/artist";
 const BEATS_LOGO = "/brand/Logo_skull_transparent.png";
 const ARTIST_LOGO = "/brand/Logo_artist_transparent.png";

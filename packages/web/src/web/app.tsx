@@ -1,8 +1,14 @@
 import { lazy, Suspense } from "react";
-import { Route, Switch } from "wouter";
+import { Route, Switch, Redirect, useLocation } from "wouter";
 import Index from "./pages/index";
 import { Provider } from "./components/provider";
-import { MANAGED_PAGE_FALLBACK_ROUTE } from "./lib/page-routes";
+import { ManagedPage } from "./components/managed-page";
+import { useSiteSettings } from "./lib/site-settings";
+import {
+  MANAGED_PAGE_FALLBACK_ROUTE,
+  builderPagePath,
+  normalizeManagedPath,
+} from "./lib/page-routes";
 
 const BeatsPage = lazy(() => import("./pages/beats"));
 const BeatDetail = lazy(() => import("./pages/beat-detail"));
@@ -28,6 +34,26 @@ const AgentFeedback = import.meta.env.DEV
       })),
     )
   : null;
+
+const OLD_BEATS_HOME = "/home/vylanous-beats";
+const NEW_BEATS_HOME = "/home/beats";
+
+function BeatsHomeRoute() {
+  const [location] = useLocation();
+  const { pages } = useSiteSettings();
+  const current = normalizeManagedPath(location);
+  const live = (path: string) =>
+    pages.some((p) => p.published && builderPagePath(p) === path);
+  const renamed = pages.length > 0 && !live(OLD_BEATS_HOME) && live(NEW_BEATS_HOME);
+  if (renamed && current === OLD_BEATS_HOME) {
+    return <Redirect to={NEW_BEATS_HOME} />;
+  }
+  if (current === NEW_BEATS_HOME && !renamed) {
+    // Page still lives at the old path: serve it here too.
+    return <ManagedPage path={OLD_BEATS_HOME} />;
+  }
+  return <BuilderPage />;
+}
 
 function App() {
   return (
@@ -58,6 +84,13 @@ function App() {
           <Route path="/privacy" component={PrivacyPage} />
           <Route path="/terms" component={TermsPage} />
           <Route path="/admin" component={AdminPage} />
+          {/* Beats home URL migration: the managed page is moving from
+              /home/vylanous-beats to /home/beats (page path edited in Admin
+              Studio). This keeps both URLs working no matter which change
+              lands first: before the rename /home/beats aliases the live
+              page; after the rename /home/vylanous-beats redirects to it. */}
+          <Route path="/home/vylanous-beats" component={BeatsHomeRoute} />
+          <Route path="/home/beats" component={BeatsHomeRoute} />
           <Route path={MANAGED_PAGE_FALLBACK_ROUTE} component={BuilderPage} />
           <Route>
             <div className="min-h-screen grid place-items-center bg-vb-black">
