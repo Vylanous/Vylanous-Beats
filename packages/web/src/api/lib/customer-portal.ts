@@ -75,6 +75,8 @@ export async function customerDashboard(customer: Customer) {
       email: customer.email,
       displayName: customer.displayName,
       marketingOptIn: customer.marketingOptIn,
+      emailVerified: customer.emailVerified,
+      emailVerifiedAt: customer.emailVerifiedAt,
     },
     insights: {
       paidOrders: paid.length,
