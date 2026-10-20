@@ -177,9 +177,17 @@ export async function requireCustomer(c: Context, next: Next) {
 
 export async function requireVerifiedCustomer(c: Context, next: Next) {
   const customer = await customerFromRequest(c);
-  if (!customer) return c.json({ error: "customer_auth_required" }, 401);
+  if (!customer) return c.json({ error: "customer_auth_required", message: "Sign in to continue." }, 401);
   if (!customer.emailVerified) {
-    return c.json({ error: "email_verification_required", email: customer.email }, 403);
+    return c.json(
+      {
+        error: "email_verification_required",
+        message:
+          "Verify your email to complete checkout. Check your inbox for the verification link, click it, then try again.",
+        email: customer.email,
+      },
+      403,
+    );
   }
   c.set("customer", customer);
   await next();

@@ -135,7 +135,13 @@ export function checkoutRoutes(app: Hono) {
 
     if (existingRequest && existingRequest.expiresAt >= now) {
       if (existingRequest.cartHash !== cartHash) {
-        return c.json({ error: "idempotency_key_reused" }, 409);
+        return c.json(
+          {
+            error: "idempotency_key_reused",
+            message: "Your cart changed while checkout was starting. Review your cart and try again.",
+          },
+          409,
+        );
       }
       if (existingRequest.state !== "complete") {
         return c.json(
@@ -168,7 +174,13 @@ export function checkoutRoutes(app: Hono) {
           console.error("[checkout] idempotent Stripe session lookup failed", error);
         }
       }
-      return c.json({ error: "checkout_session_unavailable" }, 409);
+      return c.json(
+        {
+          error: "checkout_session_unavailable",
+          message: "That checkout session is no longer available. Review your cart and try again.",
+        },
+        409,
+      );
     }
 
     if (existingRequest?.expiresAt && existingRequest.expiresAt < now) {
